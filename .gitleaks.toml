@@ -1,0 +1,16 @@
+# Vision OS 3.0 — gitleaks pre-commit secret scan.
+# The one deterministic leak-catcher with a real track record (caught actual strays in V1/V2).
+# Run before any commit that touches Vault/: gitleaks protect --staged
+# Defaults (800+ rules) are extended, not replaced.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Framework docs may show placeholder-shaped examples"
+paths = [
+  '''System/design/.*''',
+]
+regexes = [
+  '''(?i)(placeholder|REPLACE_ME|XXXX|your-key-here|example)''',
+]

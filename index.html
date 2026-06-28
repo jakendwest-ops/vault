@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PTHub</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -83,6 +86,7 @@
 
     /* ── Main wrapper ── */
     #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #view-account { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
     /* ── Dashboard ── */
     #view-dashboard { flex: 1; overflow-y: auto; }
@@ -378,6 +382,11 @@
     /* Exercise summary in template view */
     .wb-ex-params-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
     .wb-ex-param-chip { font-size: 0.72rem; color: var(--muted); background: var(--surface); border-radius: 4px; padding: 2px 7px; }
+    /* Set summary table */
+    .wb-set-tbl { margin-top: 6px; border-collapse: collapse; }
+    .wb-set-tbl th { font-size: 0.6rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 10px 3px 0; text-align: left; white-space: nowrap; }
+    .wb-set-tbl td { font-size: 0.72rem; color: var(--muted); padding: 2px 10px 2px 0; white-space: nowrap; }
+    .wb-set-tbl td.wb-set-num { color: var(--text); font-weight: 700; font-size: 0.7rem; min-width: 38px; }
     .session-card { background: var(--surface2); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor:pointer; border:1px solid transparent; transition:border-color 0.12s; }
     .session-card:hover { border-color: var(--border); }
     .session-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
@@ -392,7 +401,39 @@
     .mg-chip { font-size:0.65rem; font-weight:700; border-radius:4px; padding:2px 8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; white-space:nowrap; }
     .mg-chip.active { border-color:var(--accent)60; background:var(--accent)20; color:var(--accent); }
     /* ── Account page ── */
-    .account-view { max-width: 680px; margin: 0 auto; padding: 40px 24px; }
+    .account-layout { display: flex; flex: 1; min-height: 0; }
+    .account-nav { width: 200px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 32px 0; display: flex; flex-direction: column; gap: 2px; }
+    .account-nav-item { padding: 10px 24px; font-size: 0.88rem; cursor: pointer; color: var(--muted); border-left: 3px solid transparent; transition: color 0.15s, border-color 0.15s; }
+    .account-nav-item:hover { color: var(--text); background: var(--surface); }
+    .account-nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent)10; font-weight: 600; }
+    .account-content { flex: 1; overflow-y: auto; padding: 40px 48px; }
+    .account-view { max-width: 620px; }
+    /* ── Program Builder ── */
+    .pb-layout { display:flex; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; min-height:520px; margin-top:16px; }
+    .pb-phases { width:168px; flex-shrink:0; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--surface); }
+    .pb-phase-item { padding:10px 14px; cursor:pointer; border-left:3px solid transparent; transition:background 0.12s; }
+    .pb-phase-item:hover { background:var(--surface2); }
+    .pb-phase-item.active { border-left-color:var(--accent); background:var(--accent)12; }
+    .pb-phase-name { font-size:0.84rem; font-weight:600; }
+    .pb-phase-meta { font-size:0.7rem; color:var(--muted); margin-top:2px; }
+    .pb-right { flex:1; min-width:0; display:flex; flex-direction:column; }
+    .pb-phase-hdr { display:flex; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid var(--border); background:var(--surface2); flex-wrap:wrap; }
+    .pb-sessions { display:flex; align-items:center; gap:4px; padding:9px 14px; border-bottom:1px solid var(--border); flex-wrap:wrap; background:var(--bg); }
+    .pb-session-tab { padding:4px 11px; border-radius:6px; font-size:0.79rem; cursor:pointer; border:1px solid var(--border); background:var(--surface2); color:var(--muted); transition:all 0.12s; white-space:nowrap; }
+    .pb-session-tab:hover { color:var(--text); }
+    .pb-session-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+    .pb-week-bar { display:flex; align-items:center; gap:4px; padding:8px 14px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .pb-week-pill { min-width:26px; height:26px; padding:0 6px; border-radius:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.74rem; border:1px solid var(--border); background:var(--surface2); color:var(--muted); transition:all 0.12s; }
+    .pb-week-pill:hover { color:var(--text); }
+    .pb-week-pill.active { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+    .pb-week-pill.has-ov { border-color:var(--warning)80; color:var(--warning); }
+    .pb-ex-area { flex:1; padding:12px 14px; overflow-y:auto; }
+    .pb-tbl { width:100%; border-collapse:collapse; font-size:0.8rem; }
+    .pb-tbl th { font-size:0.63rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:700; padding:0 8px 8px 0; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
+    .pb-tbl td { padding:8px 8px 8px 0; border-bottom:1px solid var(--border)40; vertical-align:middle; }
+    .pb-tbl tr:last-child td { border-bottom:none; }
+    .pb-type-chip { font-size:0.62rem; padding:1px 5px; border-radius:3px; background:var(--accent)20; color:var(--accent); margin-left:4px; font-weight:700; }
+    .pb-ov-badge { font-size:0.62rem; color:var(--warning); margin-left:3px; }
     .account-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
     .account-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; }
     .account-field { margin-bottom: 14px; }
@@ -532,7 +573,7 @@
       <div class="top-nav-search">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" placeholder="Search clients…"
-          oninput="dashLetterFilter='';renderDashboard(this.value);updateSearchDropdown(this.value)"
+          oninput="renderDashboard(this.value);updateSearchDropdown(this.value)"
           onblur="setTimeout(()=>{const d=document.getElementById('search-dropdown');if(d)d.classList.add('hidden')},150)"
           onfocus="updateSearchDropdown(this.value)" />
         <div id="search-dropdown" class="search-dropdown hidden"></div>
@@ -569,64 +610,127 @@
       </button>
       <div class="logo" id="nav-logo-acct">PT<span>Hub</span></div>
     </nav>
-    <div class="account-view">
-      <div class="page-title">My Account</div>
-      <div class="page-sub">Personalise your workspace and branding.</div>
-      <div class="account-section">
-        <div class="account-section-title">Profile</div>
-        <div class="account-field"><div class="account-label">Your Name</div><input class="account-input" id="acct-ptname" type="text" placeholder="e.g. Jake West"/></div>
-        <div class="account-field"><div class="account-label">Business Name</div><input class="account-input" id="acct-biz" type="text" placeholder="e.g. West Performance"/></div>
-        <div class="account-field"><div class="account-label">About Me</div><textarea class="account-input" id="acct-about" rows="4" placeholder="Short bio shown on your account page…" style="resize:vertical"></textarea></div>
-        <div class="account-field"><div class="account-label">Currency</div>
-          <select class="account-input" id="acct-currency" style="width:auto">
-            <option value="GBP">£ GBP</option>
-            <option value="USD">$ USD</option>
-            <option value="EUR">€ EUR</option>
-            <option value="AUD">A$ AUD</option>
-            <option value="CAD">C$ CAD</option>
-          </select>
-        </div>
-        <button class="btn-sm" onclick="saveAccount()">Save Profile</button>
+    <div class="account-layout">
+      <!-- Left nav -->
+      <div class="account-nav">
+        <div class="account-nav-item active" id="acct-nav-profile"    onclick="showAcctTab('profile')">Profile</div>
+        <div class="account-nav-item"        id="acct-nav-branding"   onclick="showAcctTab('branding')">Branding</div>
+        <div class="account-nav-item"        id="acct-nav-sessions"   onclick="showAcctTab('sessions')">Session Library</div>
+        <div class="account-nav-item"        id="acct-nav-programs"   onclick="showAcctTab('programs')">Program Library</div>
+        <div class="account-nav-item"        id="acct-nav-notif"      onclick="showAcctTab('notif')">Notifications</div>
+        <div class="account-nav-item"        id="acct-nav-data"       onclick="showAcctTab('data')">Data</div>
       </div>
-      <div class="account-section">
-        <div class="account-section-title">Branding</div>
-        <div class="account-field"><div class="account-label">Accent colour</div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <input type="color" id="acct-color" style="width:44px;height:36px;border:none;background:none;cursor:pointer;border-radius:6px;padding:0"/>
-            <span style="font-size:0.8rem;color:var(--muted)">Used for highlights throughout the app</span>
+      <!-- Content panels -->
+      <div class="account-content">
+        <div class="account-view">
+          <!-- Profile -->
+          <div id="acct-panel-profile">
+            <div class="page-title" style="font-size:1.4rem;margin-bottom:4px">Profile</div>
+            <div class="page-sub" style="margin-bottom:24px">Your name and personal details.</div>
+            <div class="account-section">
+              <div class="account-field"><div class="account-label">Your Name</div><input class="account-input" id="acct-ptname" type="text" placeholder="e.g. Jake West"/></div>
+              <div class="account-field"><div class="account-label">About Me</div><textarea class="account-input" id="acct-about" rows="4" placeholder="Short bio shown on your account page…" style="resize:vertical"></textarea></div>
+              <div class="account-field"><div class="account-label">Currency</div>
+                <select class="account-input" id="acct-currency" style="width:auto">
+                  <option value="GBP">£ GBP</option>
+                  <option value="USD">$ USD</option>
+                  <option value="EUR">€ EUR</option>
+                  <option value="AUD">A$ AUD</option>
+                  <option value="CAD">C$ CAD</option>
+                </select>
+              </div>
+              <button class="btn-sm" onclick="saveAccount()">Save Profile</button>
+            </div>
+          </div>
+          <!-- Branding -->
+          <div id="acct-panel-branding" class="hidden">
+            <div class="page-title" style="font-size:1.4rem;margin-bottom:4px">Branding</div>
+            <div class="page-sub" style="margin-bottom:24px">Customise how your workspace looks.</div>
+            <div class="account-section">
+              <div class="account-field"><div class="account-label">Business Name</div><input class="account-input" id="acct-biz" type="text" placeholder="e.g. West Performance"/></div>
+              <div class="account-field">
+                <div class="account-label">Logo — Dark Background</div>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                  <label style="cursor:pointer;display:flex;align-items:center;gap:8px">
+                    <div id="logo-dark-preview" style="width:48px;height:48px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface2)"><span style="font-size:1.2rem">🖼</span></div>
+                    <span class="btn-xs">Upload</span>
+                    <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(event,'dark')"/>
+                  </label>
+                  <button class="btn-ghost" style="font-size:0.75rem" onclick="removeLogo('dark')">Remove</button>
+                  <span style="font-size:0.78rem;color:var(--muted)">Shown in the app nav (dark theme)</span>
+                </div>
+              </div>
+              <div class="account-field">
+                <div class="account-label">Logo — Light Background</div>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                  <label style="cursor:pointer;display:flex;align-items:center;gap:8px">
+                    <div id="logo-light-preview" style="width:48px;height:48px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff"><span style="font-size:1.2rem">🖼</span></div>
+                    <span class="btn-xs">Upload</span>
+                    <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(event,'light')"/>
+                  </label>
+                  <button class="btn-ghost" style="font-size:0.75rem" onclick="removeLogo('light')">Remove</button>
+                  <span style="font-size:0.78rem;color:var(--muted)">Used on printed/exported outputs</span>
+                </div>
+              </div>
+              <div class="account-field"><div class="account-label">Accent Colour</div>
+                <div style="display:flex;align-items:center;gap:12px">
+                  <input type="color" id="acct-color" style="width:44px;height:36px;border:none;background:none;cursor:pointer;border-radius:6px;padding:0"/>
+                  <span style="font-size:0.8rem;color:var(--muted)">Used for highlights throughout the app</span>
+                </div>
+              </div>
+              <button class="btn-sm" onclick="saveBranding()">Save Branding</button>
+            </div>
+          </div>
+          <!-- Session Library -->
+          <div id="acct-panel-sessions" class="hidden">
+            <div class="page-title" style="font-size:1.4rem;margin-bottom:4px">Session Library</div>
+            <div class="page-sub" style="margin-bottom:24px">Global session templates assignable to any client.</div>
+            <div class="account-section">
+              <div id="acct-sessions"></div>
+            </div>
+          </div>
+          <!-- Program Library -->
+          <div id="acct-panel-programs" class="hidden">
+            <div class="page-title" style="font-size:1.4rem;margin-bottom:4px">Program Library</div>
+            <div class="page-sub" style="margin-bottom:24px">Reusable multi-week training blocks you can assign to any client.</div>
+            <div class="account-section">
+              <div id="acct-programs"></div>
+            </div>
+          </div>
+          <!-- Notifications -->
+          <div id="acct-panel-notif" class="hidden">
+            <div class="page-title" style="font-size:1.4rem;margin-bottom:4px">Notifications</div>
+            <div class="page-sub" style="margin-bottom:24px">Event reminders and alerts.</div>
+            <div class="account-section">
+              <div class="account-field">
+                <div class="notif-toggle">
+                  <input type="checkbox" id="acct-notif-on"/>
+                  <label for="acct-notif-on" style="font-size:0.85rem;cursor:pointer">Enable event reminders</label>
+                </div>
+                <div id="acct-notif-status" style="font-size:0.75rem;margin-top:4px;color:var(--muted)"></div>
+              </div>
+              <div class="account-field">
+                <div class="account-label">Remind me (days before)</div>
+                <input class="account-input" id="acct-notif-days" type="number" min="0" max="14" placeholder="1" style="width:80px"/>
+              </div>
+              <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Reminders fire when you open the app. Keep the tab open for same-day alerts.</div>
+              <button class="btn-sm" onclick="saveNotifSettings()">Save</button>
+            </div>
+          </div>
+          <!-- Data -->
+          <div id="acct-panel-data" class="hidden">
+            <div class="page-title" style="font-size:1.4rem;margin-bottom:4px">Data</div>
+            <div class="page-sub" style="margin-bottom:24px">Backup, restore, and storage usage.</div>
+            <div class="account-section">
+              <div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px">Export a full backup of all clients and settings as a JSON file. Import to restore.</div>
+              <div id="acct-ls-usage" style="font-size:0.75rem;color:var(--muted);margin-bottom:12px"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn-sm" onclick="exportData()">⬇ Export Backup</button>
+                <label class="btn-ghost" style="cursor:pointer;font-size:0.82rem;padding:6px 14px">⬆ Import Backup<input type="file" accept=".json" style="display:none" onchange="importData(event)"/></label>
+              </div>
+            </div>
           </div>
         </div>
-        <button class="btn-sm" onclick="saveAccentColor()">Apply Colour</button>
-      </div>
-      <div class="account-section">
-        <div class="account-section-title">Data</div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px">Export a full backup of all clients and settings as a JSON file. Import to restore.</div>
-        <div id="acct-ls-usage" style="font-size:0.75rem;color:var(--muted);margin-bottom:12px"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-sm" onclick="exportData()">⬇ Export Backup</button>
-          <label class="btn-ghost" style="cursor:pointer;font-size:0.82rem;padding:6px 14px">⬆ Import Backup<input type="file" accept=".json" style="display:none" onchange="importData(event)"/></label>
-        </div>
-      </div>
-      <div class="account-section">
-        <div class="account-section-title">Notifications</div>
-        <div class="account-field">
-          <div class="notif-toggle">
-            <input type="checkbox" id="acct-notif-on"/>
-            <label for="acct-notif-on" style="font-size:0.85rem;cursor:pointer">Enable event reminders</label>
-          </div>
-          <div id="acct-notif-status" style="font-size:0.75rem;margin-top:4px;color:var(--muted)"></div>
-        </div>
-        <div class="account-field">
-          <div class="account-label">Remind me (days before)</div>
-          <input class="account-input" id="acct-notif-days" type="number" min="0" max="14" placeholder="1" style="width:80px"/>
-        </div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Reminders fire when you open the app. Keep the tab open for same-day alerts.</div>
-        <button class="btn-sm" onclick="saveNotifSettings()">Save</button>
-      </div>
-      <div class="account-section">
-        <div class="account-section-title">Program Library</div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:14px">Reusable multi-week training blocks you can assign to any client.</div>
-        <div id="acct-programs"></div>
       </div>
     </div>
   </div>
@@ -698,6 +802,7 @@ let weightLogExpanded = false;
 let collapsedMonths = new Set();
 let perfEditId = null;
 let bioEdit = false;
+let measOpen = false;
 let macroEdit = false;
 let goalForm = false;
 let expandedGoalId = null;
@@ -705,8 +810,12 @@ let collapsedMsGoals = new Set();
 let expandedMilestones = new Set();
 let editGoalId = null;
 let dashLetterFilter = '';
+let dashSortAsc = true;
+let dashSortField = 'name';   // name | change | session
+let dashFilter = 'all';       // all | losing | gaining | no-goal | today
 let wbNewExMuscles = [];
 let wbExpandedSession = null;
+let wbEditSessionId = null;
 let measureEditId = null;
 let comparePhotos = [];
 let nutritionFormOpen = false;
@@ -719,6 +828,7 @@ let commFormOpen = false;
 let progFormOpen = false;
 let progEditId = null;
 let progSlots = [];
+let sessions = []; // global session library
 let progAssignCid = null;
 let progAssignProgId = null;
 
@@ -730,6 +840,10 @@ function save() {
   localStorage.setItem('pthub_c', JSON.stringify(clients));
   localStorage.setItem('pthub_s', JSON.stringify(settings));
   localStorage.setItem('pthub_p', JSON.stringify(programs));
+  localStorage.setItem('pthub_sess', JSON.stringify(sessions));
+}
+function clientSessions(c) {
+  return sessions.filter(s => (c.assignedSessionIds||[]).includes(s.id));
 }
 
 function boot() {
@@ -739,12 +853,26 @@ function boot() {
   if (sp) programs = JSON.parse(sp);
   if (ss) settings = { ...settings, ...JSON.parse(ss) };
   if (!Array.isArray(settings.notifiedEvents)) settings.notifiedEvents = [];
+  const storedSess = localStorage.getItem('pthub_sess');
+  if (storedSess) sessions = JSON.parse(storedSess);
   const stored = sc ? JSON.parse(sc).map(migrate) : [];
   const storedIds = new Set(stored.map(c => c.id));
   // merge: keep all stored clients, add any DEMO clients not yet present
   clients = stored.length
     ? [...stored, ...DEMO.map(migrate).filter(c => !storedIds.has(c.id))]
     : DEMO.map(migrate);
+  // migrate per-client templates to global session library
+  let migrated = false;
+  clients.forEach(c => {
+    if (!c.assignedSessionIds) {
+      c.assignedSessionIds = [];
+      (c.templates||[]).forEach(t => {
+        if (!sessions.find(s => s.id === t.id)) sessions.push({ ...t });
+        if (!c.assignedSessionIds.includes(t.id)) c.assignedSessionIds.push(t.id);
+      });
+      migrated = true;
+    }
+  });
   purgeTrash();
   save();
   const ub = document.getElementById('unit-btn'); if(ub) ub.textContent = settings.unit;
@@ -799,6 +927,7 @@ function migrate(c) {
     c.noteEntries = c.notes ? [{ id: String(uid()), date: localDate(), text: c.notes, category: 'General' }] : [];
   }
   if (!c.templates) c.templates = [];
+  if (!c.assignedSessionIds) c.assignedSessionIds = [];
   c.templates.forEach(t => (t.exercises||[]).forEach(ex => {
     if (!ex.muscleGroups) ex.muscleGroups = [];
     if (ex.oneRM === undefined) ex.oneRM = null;
@@ -858,9 +987,8 @@ function distTabs() {
 function setDistUnit(u) { settings.distUnit=u; save(); renderClient(find(activeId)); }
 function fmtPace(distKm, timeStr) {
   if (!distKm || !timeStr) return '—';
-  const p = timeStr.split(':').map(Number);
-  const secs = (p[0]||0)*3600 + (p[1]||0)*60 + (p[2]||0);
-  if (!secs || !distKm) return '—';
+  const secs = timeToSecs(timeStr);
+  if (!secs || secs === Infinity) return '—';
   const dist = settings.distUnit==='mi' ? distKm*MI_PER_KM : distKm;
   const paceS = secs / dist;
   const m = Math.floor(paceS/60);
@@ -870,9 +998,8 @@ function fmtPace(distKm, timeStr) {
 function fmtPaceEx(distKm, timeStr, u) {
   if (!distKm || !timeStr) return '—';
   if (u === 'yd' || u === 'ft') return '—';
-  const p = timeStr.split(':').map(Number);
-  const secs = (p[0]||0)*3600 + (p[1]||0)*60 + (p[2]||0);
-  if (!secs) return '—';
+  const secs = timeToSecs(timeStr);
+  if (!secs || secs === Infinity) return '—';
   // For metres, show pace per 500m (rowing standard)
   const paceDistKm = u === 'm' ? 0.5 : (DIST_TO_KM[u]||DIST_TO_KM.km)(1);
   const paceS = secs / (distKm / paceDistKm);
@@ -883,9 +1010,8 @@ function fmtPaceEx(distKm, timeStr, u) {
 }
 function fmtPaceFixed(distKm, timeStr, targetKm) {
   if (!distKm || !timeStr) return '—';
-  const p = timeStr.split(':').map(Number);
-  const secs = (p[0]||0)*3600 + (p[1]||0)*60 + (p[2]||0);
-  if (!secs) return '—';
+  const secs = timeToSecs(timeStr);
+  if (!secs || secs === Infinity) return '—';
   const paceS = secs / (distKm / targetKm);
   const m = Math.floor(paceS/60);
   const s = String(Math.round(paceS%60)).padStart(2,'0');
@@ -929,7 +1055,13 @@ function getPB(ex) {
   const w = ex.entries.filter(e => e.weight > 0);
   return w.length ? w.reduce((b,e) => e.weight > b.weight ? e : b, w[0]) : null;
 }
-function timeToSecs(t) { if(!t) return Infinity; const p=t.split(':').map(Number); return (p[0]||0)*3600+(p[1]||0)*60+(p[2]||0); }
+function timeToSecs(t) {
+  if (!t) return Infinity;
+  const p = t.split(':').map(Number);
+  if (p.length === 3) return (p[0]||0)*3600 + (p[1]||0)*60 + (p[2]||0);
+  if (p.length === 2) return (p[0]||0)*60 + (p[1]||0);
+  return p[0]||0;
+}
 function fmtPB(ex) {
   const pb = getPB(ex);
   if (!pb) return '';
@@ -946,6 +1078,10 @@ let wbLogTemplateId = null;    // template selected for logging
 let wbExSets = {};             // { exId: [{reps,weight,rest}] } for active form
 let wbNewEx = false;           // add-exercise form open in template editor
 let wbNewExType = 'strength';
+let wbCDistUnit = 'km';        // distance unit for cardio exercise sets in builder
+let wbCIntensityMode = 'pace'; // 'pace' | 'hr' toggle for cardio target intensity field
+let wbCSetMode = 'duration';   // 'duration' | 'distance' — cardio set input mode
+let wbCPaceUnit = '500m';      // '500m' | '1km' — pace reference unit (distance mode only)
 let wbNewExName = '';          // preserve name across re-renders
 let wbSetAdded = false;        // whether "Add Set" has been clicked (reveals rest of form)
 let wbEditExId = null;         // exercise id being edited (null = new)
@@ -954,6 +1090,10 @@ let wbSetTimed = false;        // current set form: timed mode
 let wbSetAmrap = false;        // current set form: AMRAP mode
 let wbSetEffortType = 'rpe';   // 'rpe' | 'rir'
 let wbExOneRM = '';            // current exercise 1RM (for % intensity hints)
+// preserved new-set form values across toggle re-renders
+let wbCurRepsMin='', wbCurRepsMax='', wbCurRepsL='', wbCurRepsR='';
+let wbCurWeight='', wbCurIMin='', wbCurIMax='', wbCurEMin='', wbCurEMax='';
+let wbCurRest='', wbCurRestMax='', wbCurTempo='', wbCurCd='', wbCurTime='', wbCurNotes='';
 let wbProgressExpanded = new Set(); // exercise names expanded in Progress tab
 
 // ── Dashboard ──
@@ -966,6 +1106,11 @@ function updateSearchDropdown(val) {
   if (!matches.length) { dd.classList.add('hidden'); return; }
   dd.innerHTML = matches.map(c => `<div class="search-dd-item" onmousedown="showClient(${c.id})">${c.first} ${c.last}</div>`).join('');
   dd.classList.remove('hidden');
+}
+function dashSortClientList(field, defaultAsc) {
+  if (dashSortField === field) { dashSortAsc = !dashSortAsc; }
+  else { dashSortField = field; dashSortAsc = defaultAsc; }
+  renderDashboard();
 }
 function renderDashboard(filter='') {
   const fl = filter.toLowerCase();
@@ -1067,14 +1212,36 @@ function renderDashboard(filter='') {
     <div class="dash-section-title">Recently Viewed</div>
     <div class="recent-grid">${recentClients.map(clientCard).join('')}</div>` : '';
 
-  // All clients alphabetical, filtered by search + letter
-  const sorted = [...visible].sort((a,b)=>`${a.last}${a.first}`.localeCompare(`${b.last}${b.first}`));
-  const byLetter = dashLetterFilter ? sorted.filter(c => (c.last[0]||'').toUpperCase() === dashLetterFilter) : sorted;
+  // Quick filter
+  const dashTodayStr = localDate();
+  const hasSessionToday = c => (c.events||[]).some(e => e.date === dashTodayStr && (e.type==='session'||e.type==='workout'));
+  const filterFn = {
+    all:      ()  => true,
+    losing:   c   => { const ch=chKg(c); return ch!==null && ch<0; },
+    gaining:  c   => { const ch=chKg(c); return ch!==null && ch>0; },
+    'no-goal':c   => !c.goals.some(g=>!g.done),
+    today:    c   => hasSessionToday(c),
+  }[dashFilter] || (()=>true);
 
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const azBar = `<div class="az-filter">${letters.map(l =>
-    `<button class="az-btn${dashLetterFilter===l?' active':''}" onclick="dashLetterFilter=dashLetterFilter==='${l}'?'':'${l}';renderDashboard()">${l}</button>`
-  ).join('')}</div>`;
+  const filtered = visible.filter(filterFn);
+
+  // Sort
+  const lastSessionDate = c => (c.sessions||[]).reduce((best,s)=>s.date>best?s.date:best,'');
+  const sortFns = {
+    name:    (a,b) => `${a.last}${a.first}`.localeCompare(`${b.last}${b.first}`),
+    change:  (a,b) => (chKg(a)??-Infinity) - (chKg(b)??-Infinity),
+    session: (a,b) => lastSessionDate(a).localeCompare(lastSessionDate(b)),
+  };
+  const sorted = [...filtered].sort((a,b) => {
+    const cmp = (sortFns[dashSortField]||sortFns.name)(a,b);
+    return dashSortAsc ? cmp : -cmp;
+  });
+
+  const azBar = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">'
+    + '<button class="az-btn' + (dashSortAsc?' active':'') + '" onclick="dashSortAsc=true;renderDashboard()" style="padding:4px 10px;font-size:0.73rem">A → Z</button>'
+    + '<button class="az-btn' + (!dashSortAsc?' active':'') + '" onclick="dashSortAsc=false;renderDashboard()" style="padding:4px 10px;font-size:0.73rem">Z → A</button>'
+    + '</div>';
+  const byLetter = sorted;
 
   const listHtml = byLetter.length ? `
     <div class="client-list-wrap">
@@ -1133,7 +1300,7 @@ function programsPanel(c) {
     const progOptions = programs.map(p => '<option value="' + p.id + '"' + (progAssignProgId===p.id?' selected':'') + '>' + p.name + ' (' + p.weeks + ' wks)</option>').join('');
     const prog = programs.find(p => p.id === progAssignProgId);
     const slotMapHtml = prog ? prog.slots.map(s => {
-      const templateOptions = '<option value="">Free session</option>' + (c.templates||[]).map(t => '<option value="' + t.id + '">' + t.name + '</option>').join('');
+      const templateOptions = '<option value="">Free session</option>' + clientSessions(c).map(t => '<option value="' + t.id + '">' + t.name + '</option>').join('');
       return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">'
         + '<span style="font-size:0.78rem;min-width:80px;color:var(--muted)">' + DAY_LABELS[s.day] + ' – ' + s.label + '</span>'
         + '<select id="prog-slot-tpl-' + s.id + '" style="flex:1">' + templateOptions + '</select>'
@@ -1145,7 +1312,7 @@ function programsPanel(c) {
       + '<select id="prog-assign-prog" style="width:100%" onchange="progAssignProgId=parseInt(this.value)||null;renderClient(find(' + c.id + '))">' + (progOptions||'<option value="">No programs — create one in Account</option>') + '</select>'
       + '<input id="prog-assign-start" type="date" value="' + localDate() + '" style="width:180px"/>'
       + '</div>'
-      + (slotMapHtml ? '<div style="font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:6px">Map sessions to templates</div>' + slotMapHtml : '')
+      + (slotMapHtml ? '<div style="font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:6px">Map slots to sessions</div>' + slotMapHtml : '')
       + '<div style="display:flex;gap:8px;margin-top:8px">'
       + '<button class="btn-sm" onclick="progDoAssign(' + c.id + ')">Assign & Generate Events</button>'
       + '<button class="btn-ghost" onclick="progAssignCid=null;progAssignProgId=null;renderClient(find(' + c.id + '))">Cancel</button>'
@@ -1179,7 +1346,7 @@ function progDoAssign(cid) {
       const dayNum = DAY_NUMS[slot.day];
       const base = new Date(startDate + 'T12:00:00');
       const firstDay = new Date(base); firstDay.setDate(base.getDate() + ((dayNum - base.getDay() + 7) % 7) + w * 7);
-      const tpl = slotTemplates[slot.id] ? (c.templates||[]).find(t => t.id === slotTemplates[slot.id]) : null;
+      const tpl = slotTemplates[slot.id] ? clientSessions(c).find(t => t.id === slotTemplates[slot.id]) : null;
       c.events.push({ id: uid(), title: (tpl ? tpl.name : slot.label), date: localDate(firstDay), type: 'session', time: '', duration: null });
       eventsAdded++;
     }
@@ -1210,7 +1377,7 @@ function renderClient(c) {
   const _age = calcAge(c.dob) ?? c.age;
   document.getElementById('ph-sub').textContent  = `${_age ? _age+' years old' : 'Age unknown'} · ${c.sex} · ${c.height ? c.height+' cm' : 'Height unknown'}`;
   document.getElementById('profile-body').innerHTML =
-    bioPanel(c) + goalsPanel(c) + eventsPanel(c) + notesPanel(c) + weightPanel(c) + measurementsPanel(c) + macrosPanel(c) + workoutPanel(c) + perfPanel(c) + programsPanel(c) + creditsPanel(c) + invoicesPanel(c) + commLogPanel(c);
+    goalsPanel(c) + weightPanel(c) + programsPanel(c) + workoutPanel(c) + workoutLoggerPanel(c) + perfPanel(c) + bioPanel(c) + notesPanel(c) + macrosPanel(c) + eventsPanel(c) + creditsPanel(c) + invoicesPanel(c) + commLogPanel(c);
   buildChart(c);
   document.getElementById('wd').value = new Date().toISOString().split('T')[0];
   const restoreScroll = () => {
@@ -1287,6 +1454,17 @@ function bioPanel(c) {
           }).join('')}
           <div class="photo-add" onclick="triggerPhotoUpload(${c.id},'bio',null)">📷<span style="font-size:0.62rem;margin-top:2px">Add</span></div>
         </div>
+      </div>
+      <!-- Body Measurements collapsible -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="measOpen=!measOpen;renderClient(find(activeId))">
+          <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Body Measurements</span>
+          <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
+            <div class="unit-tabs"><button class="unit-tab${measUnit()==='cm'?' active':''}" onclick="settings.measureUnit='cm';save();renderClient(find(activeId))">cm</button><button class="unit-tab${measUnit()==='in'?' active':''}" onclick="settings.measureUnit='in';save();renderClient(find(activeId))">in</button></div>
+          </div>
+          <span style="font-size:0.7rem;color:var(--muted)">${measOpen ? '▲' : '▼'}</span>
+        </div>
+        ${measOpen ? measurementsBody(c) : ''}
       </div>
     </div>`;
 }
@@ -2033,7 +2211,7 @@ function exRows(c, exList) {
     const isCardio = ex.type === 'cardio';
     const pbLabel = fmtPB(ex);
 
-    const du = settings.distUnit || 'km';
+    const du = isCardio ? (ex.distUnit || 'km') : 'km';
     const wu = settings.unitPerf || 'kg';
     const exDistVal  = km => km == null ? null : (DIST_FROM_KM[du]||DIST_FROM_KM.km)(km);
     const exWtVal    = kg => kg == null ? null : wu === 'lbs' ? Math.round(kg * KG_LBS * 10) / 10 : kg;
@@ -2048,7 +2226,7 @@ function exRows(c, exList) {
           <tr>
             <td>${inp(`pe-date-${e.id}`, e.date, '', '115px')}</td>
             <td>${inp(`pe-dist-${e.id}`, e.distance != null ? exDistVal(e.distance) : '', du, '60px')}</td>
-            <td>${inp(`pe-time-${e.id}`, e.time||'', '00:00:00', '85px')}</td>
+            <td><input id="pe-time-${e.id}" type="text" value="${e.time||''}" placeholder="0:00:00" maxlength="9" onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="perfRtlTime(this,event)" style="background:var(--surface);border:1px solid var(--accent);border-radius:5px;color:var(--text);padding:3px 6px;font-size:0.8rem;font-family:inherit;width:85px"/></td>
             ${(du==='yd'||du==='ft') ? '' : '<td></td><td></td>'}
             <td>${inp(`pe-hr-${e.id}`, e.avgHr||'', 'bpm', '55px')}</td>
             <td></td>
@@ -2108,7 +2286,7 @@ function exRows(c, exList) {
       <div class="add-entry-form">
         <input type="date" id="ed-${ex.id}" value="${localDate()}" style="width:125px"/>
         <input type="number" id="edist-${ex.id}" placeholder="Dist (${du})" step="${distStep}" style="width:95px"/>
-        <input type="text" id="etime-${ex.id}" placeholder="HH:MM:SS" style="width:110px"/>
+        <input type="text" id="etime-${ex.id}" placeholder="0:00:00" maxlength="9" onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="perfRtlTime(this,event)" style="width:110px"/>
         <input type="number" id="ehr-${ex.id}" placeholder="HR (bpm)" style="width:90px"/>
         <button class="btn-sm" onclick="logEntry(${c.id},${ex.id})">Log</button>
       </div>` : `
@@ -2130,11 +2308,21 @@ function exRows(c, exList) {
         ${addForm}
       </div>` : '';
 
+    const exDistTabs = isCardio ? `<div class="unit-tabs" style="gap:1px;margin-left:auto" onclick="event.stopPropagation()">
+      <button class="unit-tab${du==='km'?' active':''}" onclick="setExUnit(${c.id},${ex.id},'km')">km</button>
+      <button class="unit-tab${du==='m'?' active':''}" onclick="setExUnit(${c.id},${ex.id},'m')">m</button>
+      <span style="width:1px;background:var(--border);align-self:stretch;margin:4px 3px"></span>
+      <button class="unit-tab${du==='mi'?' active':''}" onclick="setExUnit(${c.id},${ex.id},'mi')">mi</button>
+      <button class="unit-tab${du==='yd'?' active':''}" onclick="setExUnit(${c.id},${ex.id},'yd')">yd</button>
+      <button class="unit-tab${du==='ft'?' active':''}" onclick="setExUnit(${c.id},${ex.id},'ft')">ft</button>
+    </div>` : '';
+
     return `
       <div class="perf-exercise${isCardio?' cardio':''}">
         <div class="perf-header" onclick="toggleEx(${c.id},${ex.id})">
           <div class="perf-name">${ex.name}</div>
           ${pbLabel ? `<span class="perf-pb-label${isCardio?' cardio-pb':''}">${pbLabel}</span>` : ''}
+          ${exDistTabs}
           <span class="perf-chevron${open?' open':''}">▼</span>
           <span class="perf-del-btn" onclick="event.stopPropagation();delEx(${c.id},${ex.id})">×</span>
         </div>
@@ -2171,7 +2359,6 @@ function perfPanel(c) {
     <div class="perf-section-header" style="margin-top:${strength.length?'18px':'0'}">
       <span class="perf-section-label" style="color:var(--cyan)">🏃 Cardio</span>
       <div class="perf-section-line"></div>
-      ${distToggle}
     </div>
     ${exRows(c, cardio)}` : '';
 
@@ -2200,7 +2387,7 @@ function logEntry(cid, exid) {
   const ex   = find(cid).performance.find(x=>x.id===exid);
   if (!date) { alert('Enter a date.'); return; }
   if (ex.type === 'cardio') {
-    const du = settings.distUnit || 'km';
+    const du = ex.distUnit || 'km';
     const distDisplay = parseFloat(document.getElementById(`edist-${exid}`)?.value);
     const time = document.getElementById(`etime-${exid}`)?.value.trim();
     const hr   = parseInt(document.getElementById(`ehr-${exid}`)?.value);
@@ -2225,7 +2412,7 @@ function savePerfEdit(cid, exid, eid) {
   const newDate = document.getElementById(`pe-date-${eid}`)?.value;
   if (newDate) e.date = newDate;
   if (ex.type === 'cardio') {
-    const du = settings.distUnit || 'km';
+    const du = ex.distUnit || 'km';
     const distDisplay = parseFloat(document.getElementById(`pe-dist-${eid}`)?.value);
     const time = document.getElementById(`pe-time-${eid}`)?.value.trim();
     const hr   = parseInt(document.getElementById(`pe-hr-${eid}`)?.value);
@@ -2264,7 +2451,7 @@ function delEx(cid, exid) {
 
 // ── Navigation ──
 function showDashboard() {
-  activeId=null; bioEdit=false; macroEdit=false; goalForm=false; eventFormOpen=false; calMonth=null; wbTab='templates'; wbEditTemplateId=null; wbNewTemplate=false; wbLogForm=false; wbLogTemplateId=null; wbExSets={}; wbNewEx=false; wbNewExName=''; wbSetAdded=false; wbEditExId=null; _wbSets=[]; wbSetUnilateral=false; wbSetTimed=false; wbSetAmrap=false; wbSetEffortType='rpe'; wbExOneRM=''; wbNewExMuscles=[]; wbProgressExpanded=new Set(); wbExpandedSession=null; expandedEx=null; weightEditId=null; perfEditId=null; weightLogExpanded=false; collapsedMonths=new Set(); expandedGoalId=null; editGoalId=null; collapsedMsGoals=new Set(); expandedMilestones=new Set(); nutritionFormOpen=false; nutritionLogExpanded=false; nutritionEditId=null; creditFormOpen=false; invoiceFormOpen=false; invoiceEditId=null; commFormOpen=false; progAssignCid=null; progAssignProgId=null;
+  activeId=null; bioEdit=false; macroEdit=false; goalForm=false; eventFormOpen=false; calMonth=null; wbTab='templates'; wbEditTemplateId=null; wbNewTemplate=false; wbLogForm=false; wbLogTemplateId=null; wbExSets={}; wbNewEx=false; wbNewExName=''; wbSetAdded=false; wbEditExId=null; _wbSets=[]; wbSetUnilateral=false; wbSetTimed=false; wbSetAmrap=false; wbSetEffortType='rpe'; wbExOneRM=''; wbNewExMuscles=[]; wbCurRepsMin=''; wbCurRepsMax=''; wbCurRepsL=''; wbCurRepsR=''; wbCurWeight=''; wbCurIMin=''; wbCurIMax=''; wbCurEMin=''; wbCurEMax=''; wbCurRest='2:00'; wbCurRestMax=''; wbCurTempo=''; wbCurCd=''; wbCurTime=''; wbProgressExpanded=new Set(); wbExpandedSession=null; expandedEx=null; weightEditId=null; perfEditId=null; weightLogExpanded=false; collapsedMonths=new Set(); expandedGoalId=null; editGoalId=null; collapsedMsGoals=new Set(); expandedMilestones=new Set(); nutritionFormOpen=false; nutritionLogExpanded=false; nutritionEditId=null; creditFormOpen=false; invoiceFormOpen=false; invoiceEditId=null; commFormOpen=false; progAssignCid=null; progAssignProgId=null;
   document.getElementById('view-dashboard').classList.remove('hidden');
   document.getElementById('view-client').classList.add('hidden');
   document.getElementById('view-account').classList.add('hidden');
@@ -2289,23 +2476,20 @@ const MUSCLE_GROUPS = [
   {id:'core',label:'Core'},{id:'calves',label:'Calves'},
 ];
 function wbToggleMuscle(m) {
+  wbNewExName = document.getElementById('wb-exname')?.value || wbNewExName;
+  wbFlushCurrentSetForm();
   const i = wbNewExMuscles.indexOf(m);
   if (i === -1) wbNewExMuscles.push(m); else wbNewExMuscles.splice(i, 1);
-  document.querySelectorAll('[data-mg="' + m + '"]').forEach(btn => {
-    const on = wbNewExMuscles.includes(m);
-    btn.classList.toggle('active', on);
-  });
+  renderClient(find(activeId));
 }
 function workoutPanel(c) {
   const tabs = `<div class="wb-tabs">
-    <button class="wb-tab${wbTab==='templates'?' active':''}" onclick="wbTab='templates';wbNewTemplate=false;wbEditTemplateId=null;renderClient(find(activeId))">Templates</button>
-    <button class="wb-tab${wbTab==='log'?' active':''}" onclick="wbTab='log';wbLogForm=false;renderClient(find(activeId))">Session Log</button>
+    <button class="wb-tab${wbTab==='templates'?' active':''}" onclick="wbTab='templates';wbNewTemplate=false;wbEditTemplateId=null;renderClient(find(activeId))">Sessions</button>
     <button class="wb-tab${wbTab==='progress'?' active':''}" onclick="wbTab='progress';renderClient(find(activeId))">My Progress</button>
   </div>`;
 
   if (wbTab === 'templates') return `<div class="panel col-8">${panelTitle('Workout Builder','var(--success)')}${tabs}${templatesTab(c)}</div>`;
-  if (wbTab === 'progress') return `<div class="panel col-8">${panelTitle('Workout Builder','var(--success)')}${tabs}${progressTab(c)}</div>`;
-  return `<div class="panel col-8">${panelTitle('Workout Builder','var(--success)')}${tabs}${sessionLogTab(c)}</div>`;
+  return `<div class="panel col-8">${panelTitle('Workout Builder','var(--success)')}${tabs}${progressTab(c)}</div>`;
 }
 
 function panelTitle(label, color) {
@@ -2315,31 +2499,32 @@ function panelTitle(label, color) {
 function templatesTab(c) {
   // Template editor
   if (wbEditTemplateId !== null) {
-    const t = c.templates.find(t=>t.id===wbEditTemplateId) || { id:wbEditTemplateId, name:'', exercises:[] };
+    const t = sessions.find(s=>s.id===wbEditTemplateId) || { id:wbEditTemplateId, name:'', exercises:[] };
     return templateEditor(c, t);
   }
 
   // New template form
   if (wbNewTemplate) {
     return `<div class="wb-add-ex-form">
-      <input id="wb-tname" type="text" placeholder="Template name (e.g. Push Day, Leg Day)" style="width:100%;margin-bottom:8px"/>
+      <input id="wb-tname" type="text" placeholder="Session name (e.g. Push Day, Leg Day)" style="width:100%;margin-bottom:8px"/>
       <div style="display:flex;gap:8px">
-        <button class="btn-sm" onclick="wbSaveNewTemplate(${c.id})">Create</button>
+        <button class="btn-sm" onclick="wbSaveNewTemplate(${c.id})">Create Session</button>
         <button class="btn-ghost" onclick="wbNewTemplate=false;renderClient(find(activeId))">Cancel</button>
       </div>
     </div>`;
   }
 
   // Template list
-  const list = c.templates.length
-    ? c.templates.map(t => {
+  const cSess = clientSessions(c);
+  const list = cSess.length
+    ? cSess.map(t => {
         const exCount = t.exercises.length;
         const summary = t.exercises.slice(0,3).map(e=>e.name).join(', ') + (exCount>3?` +${exCount-3} more`:'');
         return `<div class="wb-template-card">
           <div class="wb-template-name">
             ${t.name}
             <div style="display:flex;gap:6px">
-              <button class="btn-xs" onclick="wbTab='log';wbLogTemplateId=${t.id};wbLogForm=true;wbExSets={};renderClient(find(activeId))">Use</button>
+              <button class="btn-xs" onclick="wbLogTemplateId=${t.id};wbLogForm=true;wbExSets={};renderClient(find(activeId));setTimeout(()=>document.getElementById('wb-logger-panel')?.scrollIntoView({block:'start',behavior:'smooth'}),80)">Use</button>
               <button class="btn-xs" onclick="wbEditTemplateId=${t.id};wbNewEx=false;renderClient(find(activeId))">Edit</button>
               <button class="btn-xs" style="color:var(--danger)" onclick="wbDeleteTemplate(${c.id},${t.id})">✕</button>
             </div>
@@ -2347,9 +2532,9 @@ function templatesTab(c) {
           <div class="wb-template-meta">${exCount} exercise${exCount!==1?'s':''} · ${summary||'Empty'}</div>
         </div>`;
       }).join('')
-    : '<div style="color:var(--muted);font-size:0.82rem;font-style:italic;margin-bottom:12px">No templates yet — create your first one.</div>';
+    : '<div style="color:var(--muted);font-size:0.82rem;font-style:italic;margin-bottom:12px">No sessions yet — create your first one.</div>';
 
-  return `${list}<button class="btn-sm" onclick="wbNewTemplate=true;renderClient(find(activeId))">+ New Template</button>`;
+  return `${list}<button class="btn-sm" onclick="wbNewTemplate=true;renderClient(find(activeId))">+ New Session</button>`;
 }
 
 function templateEditor(c, t) {
@@ -2372,24 +2557,66 @@ function templateEditor(c, t) {
       if (ex.rest) chips.push(wbFmtRest(ex.rest)+' rest');
     }
 
-    // build per-set summary lines for new-format exercises
-    const setLines = (!isCardio && ex.sets?.length) ? ex.sets.map((s, si) => {
-      const parts = [];
-      if (s.unilateral) {
-        if (s.repsLeft || s.repsRight) parts.push(`L${s.repsLeft||0} · R${s.repsRight||0} reps`);
-      } else {
-        const mn = s.repsMin||0, mx = s.repsMax||0;
-        if (mn||mx) parts.push(mn===mx ? `${mn} reps` : `${mn}–${mx} reps`);
-      }
-      if (s.timed && s.time) parts.push(s.time);
-      if (s.weight) parts.push(`${s.weight} ${s.weightUnit||'kg'}`);
-      if (s.rest) parts.push(wbFmtRest(s.rest)+' rest');
-      if (s.rpe) parts.push('RPE '+s.rpe);
-      if (s.tempo) parts.push('Tempo '+s.tempo);
-      return `<div class="wb-ex-params-summary" style="margin-top:2px"><span class="wb-ex-param-chip" style="color:var(--text);min-width:38px">Set ${si+1}</span>${parts.map(p=>`<span class="wb-ex-param-chip">${p}</span>`).join('')}</div>`;
-    }).join('') : '';
+    // cardio template exercise: per-set summary table
+    const cardioSetLines = (isCardio && ex.sets?.length) ? (() => {
+      const sets = ex.sets;
+      const headers = ['Duration', 'Distance', 'Intensity / Pace', 'Rest'];
+      const thRow = '<tr><th></th>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+      const rows = sets.map((s, si) => {
+        const mn = s.restMin != null ? s.restMin : (s.rest || null);
+        const mx = s.restMax || null;
+        const restVal = !mn ? '' : (mx && mx !== mn) ? wbFmtRest(mn)+'–'+wbFmtRest(mx) : wbFmtRest(mn);
+        const distVal = s.distance ? `${s.distance} ${s.distUnit||'km'}` : '';
+        const hasNotes = !!s.notes;
+        const notesId = `wb-tbl-notes-${ex.id}-${si}`;
+        const notesTr = hasNotes ? `<tr id="${notesId}"><td></td><td colspan="${headers.length}" style="font-size:0.7rem;color:var(--accent);padding:2px 0 6px;font-style:italic">↳ ${s.notes}</td></tr>` : '';
+        const notesToggle = hasNotes ? `<span style="cursor:pointer;color:var(--muted);font-size:0.65rem;margin-left:4px" onclick="const r=document.getElementById('${notesId}');if(r){const show=r.style.display==='none';r.style.display=show?'':'none';this.textContent=show?'▼':'▶'}">▼</span>` : '';
+        const paceVal = s.intensity ? (s.intensityMax && s.intensityMax !== s.intensity ? `${s.intensity} – ${s.intensityMax}` : s.intensity) : '';
+        return `<tr><td class="wb-set-num">Set ${si+1}${notesToggle}</td><td>${s.time||''}</td><td>${distVal}</td><td>${paceVal}</td><td>${restVal}</td></tr>${notesTr}`;
+      }).join('');
+      return `<table class="wb-set-tbl"><thead>${thRow}</thead><tbody>${rows}</tbody></table>`;
+    })() : '';
 
-    const chipsHtml = (chips.length ? `<div class="wb-ex-params-summary">${chips.map(ch=>`<span class="wb-ex-param-chip">${ch}</span>`).join('')}</div>` : '') + setLines;
+    // build per-set summary table for new-format exercises
+    const setLines = (!isCardio && ex.sets?.length) ? (() => {
+      const sets = ex.sets;
+      const efLabel = (sets.find(s=>s.effortType)?.effortType || 'rpe').toUpperCase();
+      const hasTimed = sets.some(s => s.timed && s.time);
+      const headers = ['Reps', ...(hasTimed ? ['Time'] : []), 'Weight', 'Rest', '%1RM', efLabel, 'Tempo', 'CD (s)'];
+      const thRow = '<tr><th></th>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+      const rows = sets.map((s, si) => {
+        const mn = s.restMin != null ? s.restMin : (s.rest || null);
+        const mx = s.restMax || null;
+        const restVal = !mn ? '' : (mx && mx !== mn) ? wbFmtRest(mn)+'–'+wbFmtRest(mx) : wbFmtRest(mn);
+        const repsVal = s.amrap ? 'AMRAP'
+          : s.unilateral ? (s.repsLeft||s.repsRight ? `L${s.repsLeft||0}·R${s.repsRight||0}` : '')
+          : (s.repsMin||s.repsMax) ? (s.repsMin===s.repsMax ? `${s.repsMin}` : `${s.repsMin||0}–${s.repsMax||0}`) : '';
+        const intVal  = (s.intensityMin||s.intensityMax) ? `${s.intensityMin||''}${s.intensityMax?'–'+s.intensityMax:''}%` : '';
+        const efMin = s.effortMin!=null && s.effortMin!=='' ? s.effortMin : null;
+        const efMax = s.effortMax!=null && s.effortMax!=='' ? s.effortMax : null;
+        const efVal = efMin!=null ? (efMax!=null && efMax!==efMin ? `${efMin}–${efMax}` : `${efMin}`) : (efMax!=null ? `${efMax}` : '');
+        const orm = ex.oneRM || null;
+        const calcWeight = (!s.weight && orm && (s.intensityMin||s.intensityMax))
+          ? wbCalcWeight(orm, s.intensityMin||s.intensityMax) + ' ' + (s.weightUnit||'kg') + '*'
+          : '';
+        const weightVal = s.weight ? `${s.weight} ${s.weightUnit||'kg'}` : calcWeight;
+        const cells = [repsVal, ...(hasTimed ? [s.timed&&s.time?s.time:''] : []), weightVal, restVal, intVal, efVal, s.tempo||'', s.countdown||''];
+        const hasNotes = !!s.notes;
+        const notesId = `wb-tbl-notes-${ex.id}-${si}`;
+        const notesTr = hasNotes
+          ? `<tr id="${notesId}"><td></td><td colspan="${headers.length}" style="font-size:0.7rem;color:var(--accent);padding:2px 0 6px;font-style:italic">↳ ${s.notes}</td></tr>`
+          : '';
+        const notesToggle = hasNotes
+          ? `<span style="cursor:pointer;color:var(--muted);font-size:0.65rem;margin-left:4px" onclick="const r=document.getElementById('${notesId}');if(r){const show=r.style.display==='none';r.style.display=show?'':'none';this.textContent=show?'▼':'▶'}">▼</span>`
+          : '';
+        return `<tr><td class="wb-set-num">Set ${si+1}${notesToggle}</td>${cells.map(v=>`<td>${v}</td>`).join('')}</tr>${notesTr}`;
+      }).join('');
+      const hasCalc = sets.some(s => !s.weight && ex.oneRM && (s.intensityMin||s.intensityMax));
+      const legend = hasCalc ? '<div style="font-size:0.6rem;color:var(--muted);margin-top:3px">* calculated from 1RM</div>' : '';
+      return `<table class="wb-set-tbl"><thead>${thRow}</thead><tbody>${rows}</tbody></table>` + legend;
+    })() : '';
+
+    const chipsHtml = (chips.length ? `<div class="wb-ex-params-summary">${chips.map(ch=>`<span class="wb-ex-param-chip">${ch}</span>`).join('')}</div>` : '') + setLines + cardioSetLines;
 
     // Progression timeline: last 3 sessions containing this exercise
     const sessionsWithEx = (c.sessions||[])
@@ -2415,13 +2642,16 @@ function templateEditor(c, t) {
       <div style="display:flex;flex-direction:column;flex:1;gap:4px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="wb-ex-name">${ex.name}</span>
-          <span class="wb-ex-detail" style="color:${isCardio?'var(--cyan)':'var(--accent2)'}">${isCardio?'Cardio':'Strength'}</span>
           ${(ex.muscleGroups||[]).map(m => `<span style="font-size:0.62rem;font-weight:700;border-radius:4px;padding:1px 6px;background:var(--accent)15;border:1px solid var(--accent)40;color:var(--accent)">${m}</span>`).join('')}
         </div>
         ${chipsHtml}
         ${progHtml}
       </div>
-      <div style="display:flex;gap:4px;flex-shrink:0">
+      <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <button class="btn-xs" style="padding:1px 5px;font-size:0.6rem" onclick="wbMoveEx(${c.id},${t.id},${ex.id},-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="btn-xs" style="padding:1px 5px;font-size:0.6rem" onclick="wbMoveEx(${c.id},${t.id},${ex.id},1)" ${i===t.exercises.length-1?'disabled':''}>▼</button>
+        </div>
         <button class="btn-xs" onclick="wbOpenEditEx(${c.id},${t.id},${ex.id})">✎</button>
         <button class="btn-xs" style="color:var(--danger)" onclick="wbRemoveEx(${c.id},${t.id},${ex.id})">✕</button>
       </div>
@@ -2435,6 +2665,41 @@ function templateEditor(c, t) {
 
   // render a saved set row (already in _wbSets)
   function wbSetRow(s, i) {
+    if (s.cardio) {
+      const restMinVal = s.restMin != null ? wbFmtRest(s.restMin) : (s.rest ? wbFmtRest(s.rest) : '2:00');
+      const restMaxVal = s.restMax ? wbFmtRest(s.restMax) : '';
+      function cc(label, inputHtml) {
+        return '<div style="display:flex;flex-direction:column;gap:3px">'
+          + '<span style="font-size:0.62rem;color:var(--muted);white-space:nowrap">' + label + '</span>'
+          + inputHtml + '</div>';
+      }
+      const du = s.distUnit || wbCDistUnit || 'km';
+      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        + '<span style="font-size:0.72rem;font-weight:700;color:var(--text);letter-spacing:0.03em">Set ' + (i+1) + '</span>'
+        + '<button class="btn-xs" style="color:var(--danger)" onclick="wbDeleteSet(' + i + ')">✕</button></div>'
+        + '<div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">'
+        + (s.setMode==='distance'
+            ? '<div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;align-items:center;gap:4px"><span style="font-size:0.62rem;color:var(--muted)">Distance</span><span style="font-size:0.6rem;color:var(--accent)">' + du + '</span></div><input class="wb-param-mini" id="wb-s' + i + '-cdist" type="text" value="' + (s.distance||'') + '" placeholder="—" style="width:60px"/></div>'
+            : cc('Duration', '<input class="wb-param-mini" id="wb-s' + i + '-cdur" type="text" value="' + (s.time||'') + '" placeholder="0:00:00" maxlength="9" onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,\'\')" onkeydown="perfRtlTime(this,event)" style="width:90px"/>'))
+        + (function(){
+            const iLabel = s.intensityMode==='hr' ? 'Target HR' : ('Target Pace' + (s.setMode==='distance' && s.paceUnit ? ' /' + s.paceUnit : ''));
+            const iInputs = s.intensityMode==='hr'
+              ? '<input class="wb-param-mini" id="wb-s' + i + '-cintensity" type="text" value="' + (s.intensity||'').replace(/"/g,'&quot;') + '" placeholder="e.g. 140" style="width:70px"/><span style="font-size:0.65rem;color:var(--muted)">–</span><input class="wb-param-mini" id="wb-s' + i + '-cintensity-max" type="text" value="' + (s.intensityMax||'').replace(/"/g,'&quot;') + '" placeholder="e.g. 160" style="width:70px"/>'
+              : '<input class="wb-param-mini" id="wb-s' + i + '-cintensity" type="text" value="' + (s.intensity||'').replace(/"/g,'&quot;') + '" placeholder="0:00:00" maxlength="9" onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,\'\')" onkeydown="perfRtlTime(this,event)" style="width:80px"/><span style="font-size:0.65rem;color:var(--muted)">–</span><input class="wb-param-mini" id="wb-s' + i + '-cintensity-max" type="text" value="' + (s.intensityMax||'').replace(/"/g,'&quot;') + '" placeholder="0:00:00" maxlength="9" onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,\'\')" onkeydown="perfRtlTime(this,event)" style="width:80px"/>';
+            return '<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:0.62rem;color:var(--muted)">' + iLabel + '</span><div style="display:flex;align-items:center;gap:4px">' + iInputs + '</div></div>';
+          })()
+        + '<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:0.62rem;color:var(--muted);white-space:nowrap">Rest</span>'
+        + '<div style="display:flex;align-items:center;gap:3px">'
+        + '<input class="wb-param-mini" id="wb-s' + i + '-rest" type="text" value="' + restMinVal + '" placeholder="2:00" maxlength="5" style="width:50px"/>'
+        + '<span style="font-size:0.65rem;color:var(--muted)">–</span>'
+        + '<input class="wb-param-mini" id="wb-s' + i + '-rest-max" type="text" value="' + restMaxVal + '" placeholder="—" maxlength="5" style="width:50px"/>'
+        + '</div></div>'
+        + '</div>'
+        + '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+        + '<input type="text" id="wb-s' + i + '-notes" value="' + (s.notes||'').replace(/"/g,'&quot;') + '" placeholder="Notes (coaching cues, HR target, pace guidance…)" style="width:100%;font-size:0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text)"/>'
+        + '</div></div>';
+    }
     const uni = !!s.unilateral;
     const timed = !!s.timed;
     const amrap = !!s.amrap;
@@ -2470,14 +2735,21 @@ function templateEditor(c, t) {
       + '<span style="font-size:0.65rem;color:var(--muted)">–</span>'
       + '<input class="wb-param-mini" id="wb-s' + i + '-rest-max" type="text" value="' + restMaxVal + '" placeholder="—" maxlength="5" style="width:50px"/>'
       + '</div></div>';
-    // intensity % range
+    // intensity % range — with live weight hint if 1RM known
+    const ormVal = parseFloat(wbExOneRM) || null;
+    const iHint = (ormVal && (s.intensityMin||s.intensityMax))
+      ? '<span style="font-size:0.6rem;color:var(--accent);white-space:nowrap;margin-top:2px">'
+        + (s.intensityMin ? wbCalcWeight(ormVal, s.intensityMin) : '?')
+        + (s.intensityMax && s.intensityMax !== s.intensityMin ? '–' + wbCalcWeight(ormVal, s.intensityMax) : '')
+        + ' ' + (s.weightUnit || wu) + '</span>'
+      : '';
     const intCell = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
       + '<span style="font-size:0.62rem;color:var(--muted);white-space:nowrap">%1RM</span>'
       + '<div style="display:flex;align-items:center;gap:3px">'
-      + '<input class="wb-param-mini" id="wb-s' + i + '-imin" type="number" value="' + (s.intensityMin||'') + '" placeholder="—" style="width:46px"/>'
+      + '<input class="wb-param-mini" id="wb-s' + i + '-imin" type="number" value="' + (s.intensityMin||'') + '" placeholder="—" style="width:46px" oninput="wbFlushSetRows();renderClient(find(activeId))"/>'
       + '<span style="font-size:0.65rem;color:var(--muted)">–</span>'
-      + '<input class="wb-param-mini" id="wb-s' + i + '-imax" type="number" value="' + (s.intensityMax||'') + '" placeholder="—" style="width:46px"/>'
-      + '</div></div>';
+      + '<input class="wb-param-mini" id="wb-s' + i + '-imax" type="number" value="' + (s.intensityMax||'') + '" placeholder="—" style="width:46px" oninput="wbFlushSetRows();renderClient(find(activeId))"/>'
+      + '</div>' + iHint + '</div>';
     // effort range (RPE or RIR)
     const efLabel = effortType.toUpperCase();
     const effortCell = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
@@ -2489,8 +2761,8 @@ function templateEditor(c, t) {
       + '</div></div>';
     // header buttons
     const hdr = '<button class="btn-xs' + (amrap?' active':'') + '" onclick="wbToggleSetProp(' + i + ',\'amrap\')">AMRAP</button>'
-      + '<button class="btn-xs' + (uni?' active':'') + '" onclick="wbToggleSetProp(' + i + ',\'unilateral\')">⟺ Uni</button>'
-      + '<button class="btn-xs' + (timed?' active':'') + '" onclick="wbToggleSetProp(' + i + ',\'timed\')">⏱ Timed</button>'
+      + '<button class="btn-xs' + (uni?' active':'') + '" onclick="wbToggleSetProp(' + i + ',\'unilateral\')">Unilateral</button>'
+      + '<button class="btn-xs' + (timed?' active':'') + '" onclick="wbToggleSetProp(' + i + ',\'timed\')">Time / Duration</button>'
       + '<button class="btn-xs" style="font-size:0.65rem;padding:2px 5px" onclick="wbToggleSetEffortType(' + i + ')">' + efLabel + ' ↔</button>'
       + '<button class="btn-xs" style="color:var(--danger)" onclick="wbDeleteSet(' + i + ')">✕</button>';
     return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
@@ -2505,118 +2777,212 @@ function templateEditor(c, t) {
       + restCell + effortCell
       + cell('Tempo', '<input class="wb-param-mini" id="wb-s' + i + '-tempo" type="text" value="' + (s.tempo||'') + '" placeholder="—" maxlength="6" style="width:60px"/>')
       + cell('Countdown (s)', '<input class="wb-param-mini" id="wb-s' + i + '-cd" type="number" min="0" max="60" value="' + (s.countdown||'') + '" placeholder="—" style="width:60px"/>')
+      + '</div>'
+      + '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+      + '<input type="text" id="wb-s' + i + '-notes" value="' + (s.notes||'').replace(/"/g,'&quot;') + '" placeholder="Notes (optional cues, tempo guidance, technique…)" style="width:100%;font-size:0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text)"/>'
       + '</div></div>';
   }
 
   const savedSetsHtml = _wbSets.map((s,i) => wbSetRow(s, i)).join('');
 
-  // pre-computed HTML helpers for the new-set form (avoid deep template literal nesting)
-  const wbNewSetRepsRow = wbSetAmrap
-    ? '<div class="wb-param-row"><span class="wb-param-label">Reps</span><div class="wb-param-right"><span style="font-weight:700;color:var(--accent);font-size:0.85rem">AMRAP</span></div></div>'
-    : '<div class="wb-param-row"><span class="wb-param-label">Reps</span><div class="wb-param-right" style="gap:6px">'
-      + (wbSetUnilateral
-        ? '<span style="font-size:0.72rem;color:var(--muted)">L</span><input class="wb-param-mini" id="wb-rl" type="number" min="0" placeholder="0" style="width:46px"/><span class="wb-param-sep">·</span><span style="font-size:0.72rem;color:var(--muted)">R</span><input class="wb-param-mini" id="wb-rr" type="number" min="0" placeholder="0" style="width:46px"/>'
-        : '<input class="wb-param-mini" id="wb-rmin" type="number" min="1" placeholder="6" style="width:46px"/><span class="wb-param-sep">–</span><input class="wb-param-mini" id="wb-rmax" type="number" min="1" placeholder="10" style="width:46px"/>'
-      ) + '</div></div>';
-  const wbNewSetIntRow = '<div class="wb-param-row"><span class="wb-param-label">Intensity (%1RM)</span>'
-    + '<div class="wb-param-right" style="gap:4px;align-items:center">'
-    + '<input class="wb-param-mini" id="wb-imin" type="number" min="1" max="100" placeholder="Min" style="width:52px"/>'
-    + '<span style="color:var(--muted);font-size:0.8rem">–</span>'
-    + '<input class="wb-param-mini" id="wb-imax" type="number" min="1" max="100" placeholder="Max" style="width:52px"/>'
-    + '</div></div>';
+  // pre-computed cell helpers for the new-set card (cell = label above + input below)
+  function newCell(label, inputHtml) {
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+      + '<span style="font-size:0.62rem;color:var(--muted);white-space:nowrap">' + label + '</span>'
+      + inputHtml + '</div>';
+  }
   const _efLabel = wbSetEffortType.toUpperCase();
-  const wbNewSetEffortRow = '<div class="wb-param-row"><span class="wb-param-label">' + _efLabel + '</span>'
-    + '<div class="wb-param-right" style="gap:4px;align-items:center">'
-    + '<input class="wb-param-mini" id="wb-emin" type="number" step="0.5" min="0" max="10" placeholder="Min" style="width:52px"/>'
-    + '<span style="color:var(--muted);font-size:0.8rem">–</span>'
-    + '<input class="wb-param-mini" id="wb-emax" type="number" step="0.5" min="0" max="10" placeholder="Max" style="width:52px"/>'
+  const newSetRepsCell = wbSetAmrap
+    ? newCell('Reps', '<span style="font-weight:700;color:var(--accent);font-size:0.85rem;padding:4px 6px">AMRAP</span>')
+    : (wbSetUnilateral
+        ? newCell('Left',  '<input class="wb-param-mini" id="wb-rl"   type="number" min="0" placeholder="0"  value="' + wbCurRepsL + '" style="width:46px"/>')
+          + newCell('Right', '<input class="wb-param-mini" id="wb-rr"   type="number" min="0" placeholder="0"  value="' + wbCurRepsR + '" style="width:46px"/>')
+        : '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+          + '<span style="font-size:0.62rem;color:var(--muted)">Reps</span>'
+          + '<div style="display:flex;align-items:center;gap:3px">'
+          + '<input class="wb-param-mini" id="wb-rmin" type="number" min="1" placeholder="6"  value="' + wbCurRepsMin + '" style="width:46px"/>'
+          + '<span style="font-size:0.65rem;color:var(--muted)">–</span>'
+          + '<input class="wb-param-mini" id="wb-rmax" type="number" min="1" placeholder="10" value="' + wbCurRepsMax + '" style="width:46px"/>'
+          + '</div></div>'
+      );
+  const newSetTimedCell = newCell('Time', '<input class="wb-param-mini" id="wb-time" type="text" placeholder="0:00" maxlength="5" value="' + wbCurTime + '" style="width:56px"/>');
+  const newSetWeightCell = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+    + '<span style="font-size:0.62rem;color:var(--muted)">Weight</span>'
+    + '<div style="display:flex;align-items:center;gap:4px">'
+    + '<input class="wb-param-mini" id="wb-weight" type="text" placeholder="—" value="' + wbCurWeight + '" style="width:56px"/>'
+    + '<div class="unit-tabs" style="gap:2px">'
+    + '<button class="unit-tab' + (wu==='kg'?' active':'') + '" onclick="setSectionUnit(\'Perf\',\'kg\')">kg</button>'
+    + '<button class="unit-tab' + (wu==='lbs'?' active':'') + '" onclick="setSectionUnit(\'Perf\',\'lbs\')">lbs</button>'
+    + '</div></div></div>';
+  const newSetIntCell = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+    + '<span style="font-size:0.62rem;color:var(--muted)">%1RM</span>'
+    + '<div style="display:flex;align-items:center;gap:3px">'
+    + '<input class="wb-param-mini" id="wb-imin" type="number" min="1" max="100" placeholder="—" value="' + wbCurIMin + '" style="width:46px"/>'
+    + '<span style="font-size:0.65rem;color:var(--muted)">–</span>'
+    + '<input class="wb-param-mini" id="wb-imax" type="number" min="1" max="100" placeholder="—" value="' + wbCurIMax + '" style="width:46px"/>'
     + '</div></div>';
+  const newSetEffortCell = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+    + '<div style="display:flex;gap:2px;margin-bottom:1px">'
+    + '<button class="unit-tab' + (wbSetEffortType==='rpe'?' active':'') + '" style="font-size:0.62rem;padding:1px 6px" onclick="wbFlushCurrentSetForm();wbSetEffortType=\'rpe\';renderClient(find(activeId))">RPE</button>'
+    + '<button class="unit-tab' + (wbSetEffortType==='rir'?' active':'') + '" style="font-size:0.62rem;padding:1px 6px" onclick="wbFlushCurrentSetForm();wbSetEffortType=\'rir\';renderClient(find(activeId))">RIR</button>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:3px">'
+    + '<input class="wb-param-mini" id="wb-emin" type="number" step="0.5" min="0" max="10" placeholder="—" value="' + wbCurEMin + '" style="width:46px"/>'
+    + '<span style="font-size:0.65rem;color:var(--muted)">–</span>'
+    + '<input class="wb-param-mini" id="wb-emax" type="number" step="0.5" min="0" max="10" placeholder="—" value="' + wbCurEMax + '" style="width:46px"/>'
+    + '</div></div>';
+  const newSetRestCell = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+    + '<span style="font-size:0.62rem;color:var(--muted)">Rest</span>'
+    + '<div style="display:flex;align-items:center;gap:3px">'
+    + '<input class="wb-param-mini" id="wb-rest"     type="text" value="' + wbCurRest    + '" placeholder="0:00" maxlength="5" onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,\'\')" onkeydown="wbRtlTime(this,event)" style="width:50px"/>'
+    + '<span style="font-size:0.65rem;color:var(--muted)">–</span>'
+    + '<input class="wb-param-mini" id="wb-rest-max" type="text" value="' + wbCurRestMax + '" placeholder="0:00" maxlength="5" onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,\'\')" onkeydown="wbRtlTime(this,event)" style="width:50px"/>'
+    + '</div></div>';
+  const newSetTempoCell    = newCell('Tempo',        '<input class="wb-param-mini" id="wb-tempo"     type="text"   placeholder="—"  maxlength="6" value="' + wbCurTempo + '" style="width:60px"/>');
+  const newSetCdCell       = newCell('Countdown (s)', '<input class="wb-param-mini" id="wb-countdown" type="number" min="0" max="60" placeholder="—" value="' + wbCurCd + '" style="width:60px"/>');
   const oneRMHint = wbExOneRM ? ' · 1RM: ' + wbExOneRM + wu : '';
-  const oneRMRow = wbNewExType === 'strength'
-    ? '<div class="wb-form-row" style="margin-bottom:8px;gap:8px;align-items:center"><label style="font-size:0.72rem;color:var(--muted);white-space:nowrap">1RM (' + wu + ')</label><input id="wb-onerm" type="number" step="0.5" min="0" placeholder="Optional" value="' + (wbExOneRM||'') + '" style="flex:1;min-width:100px" oninput="wbExOneRM=this.value"/></div>'
-    : '';
+
+  const isCardioEx = wbNewExType === 'cardio';
+
+  // Cardio set card fields
+  const cardioSetCard = revealed ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Set ${_wbSets.length + 1}</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="unit-tab${wbCSetMode==='duration'?' active':''}" onclick="wbSetCSetMode('duration')" style="font-size:0.62rem">Duration</button>
+            <button class="unit-tab${wbCSetMode==='distance'?' active':''}" onclick="wbSetCSetMode('distance')" style="font-size:0.62rem">Distance</button>
+          </div>
+          ${wbCSetMode==='duration' ? `<input class="wb-param-mini" id="wb-cdur" type="text" value="${wbCurTime}" placeholder="0:00:00" maxlength="9"
+            onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="perfRtlTime(this,event)" style="width:90px"/>` : `<div style="display:flex;align-items:center;gap:4px">
+            <input class="wb-param-mini" id="wb-cdist" type="text" value="${wbCurWeight}" placeholder="—" style="width:60px"/>
+            <div class="unit-tabs" style="gap:2px">
+              <button class="unit-tab${wbCDistUnit==='km'?' active':''}" onclick="wbSetCDistUnit('km')">km</button>
+              <button class="unit-tab${wbCDistUnit==='m'?' active':''}" onclick="wbSetCDistUnit('m')">m</button>
+              <button class="unit-tab${wbCDistUnit==='mi'?' active':''}" onclick="wbSetCDistUnit('mi')">mi</button>
+            </div>
+          </div>`}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:0.62rem;color:var(--muted)">${wbCIntensityMode==='hr'?'Target HR':'Target Pace'}</span>
+            <div class="unit-tabs" style="gap:2px">
+              <button class="unit-tab${wbCIntensityMode==='pace'?' active':''}" onclick="wbSetCIntensityMode('pace')">Pace</button>
+              <button class="unit-tab${wbCIntensityMode==='hr'?' active':''}" onclick="wbSetCIntensityMode('hr')">HR</button>
+            </div>
+            ${wbCIntensityMode==='pace' ? `<div class="unit-tabs" style="gap:2px;margin-left:4px">
+              <button class="unit-tab${wbCPaceUnit==='500m'?' active':''}" onclick="wbSetCPaceUnit('500m')">/500m</button>
+              <button class="unit-tab${wbCPaceUnit==='1km'?' active':''}" onclick="wbSetCPaceUnit('1km')">/1km</button>
+            </div>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            ${wbCIntensityMode==='hr' ? `<input class="wb-param-mini" id="wb-cintensity" type="text" value="${wbCurEMin}" placeholder="e.g. 140" style="width:80px"/>
+            <span style="font-size:0.65rem;color:var(--muted)">–</span>
+            <input class="wb-param-mini" id="wb-cintensity-max" type="text" value="${wbCurEMax}" placeholder="e.g. 160" style="width:80px"/>` : `<input class="wb-param-mini" id="wb-cintensity" type="text" value="${wbCurEMin}" placeholder="0:00:00" maxlength="9"
+              onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="perfRtlTime(this,event)" style="width:90px"/>
+            <span style="font-size:0.65rem;color:var(--muted)">–</span>
+            <input class="wb-param-mini" id="wb-cintensity-max" type="text" value="${wbCurEMax}" placeholder="0:00:00" maxlength="9"
+              onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="perfRtlTime(this,event)" style="width:90px"/>`}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:0.62rem;color:var(--muted)">Rest</span>
+          <div style="display:flex;align-items:center;gap:3px">
+            <input class="wb-param-mini" id="wb-rest" type="text" value="${wbCurRest}" placeholder="0:00" maxlength="5"
+              onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="wbRtlTime(this,event)" style="width:50px"/>
+            <span style="font-size:0.65rem;color:var(--muted)">–</span>
+            <input class="wb-param-mini" id="wb-rest-max" type="text" value="${wbCurRestMax}" placeholder="0:00" maxlength="5"
+              onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="wbRtlTime(this,event)" style="width:50px"/>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <input type="text" id="wb-notes" value="${wbCurNotes.replace(/"/g,'&quot;')}" placeholder="Notes (coaching cues, HR target, pace guidance…)" style="width:100%;font-size:0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text)"/>
+      </div>
+    </div>` : '';
 
   const addExForm = wbNewEx ? `
     <div class="wb-add-ex-form" style="margin-top:8px">
-      <div class="wb-form-row" style="margin-bottom:10px">
-        <input id="wb-exname" type="text" placeholder="Exercise name" value="${wbNewExName || v('name')}"/>
-        <select id="wb-extype" onchange="wbNewExName=document.getElementById('wb-exname')?.value||wbNewExName;wbNewExType=this.value;renderClient(find(activeId))">
-          <option value="strength"${wbNewExType==='strength'?' selected':''}>Strength</option>
-          <option value="cardio"${wbNewExType==='cardio'?' selected':''}>Cardio</option>
-        </select>
+
+      <!-- Exercise name + type toggle -->
+      <div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Exercise Name</span>
+          <div class="ex-type-toggle" style="flex-shrink:0">
+            <button class="ex-type-btn${!isCardioEx?' active':''}" onclick="wbNewExName=document.getElementById('wb-exname')?.value||wbNewExName;wbFlushCurrentSetForm();wbNewExType='strength';_wbSets=[];wbSetAdded=false;renderClient(find(activeId))">🏋 Strength</button>
+            <button class="ex-type-btn${isCardioEx?' active':''}"  onclick="wbNewExName=document.getElementById('wb-exname')?.value||wbNewExName;wbFlushCurrentSetForm();wbNewExType='cardio';_wbSets=[];wbSetAdded=false;renderClient(find(activeId))">🏃 Cardio</button>
+          </div>
+        </div>
+        <input id="wb-exname" type="text" placeholder="e.g. Bench Press, 5K Row, Sprint Intervals" style="width:100%" value="${wbNewExName || v('name')}"/>
       </div>
-      ${wbNewExType === 'strength' ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">' + MUSCLE_GROUPS.map(mg => '<button data-mg="' + mg.id + '" class="mg-chip' + (wbNewExMuscles.includes(mg.id)?' active':'') + '" onclick="wbToggleMuscle(\'' + mg.id + '\')">' + mg.label + '</button>').join('') + '</div>' : ''}
-      ${oneRMRow}
-      ${wbNewExType === 'strength' ? `
+
+      ${!isCardioEx ? `<!-- Muscle groups: dropdown + chips -->
+      <div style="margin-bottom:12px">
+        <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);display:block;margin-bottom:6px">Muscle Groups</span>
+        <select onchange="wbToggleMuscle(this.value);this.value=''" style="width:100%;margin-bottom:6px">
+          <option value="">+ Add muscle group</option>
+          ${MUSCLE_GROUPS.map(mg => `<option value="${mg.id}"${wbNewExMuscles.includes(mg.id)?' disabled':''} >${mg.label}</option>`).join('')}
+        </select>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${wbNewExMuscles.map(id => { const mg = MUSCLE_GROUPS.find(m=>m.id===id); return mg ? `<span class="mg-chip active" style="cursor:default">${mg.label} <button style="background:none;border:none;color:inherit;cursor:pointer;padding:0;margin-left:2px;font-size:0.75rem" onclick="wbToggleMuscle('${id}')">×</button></span>` : ''; }).join('')}
+        </div>
+      </div>
+
+      <!-- 1RM at exercise level -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:0.78rem;color:var(--muted);white-space:nowrap">1RM (${wu})</span>
+        <input id="wb-onerm" type="number" step="0.5" min="0" placeholder="Optional" value="${wbExOneRM||''}" style="width:90px" oninput="wbExOneRM=this.value"/>
+        ${wbExOneRM ? `<span style="font-size:0.72rem;color:var(--muted)">${wbExOneRM}${wu} · use %1RM in sets below</span>` : ''}
+      </div>` : ''}
+
+      <!-- Sets header -->
+      <div style="margin-bottom:8px">
+        <span style="font-size:0.82rem;font-weight:700;color:var(--text)">Sets</span>
+      </div>
+
       ${savedSetsHtml}
-      <div class="wb-param-block">
-        ${!revealed ? `
-        <div class="wb-param-row">
-          <span class="wb-param-label">Sets</span>
-          <div class="wb-param-right">
-            <button class="btn-xs" onclick="wbMarkSetAdded()">+ Add Set</button>
-          </div>
-        </div>` : `
-        ${wbNewSetRepsRow}
-        ${wbSetTimed ? `
-        <div class="wb-param-row">
-          <span class="wb-param-label">Time</span>
-          <input class="wb-param-mini" id="wb-time" type="text" placeholder="0:00" maxlength="5" style="width:70px"/>
-        </div>` : ''}
-        <div class="wb-param-row">
-          <span class="wb-param-label">Weight</span>
-          <div class="wb-param-right" style="gap:8px">
-            <input class="wb-param-inline" id="wb-weight" type="text" placeholder="Optional" style="width:80px"/>
-            <div class="unit-tabs" style="gap:2px">
-              <button class="unit-tab${wu==='kg'?' active':''}" onclick="setSectionUnit('Perf','kg')">kg</button>
-              <button class="unit-tab${wu==='lbs'?' active':''}" onclick="setSectionUnit('Perf','lbs')">lbs</button>
-            </div>
-          </div>
+
+      ${isCardioEx ? cardioSetCard : revealed ? `
+      <!-- New set card (strength) -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Set ${_wbSets.length + 1}</div>
+        <!-- Toggles at top -->
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          <button class="btn-xs${wbSetAmrap?' active':''}"      onclick="wbToggleCurrentProp('amrap')">AMRAP</button>
+          <button class="btn-xs${wbSetUnilateral?' active':''}" onclick="wbToggleCurrentProp('unilateral')">Unilateral</button>
+          <button class="btn-xs${wbSetTimed?' active':''}"      onclick="wbToggleCurrentProp('timed')">Time / Duration</button>
         </div>
-        ${wbNewSetIntRow}
-        <div class="wb-param-row">
-          <span class="wb-param-label">Rest between sets</span>
-          <div class="wb-param-right" style="gap:4px;align-items:center">
-            <input class="wb-param-mini" id="wb-rest" type="text" value="2:00" placeholder="1:00" maxlength="5" style="width:52px"/>
-            <span style="color:var(--muted);font-size:0.8rem">–</span>
-            <input class="wb-param-mini" id="wb-rest-max" type="text" placeholder="3:00" maxlength="5" style="width:52px"/>
-          </div>
+        <!-- Fields -->
+        <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+          ${newSetRepsCell}
+          ${wbSetTimed ? newSetTimedCell : ''}
+          ${newSetWeightCell}
+          ${newSetIntCell}
+          ${newSetRestCell}
+          ${newSetEffortCell}
+          ${newSetTempoCell}
+          ${newSetCdCell}
         </div>
-        ${wbNewSetEffortRow}
-        <div class="wb-param-row">
-          <span class="wb-param-label">Tempo</span>
-          <input class="wb-param-inline" id="wb-tempo" type="text" placeholder="Optional (e.g. 3011)" maxlength="6"/>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <input type="text" id="wb-notes" value="${wbCurNotes.replace(/"/g,'&quot;')}" placeholder="Notes (optional cues, tempo guidance, technique…)" style="width:100%;font-size:0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text)"/>
         </div>
-        <div class="wb-param-row">
-          <span class="wb-param-label">Countdown (s)</span>
-          <input class="wb-param-inline" id="wb-countdown" type="number" min="0" max="60" placeholder="Optional"/>
-        </div>
-        <div class="wb-param-row" style="border-top:1px solid var(--border);padding-top:10px;gap:6px;flex-wrap:wrap">
-          <button class="btn-xs${wbSetAmrap?' active':''}" onclick="wbToggleCurrentProp('amrap')">AMRAP</button>
-          <button class="btn-xs${wbSetUnilateral?' active':''}" onclick="wbToggleCurrentProp('unilateral')">⟺ Uni</button>
-          <button class="btn-xs${wbSetTimed?' active':''}" onclick="wbToggleCurrentProp('timed')">⏱ Timed</button>
-          <button class="btn-xs" style="font-size:0.65rem" onclick="wbToggleCurrentProp('effortType')">${wbSetEffortType.toUpperCase()} ↔</button>
-        </div>`}
-      </div>` : `
-      <div class="wb-param-block">
-        <div class="wb-param-row">
-          <span class="wb-param-label">Rest Duration</span>
-          <input class="wb-param-mini" id="wb-rest" type="text" placeholder="0:00" maxlength="5" style="width:70px"/>
-        </div>
-      </div>`}
-      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      </div>` : ''}
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
         ${(revealed || editEx) ? `<button class="btn-sm" onclick="wbSaveEx(${c.id},${t.id},false)">${editEx ? 'Save Changes' : 'Save Exercise'}</button>` : ''}
         ${revealed ? `<button class="btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="wbAddAnotherSet()">+ Add Another Set</button>` : ''}
         ${!revealed ? `<button class="btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="wbMarkSetAdded()">+ Add Set</button>` : ''}
         ${_wbSets.length > 0 ? `<button class="btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="wbCopyLastSet()">Copy Last Set</button>` : ''}
-        <button class="btn-ghost" onclick="wbNewEx=false;wbNewExName='';wbSetAdded=false;wbEditExId=null;_wbSets=[];wbSetUnilateral=false;wbSetTimed=false;wbSetAmrap=false;wbSetEffortType='rpe';wbExOneRM='';renderClient(find(activeId))">Cancel</button>
+        <button class="btn-ghost" onclick="wbNewEx=false;wbNewExName='';wbSetAdded=false;wbEditExId=null;_wbSets=[];wbSetUnilateral=false;wbSetTimed=false;wbSetAmrap=false;wbSetEffortType='rpe';wbExOneRM='';wbCDistUnit='km';wbNewExType='strength';renderClient(find(activeId))">Cancel</button>
       </div>
     </div>` : '';
 
   return `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <button class="btn-ghost" onclick="wbEditTemplateId=null;renderClient(find(activeId))">← Templates</button>
-      <span style="font-weight:700">${t.name}</span>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button class="btn-xs" style="font-size:0.65rem;white-space:nowrap" onclick="wbEditTemplateId=null;renderClient(find(activeId))">← Sessions</button>
+      <span style="font-size:1.3rem;font-weight:700;letter-spacing:-0.3px">${t.name}</span>
     </div>
     <div style="margin-bottom:8px">${exList || '<div style="color:var(--muted);font-size:0.82rem;font-style:italic">No exercises yet.</div>'}</div>
     ${addExForm}
@@ -2717,85 +3083,172 @@ function progressTab(c) {
   return cards;
 }
 
-function sessionLogTab(c) {
+function workoutLoggerPanel(c) {
+  const wu = settings.unitPerf || 'kg';
+  const orm = (ex) => ex.oneRM ? parseFloat(ex.oneRM) : null;
+
+  // ── Active logging form ──
   if (wbLogForm) {
-    const t = wbLogTemplateId ? c.templates.find(t=>t.id===wbLogTemplateId) : null;
-    const exercises = t ? t.exercises : [];
-    const wu = settings.unitPerf || 'kg';
-    const exInputs = exercises.map(ex => {
+    const t = wbLogTemplateId ? sessions.find(s=>String(s.id)===String(wbLogTemplateId)) : null;
+    const exercises = t ? t.exercises.filter(e=>e.type!=='cardio') : [];
+    const cardioExs = t ? t.exercises.filter(e=>e.type==='cardio') : [];
+
+    const exInputs = [...exercises, ...cardioExs].map(ex => {
       const isCardio = ex.type === 'cardio';
-      const mg = (ex.muscleGroups||[]).map(m => '<span style="font-size:0.62rem;font-weight:700;border-radius:4px;padding:1px 6px;background:var(--accent)15;border:1px solid var(--accent)40;color:var(--accent)">' + m + '</span>').join('');
-      const exSets = (ex.sets && ex.sets.length) ? ex.sets : [{}];
+      const exOrm = orm(ex);
+      const mg = (ex.muscleGroups||[]).map(m =>
+        `<span style="font-size:0.62rem;font-weight:700;border-radius:4px;padding:1px 6px;background:var(--accent)15;border:1px solid var(--accent)40;color:var(--accent)">${m}</span>`
+      ).join('');
+
       const setInputs = isCardio
-        ? '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:8px 0">'
-          + '<input id="log-dist-' + ex.id + '" type="number" placeholder="Distance (km)" step="0.01"/>'
-          + '<input id="log-time-' + ex.id + '" type="text" placeholder="Time HH:MM:SS"/>'
-          + '<input id="log-hr-' + ex.id + '" type="number" placeholder="Max HR (bpm)"/>'
-          + '</div>'
-        : exSets.map((s, si) => {
-            const mn = s.repsMin||0, mx = s.repsMax||0;
-            const targetReps = mn||mx ? (mn===mx ? mn+'reps' : mn+'–'+mx+' reps') : '';
-            const targetWt = s.weight ? s.weight+' '+(s.weightUnit||wu) : '';
-            const targetRest = s.rest ? wbFmtRest(s.rest)+' rest' : '';
-            const targetRPE = s.rpe ? 'RPE '+s.rpe : '';
-            const targetParts = [targetReps, targetWt, targetRest, targetRPE].filter(Boolean);
-            const targetStr = targetParts.length ? targetParts.join(' · ') : '';
-            return '<div class="log-set-row">'
-              + '<div class="log-set-header">Set ' + (si+1) + (targetStr ? '<span class="log-set-target">Target: ' + targetStr + '</span>' : '') + '</div>'
-              + '<div class="log-set-inputs">'
-              + '<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:0.62rem;color:var(--muted)">Weight (' + wu + ')</span><input id="log-wt-' + ex.id + '-' + si + '" type="text" placeholder="' + (s.weight||'—') + '" style="width:80px"/></div>'
-              + '<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:0.62rem;color:var(--muted)">Reps done</span><input id="log-reps-' + ex.id + '-' + si + '" type="number" placeholder="' + (targetReps||'0') + '" style="width:70px"/></div>'
-              + '<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:0.62rem;color:var(--muted)">RPE</span><input id="log-rpe-' + ex.id + '-' + si + '" type="number" step="0.5" min="1" max="10" placeholder="—" style="width:60px"/></div>'
-              + '</div>'
-              + '</div>';
+        ? (() => {
+            const sets = ex.sets && ex.sets.length ? ex.sets : [{}];
+            const useHr = sets.some(s => s.intensityMode === 'hr');
+            const tgtLabel = useHr ? 'Target HR' : 'Target Pace';
+            const actLabel = useHr ? 'Actual HR' : 'Actual Pace';
+            const rows = sets.map((s, si) => {
+              const tgtDist = s.setMode === 'distance'
+                ? (s.distance ? `${s.distance} ${s.distUnit||'km'}` : '—')
+                : (s.time || '—');
+              const tgtDistLabel = s.setMode === 'distance' ? 'Distance' : 'Duration';
+              const tgtPace = s.intensity
+                ? (s.intensityMax && s.intensityMax !== s.intensity ? `${s.intensity} – ${s.intensityMax}` : s.intensity)
+                : '—';
+              const paceUnit = s.paceUnit ? ` /${s.paceUnit}` : '';
+              return `<div class="log-set-row">
+                <div class="log-set-header">Set ${si+1}<span class="log-set-target">${tgtDistLabel}: ${tgtDist} · ${tgtLabel}: ${tgtPace}${paceUnit}</span></div>
+                <div class="log-set-inputs">
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:0.62rem;color:var(--muted)">Actual ${tgtDistLabel}</span>
+                    <input id="log-cdur-${ex.id}-${si}" type="text" placeholder="${s.setMode==='distance'?'—':'0:00:00'}" style="width:90px"
+                      ${s.setMode!=='distance' ? `onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')" onkeydown="perfRtlTime(this,event)" maxlength="9"` : ''}/>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:0.62rem;color:var(--muted)">${actLabel}</span>
+                    ${useHr
+                      ? `<input id="log-pace-${ex.id}-${si}" type="number" placeholder="bpm" style="width:80px"/>`
+                      : `<input id="log-pace-${ex.id}-${si}" type="text" placeholder="0:00:00" maxlength="9"
+                          onfocus="this.dataset.digits=this.value.replace(/[^0-9]/g,'')"
+                          onkeydown="perfRtlTime(this,event);wbUpdateAvgPace('${ex.id}',${sets.length},'${sets[0]?.paceUnit||'500m'}')"
+                          style="width:90px"/>`}
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:0.62rem;color:var(--muted)">Notes</span>
+                    <input id="log-cnotes-${ex.id}-${si}" type="text" placeholder="—" style="width:140px"/>
+                  </div>
+                </div>
+              </div>`;
+            }).join('');
+            const avgRow = useHr ? '' : `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:0.78rem;color:var(--muted)">
+              <span style="font-weight:600;color:var(--text);margin-right:8px">Avg pace</span>
+              <span id="log-avg-pace-${ex.id}">—</span>
+            </div>`;
+            return rows + avgRow;
+          })()
+        : (ex.sets||[{}]).map((s, si) => {
+            // Build target reference string
+            const tgtReps = s.amrap ? 'AMRAP'
+              : s.unilateral ? (s.repsLeft||s.repsRight ? `L${s.repsLeft||0}·R${s.repsRight||0}` : '')
+              : (s.repsMin||s.repsMax) ? (s.repsMin===s.repsMax ? `${s.repsMin} reps` : `${s.repsMin||0}–${s.repsMax||0} reps`) : '';
+            const tgtWt = s.weight ? `${s.weight} ${s.weightUnit||wu}`
+              : (exOrm && (s.intensityMin||s.intensityMax))
+                ? `${wbCalcWeight(exOrm, s.intensityMin||s.intensityMax)} ${wu} (${s.intensityMin||''}${s.intensityMax&&s.intensityMax!==s.intensityMin?'–'+s.intensityMax:''}%)`
+                : '';
+            const mn = s.restMin != null ? s.restMin : (s.rest||null);
+            const mx = s.restMax||null;
+            const tgtRest = mn ? wbFmtRest(mn) + (mx&&mx!==mn?'–'+wbFmtRest(mx):'') + ' rest' : '';
+            const efLabel = (s.effortType||'rpe').toUpperCase();
+            const efMin = s.effortMin!=null&&s.effortMin!=='' ? s.effortMin : null;
+            const efMax = s.effortMax!=null&&s.effortMax!=='' ? s.effortMax : null;
+            const tgtEf = efMin!=null ? `${efLabel} ${efMin}${efMax!=null&&efMax!==efMin?'–'+efMax:''}` : '';
+            const tgtTempo = s.tempo ? `Tempo ${s.tempo}` : '';
+            const tgtParts = [tgtReps, tgtWt, tgtRest, tgtEf, tgtTempo].filter(Boolean);
+            const tgtStr = tgtParts.join(' · ');
+            const setNotes = s.notes ? `<div style="font-size:0.68rem;color:var(--accent);font-style:italic;margin:3px 0 6px">↳ ${s.notes}</div>` : '';
+            return `<div class="log-set-row">
+              <div class="log-set-header">Set ${si+1}${tgtStr ? `<span class="log-set-target">${tgtStr}</span>` : ''}</div>
+              ${setNotes}
+              <div class="log-set-inputs">
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:0.62rem;color:var(--muted)">Weight (${wu})</span><input id="log-wt-${ex.id}-${si}" type="text" placeholder="${s.weight||'—'}" style="width:80px"/></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:0.62rem;color:var(--muted)">Reps achieved</span><input id="log-reps-${ex.id}-${si}" type="number" placeholder="${tgtReps||'0'}" style="width:70px"/></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:0.62rem;color:var(--muted)">Effort (${efLabel})</span><input id="log-rpe-${ex.id}-${si}" type="number" step="0.5" min="1" max="10" placeholder="—" style="width:60px"/></div>
+              </div>
+            </div>`;
           }).join('');
-      return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">'
-        + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
-        + '<span style="font-size:0.85rem;font-weight:700">' + ex.name + '</span>' + mg
-        + '</div>'
-        + setInputs
-        + '</div>';
+
+      return `<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:0.9rem;font-weight:700">${ex.name}</span>${mg}
+        </div>
+        ${setInputs}
+      </div>`;
     }).join('');
 
-    return `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <button class="btn-ghost" onclick="wbLogForm=false;renderClient(find(activeId))">← Back</button>
-        <span style="font-weight:700">${t ? t.name : 'Free Session'}</span>
+    return `<div class="panel col-8" id="wb-logger-panel">
+      ${panelTitle('Workout Logger','var(--accent)')}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button class="btn-xs" onclick="wbLogForm=false;wbEditSessionId=null;renderClient(find(activeId))">← Back</button>
+        <span style="font-size:1.1rem;font-weight:700">${t ? t.name : 'Free Session'}</span>
       </div>
-      <input id="log-date" type="date" value="${localDate()}" style="margin-bottom:12px;width:180px"/>
-      <input id="log-sname" type="text" placeholder="Session name (optional)" style="width:100%;margin-bottom:12px"/>
-      ${exInputs || '<div style="color:var(--muted);font-size:0.82rem;margin-bottom:12px">No exercises in this template.</div>'}
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn-sm" onclick="wbSaveSession(${c.id})">Log Session</button>
-        <button class="btn-ghost" onclick="wbLogForm=false;renderClient(find(activeId))">Cancel</button>
-      </div>`;
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:0.62rem;color:var(--muted)">Date</span>
+          <input id="log-date" type="date" value="${localDate()}" style="width:160px"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:0.62rem;color:var(--muted)">Start time</span>
+          <input id="log-start-time" type="time" style="width:120px"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:0.62rem;color:var(--muted)">End time</span>
+          <input id="log-end-time" type="time" style="width:120px"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+          <span style="font-size:0.62rem;color:var(--muted)">Session name (optional)</span>
+          <input id="log-sname" type="text" placeholder="${t ? t.name : 'Free Session'}" style="width:100%"/>
+        </div>
+      </div>
+      ${exInputs || `<div style="color:var(--muted);font-size:0.82rem;font-style:italic;margin-bottom:12px">${t ? 'No exercises in this session.' : 'No session selected.'}</div>`}
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn-sm" onclick="wbSaveSession(${c.id})">${wbEditSessionId !== null ? 'Save Changes' : 'Finish Session'}</button>
+        <button class="btn-ghost" onclick="wbLogForm=false;wbEditSessionId=null;renderClient(find(activeId))">Cancel</button>
+      </div>
+    </div>`;
   }
 
-  // Session list
-  const sessions = [...(c.sessions||[])].sort((a,b)=>b.date.localeCompare(a.date));
-  const list = sessions.length
-    ? sessions.map(s => {
+  // ── Session history + start form ──
+  const loggedSessions = [...(c.sessions||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  const list = loggedSessions.length
+    ? loggedSessions.map(s => {
         const exCount = s.exercises?.length||0;
         const isOpen = wbExpandedSession === s.id;
-        const exDetail = isOpen && s.exercises?.length ? '<div class="session-card-body">' + s.exercises.map(ex => {
-          const isCardio = ex.type === 'cardio';
-          const mg = (ex.muscleGroups||[]).map(m => '<span style="font-size:0.6rem;font-weight:700;border-radius:3px;padding:1px 5px;background:var(--accent)15;color:var(--accent)">' + m + '</span>').join('');
-          const setsHtml = isCardio
-            ? '<div class="session-set-line">' + (ex.distance||'—') + ' km · ' + (ex.time||'—') + (ex.avgHr?' · '+ex.avgHr+' bpm':'') + '</div>'
-            : (ex.sets||[]).map((st,si) => {
-                const w = st.weight ? st.weight+' '+(st.weightUnit||'kg') : '';
-                const r = st.repsDone || st.reps || 0;
-                const rpe = st.rpe ? ' · RPE '+st.rpe : '';
-                return '<div class="session-set-line">Set '+(si+1)+': '+(r?r+' reps':'—')+(w?' @ '+w:'')+rpe+'</div>';
-              }).join('') || '<div class="session-set-line" style="color:var(--muted)">No sets recorded</div>';
-          return '<div class="session-ex-block"><div class="session-ex-name"><span>' + ex.name + '</span>' + mg + '</div>' + setsHtml + '</div>';
-        }).join('') + '</div>' : '';
+        const exDetail = isOpen && s.exercises?.length
+          ? '<div class="session-card-body">' + s.exercises.map(ex => {
+              const isCardio = ex.type === 'cardio';
+              const mg = (ex.muscleGroups||[]).map(m => `<span style="font-size:0.6rem;font-weight:700;border-radius:3px;padding:1px 5px;background:var(--accent)15;color:var(--accent)">${m}</span>`).join('');
+              const setsHtml = isCardio
+                ? (ex.sets||[]).map((st,si) => {
+                    const distVal = st.setMode==='distance' ? (st.actualDur||st.targetDistance||'—') : (st.actualDur||st.targetTime||'—');
+                    const distLabel = st.setMode==='distance' ? (st.targetDistUnit||'km') : '';
+                    const paceVal = st.actualPace || '—';
+                    const actLabel = st.intensityMode==='hr' ? 'HR' : 'Pace';
+                    return `<div class="session-set-line">Set ${si+1}: ${distVal}${distLabel?' '+distLabel:''} · ${actLabel} ${paceVal}${st.notes?' · '+st.notes:''}</div>`;
+                  }).join('')
+                : (ex.sets||[]).map((st,si) => {
+                    const w = st.weight ? `${st.weight} ${st.weightUnit||'kg'}` : '';
+                    const r = st.repsDone || st.reps || 0;
+                    const rpe = st.rpe ? ` · RPE ${st.rpe}` : '';
+                    return `<div class="session-set-line">Set ${si+1}: ${r?r+' reps':'—'}${w?' @ '+w:''}${rpe}</div>`;
+                  }).join('') || '<div class="session-set-line" style="color:var(--muted)">No sets recorded</div>';
+              return `<div class="session-ex-block"><div class="session-ex-name"><span>${ex.name}</span>${mg}</div>${setsHtml}</div>`;
+            }).join('') + '</div>' : '';
         return `<div class="session-card" onclick="wbExpandedSession=wbExpandedSession===${s.id}?null:${s.id};renderClient(find(activeId))">
           <div class="session-card-header">
             <span class="session-card-name">${s.name||'Session'}</span>
             <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
               <span class="session-card-date">${fmtDate(s.date)}</span>
               <span style="font-size:0.8rem;color:var(--muted)">${isOpen?'▲':'▼'}</span>
+              <button class="btn-xs" style="color:var(--accent)" onclick="wbStartEditSession(${c.id},${s.id})">Edit</button>
               <button class="btn-xs" style="color:var(--danger)" onclick="wbDeleteSession(${c.id},${s.id})">✕</button>
             </div>
           </div>
@@ -2805,15 +3258,52 @@ function sessionLogTab(c) {
       }).join('')
     : '<div style="color:var(--muted);font-size:0.82rem;font-style:italic;margin-bottom:12px">No sessions logged yet.</div>';
 
-  const templateOptions = c.templates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-  return `${list}
-    <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+  const templateOptions = clientSessions(c).map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  return `<div class="panel col-8" id="wb-logger-panel">
+    ${panelTitle('Workout Logger','var(--accent)')}
+    ${list}
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;display:flex;gap:8px;align-items:center">
       <select id="wb-log-select" style="flex:1">
-        <option value="">Free session</option>
+        <option value="">— Select session —</option>
         ${templateOptions}
       </select>
-      <button class="btn-sm" onclick="wbStartLog(${c.id})">+ Log Session</button>
+      <button class="btn-sm" onclick="wbStartLog(${c.id})">+ Start Session</button>
+    </div>
+  </div>`;
+}
+
+function sessionLogTab(c) {
+  // Session history list only — logging form + start UI live in workoutLoggerPanel below
+  const loggedSessions = [...(c.sessions||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  if (!loggedSessions.length) return '<div style="color:var(--muted);font-size:0.82rem;font-style:italic;padding:8px 0">No sessions logged yet. Use the Workout Logger below to start one.</div>';
+  return loggedSessions.map(s => {
+    const exCount = s.exercises?.length||0;
+    const isOpen = wbExpandedSession === s.id;
+    const exDetail = isOpen && s.exercises?.length ? '<div class="session-card-body">' + s.exercises.map(ex => {
+      const isCardio = ex.type === 'cardio';
+      const mg = (ex.muscleGroups||[]).map(m => '<span style="font-size:0.6rem;font-weight:700;border-radius:3px;padding:1px 5px;background:var(--accent)15;color:var(--accent)">' + m + '</span>').join('');
+      const setsHtml = isCardio
+        ? (ex.sets||[]).map(function(st,si){ const dv=st.setMode==='distance'?(st.actualDur||st.targetDistance||'—'):(st.actualDur||st.targetTime||'—'); const dl=st.setMode==='distance'?(st.targetDistUnit||'km'):''; const pv=st.actualPace||'—'; const al=st.intensityMode==='hr'?'HR':'Pace'; return '<div class="session-set-line">Set '+(si+1)+': '+dv+(dl?' '+dl:'')+' · '+al+' '+pv+(st.notes?' · '+st.notes:'')+'</div>'; }).join('')
+        : (ex.sets||[]).map((st,si) => {
+            const w = st.weight ? st.weight+' '+(st.weightUnit||'kg') : '';
+            const r = st.repsDone || st.reps || 0;
+            const rpe = st.rpe ? ' · RPE '+st.rpe : '';
+            return '<div class="session-set-line">Set '+(si+1)+': '+(r?r+' reps':'—')+(w?' @ '+w:'')+rpe+'</div>';
+          }).join('') || '<div class="session-set-line" style="color:var(--muted)">No sets recorded</div>';
+      return '<div class="session-ex-block"><div class="session-ex-name"><span>' + ex.name + '</span>' + mg + '</div>' + setsHtml + '</div>';
+    }).join('') + '</div>' : '';
+    return `<div class="session-card" onclick="wbExpandedSession=wbExpandedSession===${s.id}?null:${s.id};renderClient(find(activeId))">
+      <div class="session-card-header">
+        <span class="session-card-name">${s.name||'Session'}</span>
+        <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
+          <span class="session-card-date">${fmtDate(s.date)}</span>
+          <span style="font-size:0.8rem;color:var(--muted)">${isOpen?'▲':'▼'}</span>
+        </div>
+      </div>
+      <div class="session-card-meta">${exCount} exercise${exCount!==1?'s':''} · ${s.template||'Free session'}</div>
+      ${exDetail}
     </div>`;
+  }).join('');
 }
 
 // Workout CRUD
@@ -2821,20 +3311,33 @@ function wbSaveNewTemplate(cid) {
   const name = document.getElementById('wb-tname')?.value.trim();
   if (!name) return;
   const c = find(cid);
-  c.templates.push({ id: uid(), name, exercises: [] });
+  const newId = uid();
+  sessions.push({ id: newId, name, exercises: [] });
+  if (!c.assignedSessionIds) c.assignedSessionIds = [];
+  c.assignedSessionIds.push(newId);
   wbNewTemplate = false;
   save(); renderClient(c);
 }
 
 function wbDeleteTemplate(cid, tid) {
   const c = find(cid);
-  c.templates = c.templates.filter(t=>t.id!==tid);
+  c.assignedSessionIds = (c.assignedSessionIds||[]).filter(id=>id!==tid);
   save(); renderClient(c);
 }
 
 function wbRemoveEx(cid, tid, eid) {
-  const t = find(cid).templates.find(t=>t.id===tid);
+  const t = sessions.find(s=>s.id===tid);
   if (t) t.exercises = t.exercises.filter(e=>e.id!==eid);
+  save(); renderClient(find(cid));
+}
+function wbMoveEx(cid, tid, eid, dir) {
+  const t = sessions.find(s=>s.id===tid);
+  if (!t) return;
+  const idx = t.exercises.findIndex(e=>e.id===eid);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= t.exercises.length) return;
+  const exs = t.exercises;
+  [exs[idx], exs[newIdx]] = [exs[newIdx], exs[idx]];
   save(); renderClient(find(cid));
 }
 
@@ -2862,6 +3365,42 @@ function wbParseRest(str) {
   if (parts.length === 2) return (parseInt(parts[0])||0)*60 + (parseInt(parts[1])||0);
   return parseInt(str)||0;
 }
+function wbRtlTime(el, e) {
+  if (['Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+  e.preventDefault();
+  let digits = el.dataset.digits || '';
+  if (e.key === 'Backspace') {
+    digits = digits.slice(0, -1);
+  } else if (/^\d$/.test(e.key)) {
+    digits = (digits + e.key).slice(-4);
+  } else { return; }
+  el.dataset.digits = digits;
+  if (!digits) { el.value = ''; return; }
+  const p = digits.padStart(4, '0');
+  el.value = parseInt(p.slice(0, 2), 10) + ':' + p.slice(2);
+}
+function perfRtlTime(el, e) {
+  if (['Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+  e.preventDefault();
+  let digits = el.dataset.digits || '';
+  if (e.key === 'Backspace') {
+    digits = digits.slice(0, -1);
+  } else if (/^\d$/.test(e.key)) {
+    digits = (digits + e.key).slice(-6);
+  } else { return; }
+  el.dataset.digits = digits;
+  if (!digits) { el.value = ''; return; }
+  const p = digits.padStart(6, '0');
+  const h = parseInt(p.slice(0, 2), 10);
+  const m = p.slice(2, 4);
+  const s = p.slice(4, 6);
+  el.value = (h ? h + ':' : '0:') + m + ':' + s;
+}
+function wbSetCDistUnit(u) { wbNewExName=document.getElementById('wb-exname')?.value||wbNewExName; wbFlushCurrentSetForm(); wbCDistUnit=u; renderClient(find(activeId)); }
+function wbSetCIntensityMode(m) { wbNewExName=document.getElementById('wb-exname')?.value||wbNewExName; wbFlushCurrentSetForm(); wbCIntensityMode=m; renderClient(find(activeId)); }
+function wbSetCSetMode(m) { wbNewExName=document.getElementById('wb-exname')?.value||wbNewExName; wbFlushCurrentSetForm(); wbCSetMode=m; renderClient(find(activeId)); }
+function wbSetCPaceUnit(u) { wbNewExName=document.getElementById('wb-exname')?.value||wbNewExName; wbFlushCurrentSetForm(); wbCPaceUnit=u; renderClient(find(activeId)); }
+function wbCalcWeight(orm, pct) { return Math.floor(orm * pct / 100 / 2.5) * 2.5; }
 function wbFmtRest(secs) {
   if (!secs) return '—';
   const m = Math.floor(secs/60), s = String(secs%60).padStart(2,'0');
@@ -2871,15 +3410,30 @@ function wbMarkSetAdded() {
   wbNewExName = document.getElementById('wb-exname')?.value || wbNewExName;
   wbExOneRM = document.getElementById('wb-onerm')?.value || wbExOneRM;
   wbSetAdded = true;
-  wbSetUnilateral = false;
-  wbSetTimed = false;
-  wbSetAmrap = false;
-  wbSetEffortType = 'rpe';
+  wbSetUnilateral = false; wbSetTimed = false; wbSetAmrap = false; wbSetEffortType = 'rpe';
+  wbResetCurrentSetForm();
   renderClient(find(activeId));
 }
 function wbReadCurrentSet() {
   const g = id => document.getElementById(id);
   const wu = settings.unitPerf || 'kg';
+  if (wbNewExType === 'cardio') {
+    const restMin = wbParseRest(g('wb-rest')?.value);
+    const restMax = wbParseRest(g('wb-rest-max')?.value) || null;
+    return {
+      cardio: true,
+      setMode: wbCSetMode,
+      time: wbCSetMode==='duration' ? (g('wb-cdur')?.value.trim() || '') : '',
+      distance: wbCSetMode==='distance' ? (parseFloat(g('wb-cdist')?.value) || null) : null,
+      distUnit: wbCDistUnit,
+      intensity: g('wb-cintensity')?.value.trim() || '',
+      intensityMax: g('wb-cintensity-max')?.value.trim() || '',
+      intensityMode: wbCIntensityMode,
+      paceUnit: wbCPaceUnit,
+      restMin, restMax, rest: restMin,
+      notes: g('wb-notes')?.value.trim() || '',
+    };
+  }
   const restMin = wbParseRest(g('wb-rest')?.value);
   const restMax = wbParseRest(g('wb-rest-max')?.value) || null;
   const s = {
@@ -2891,6 +3445,7 @@ function wbReadCurrentSet() {
     intensityMax: parseInt(g('wb-imax')?.value)||null,
     tempo: g('wb-tempo')?.value.trim()||'',
     countdown: parseInt(g('wb-countdown')?.value)||null,
+    notes: g('wb-notes')?.value.trim()||'',
     weight: g('wb-weight')?.value.trim()||'',
     weightUnit: wu,
     unilateral: wbSetUnilateral,
@@ -2911,19 +3466,29 @@ function wbReadCurrentSet() {
 }
 function wbAddAnotherSet() {
   wbNewExName = document.getElementById('wb-exname')?.value || wbNewExName;
-  wbExOneRM = document.getElementById('wb-onerm')?.value || wbExOneRM;
+  if (wbNewExType !== 'cardio') wbExOneRM = document.getElementById('wb-onerm')?.value || wbExOneRM;
   wbFlushSetRows();
   _wbSets.push(wbReadCurrentSet());
-  wbSetUnilateral = false;
-  wbSetTimed = false;
-  wbSetAmrap = false;
-  wbSetEffortType = 'rpe';
+  wbSetUnilateral = false; wbSetTimed = false; wbSetAmrap = false; wbSetEffortType = 'rpe';
+  wbResetCurrentSetForm();
   renderClient(find(activeId));
 }
 function wbFlushSetRows() {
   const g = id => document.getElementById(id);
   _wbSets = _wbSets.map((s, i) => {
     const upd = Object.assign({}, s);
+    if (s.cardio) {
+      upd.time = g('wb-s'+i+'-cdur')?.value.trim()||'';
+      upd.distance = parseFloat(g('wb-s'+i+'-cdist')?.value)||null;
+      upd.intensity = g('wb-s'+i+'-cintensity')?.value.trim()||'';
+      upd.intensityMax = g('wb-s'+i+'-cintensity-max')?.value.trim()||'';
+      // setMode/paceUnit are state vars on the set object, not DOM inputs — preserved as-is
+      upd.restMin = wbParseRest(g('wb-s'+i+'-rest')?.value);
+      upd.restMax = wbParseRest(g('wb-s'+i+'-rest-max')?.value) || null;
+      upd.rest = upd.restMin;
+      upd.notes = g('wb-s'+i+'-notes')?.value.trim()||'';
+      return upd;
+    }
     if (s.amrap) {
       upd.repsMin = 0; upd.repsMax = 0;
     } else if (s.unilateral) {
@@ -2945,6 +3510,7 @@ function wbFlushSetRows() {
     upd.effortMax = parseFloat(g('wb-s'+i+'-emax')?.value)||null;
     upd.tempo  = g('wb-s'+i+'-tempo')?.value.trim()||'';
     upd.countdown = parseInt(g('wb-s'+i+'-cd')?.value)||null;
+    upd.notes = g('wb-s'+i+'-notes')?.value.trim()||'';
     return upd;
   });
 }
@@ -2961,16 +3527,85 @@ function wbDeleteSet(i) {
 function wbCopyLastSet() {
   wbFlushSetRows();
   if (!_wbSets.length) return;
-  _wbSets.push(Object.assign({}, _wbSets[_wbSets.length - 1]));
-  renderClient(find(activeId));
+  const src = _wbSets[_wbSets.length - 1];
+  if (wbSetAdded) {
+    // Form is open — populate current card fields from last saved set
+    if (src.cardio) {
+      wbCSetMode       = src.setMode || 'duration';
+      wbCPaceUnit      = src.paceUnit || '500m';
+      wbCIntensityMode = src.intensityMode || 'pace';
+      wbCDistUnit      = src.distUnit || wbCDistUnit;
+      wbCurTime        = src.time    || '';
+      wbCurWeight      = src.distance != null ? String(src.distance) : '';
+      wbCurEMin        = src.intensity    || '';
+      wbCurEMax        = src.intensityMax || '';
+      wbCurRest        = src.restMin ? wbFmtRest(src.restMin) : '2:00';
+      wbCurRestMax     = src.restMax ? wbFmtRest(src.restMax) : '';
+      wbCurNotes       = src.notes   || '';
+    } else {
+    wbSetUnilateral = !!src.unilateral;
+    wbSetTimed      = !!src.timed;
+    wbSetAmrap      = !!src.amrap;
+    wbSetEffortType = src.effortType || 'rpe';
+    wbCurRepsMin  = src.repsMin  != null ? String(src.repsMin)  : '';
+    wbCurRepsMax  = src.repsMax  != null ? String(src.repsMax)  : '';
+    wbCurRepsL    = src.repsLeft  != null ? String(src.repsLeft)  : '';
+    wbCurRepsR    = src.repsRight != null ? String(src.repsRight) : '';
+    wbCurWeight   = src.weight   || '';
+    wbCurIMin     = src.intensityMin != null ? String(src.intensityMin) : '';
+    wbCurIMax     = src.intensityMax != null ? String(src.intensityMax) : '';
+    wbCurEMin     = src.effortMin != null ? String(src.effortMin) : '';
+    wbCurEMax     = src.effortMax != null ? String(src.effortMax) : '';
+    wbCurRest     = src.restMin ? wbFmtRest(src.restMin) : (src.rest ? wbFmtRest(src.rest) : '2:00');
+    wbCurRestMax  = src.restMax ? wbFmtRest(src.restMax) : '';
+    wbCurTempo    = src.tempo    || '';
+    wbCurCd       = src.countdown != null ? String(src.countdown) : '';
+    wbCurTime     = src.time     || '';
+    wbCurNotes    = src.notes    || '';
+    }
+    renderClient(find(activeId));
+  } else {
+    _wbSets.push(Object.assign({}, src));
+    renderClient(find(activeId));
+  }
 }
 function wbToggleSetEffortType(i) {
   wbFlushSetRows();
   _wbSets[i].effortType = (_wbSets[i].effortType || 'rpe') === 'rpe' ? 'rir' : 'rpe';
   renderClient(find(activeId));
 }
+function wbFlushCurrentSetForm() {
+  const g = id => { const el = document.getElementById(id); return el ? el.value : null; };
+  if (g('wb-rmin')      !== null) wbCurRepsMin  = g('wb-rmin')      || '';
+  if (g('wb-rmax')      !== null) wbCurRepsMax  = g('wb-rmax')      || '';
+  if (g('wb-rl')        !== null) wbCurRepsL    = g('wb-rl')        || '';
+  if (g('wb-rr')        !== null) wbCurRepsR    = g('wb-rr')        || '';
+  if (g('wb-weight')    !== null) wbCurWeight   = g('wb-weight')    || '';
+  if (g('wb-imin')      !== null) wbCurIMin     = g('wb-imin')      || '';
+  if (g('wb-imax')      !== null) wbCurIMax     = g('wb-imax')      || '';
+  if (g('wb-emin')      !== null) wbCurEMin     = g('wb-emin')      || '';
+  if (g('wb-emax')      !== null) wbCurEMax     = g('wb-emax')      || '';
+  if (g('wb-rest')      !== null) wbCurRest     = g('wb-rest')      || '2:00';
+  if (g('wb-rest-max')  !== null) wbCurRestMax  = g('wb-rest-max')  || '';
+  if (g('wb-tempo')     !== null) wbCurTempo    = g('wb-tempo')     || '';
+  if (g('wb-countdown') !== null) wbCurCd       = g('wb-countdown') || '';
+  if (g('wb-time')      !== null) wbCurTime     = g('wb-time')      || '';
+  if (g('wb-notes')     !== null) wbCurNotes    = g('wb-notes')     || '';
+  // cardio set fields
+  if (g('wb-cdur')      !== null) wbCurTime     = g('wb-cdur')      || '';
+  if (g('wb-cdist')     !== null) wbCurWeight   = g('wb-cdist')     || '';
+  if (g('wb-cintensity')     !== null) wbCurEMin = g('wb-cintensity')     || '';
+  if (g('wb-cintensity-max') !== null) wbCurEMax = g('wb-cintensity-max') || '';
+}
+function wbResetCurrentSetForm() {
+  wbCurRepsMin=''; wbCurRepsMax=''; wbCurRepsL=''; wbCurRepsR='';
+  wbCurWeight=''; wbCurIMin=''; wbCurIMax=''; wbCurEMin=''; wbCurEMax='';
+  wbCurRest=''; wbCurRestMax=''; wbCurTempo=''; wbCurCd=''; wbCurTime=''; wbCurNotes='';
+  wbCSetMode='duration'; wbCPaceUnit='500m';
+}
 function wbToggleCurrentProp(prop) {
   wbNewExName = document.getElementById('wb-exname')?.value || wbNewExName;
+  wbFlushCurrentSetForm();
   if (prop === 'unilateral') wbSetUnilateral = !wbSetUnilateral;
   if (prop === 'timed') wbSetTimed = !wbSetTimed;
   if (prop === 'amrap') wbSetAmrap = !wbSetAmrap;
@@ -2978,7 +3613,7 @@ function wbToggleCurrentProp(prop) {
   renderClient(find(activeId));
 }
 function wbOpenEditEx(cid, tid, exid) {
-  const ex = find(cid).templates.find(t=>t.id===tid)?.exercises.find(e=>e.id===exid);
+  const ex = sessions.find(s=>s.id===tid)?.exercises.find(e=>e.id===exid);
   if (!ex) return;
   wbNewEx = true; wbEditExId = exid; wbNewExType = ex.type;
   wbNewExName = ex.name;
@@ -2991,21 +3626,22 @@ function wbOpenEditEx(cid, tid, exid) {
   setTimeout(() => document.querySelector('.wb-add-ex-form')?.scrollIntoView({block:'nearest'}), 50);
 }
 function wbSaveEx(cid, tid, keepOpen) {
-  const name = document.getElementById('wb-exname')?.value.trim();
-  if (!name) return;
-  const type = document.getElementById('wb-extype')?.value || 'strength';
-  const g = id => document.getElementById(id);
-  const oneRM = parseFloat(document.getElementById('wb-onerm')?.value) || null;
-  const ex = { id: uid(), name, type, muscleGroups: [...wbNewExMuscles], oneRM };
-  if (type === 'strength') {
-    wbFlushSetRows();
-    const currentSet = wbSetAdded ? wbReadCurrentSet() : null;
-    ex.sets = currentSet ? [..._wbSets, currentSet] : [..._wbSets];
-  } else {
-    ex.rest = wbParseRest(g('wb-rest')?.value);
+  const nameEl = document.getElementById('wb-exname');
+  const name = nameEl?.value.trim();
+  if (!name) {
+    if (nameEl) { nameEl.style.borderColor = 'var(--danger)'; nameEl.focus(); }
+    return;
   }
+  if (nameEl) nameEl.style.borderColor = '';
+  const type = wbNewExType || 'strength';
+  const g = id => document.getElementById(id);
+  const oneRM = type === 'strength' ? (parseFloat(document.getElementById('wb-onerm')?.value) || null) : null;
+  const ex = { id: uid(), name, type, muscleGroups: [...wbNewExMuscles], oneRM };
+  wbFlushSetRows();
+  const currentSet = wbSetAdded ? wbReadCurrentSet() : null;
+  ex.sets = currentSet ? [..._wbSets, currentSet] : [..._wbSets];
   const c = find(cid);
-  const t = c.templates.find(t=>t.id===tid);
+  const t = sessions.find(s=>s.id===tid);
   if (!t) return;
   if (wbEditExId) {
     const idx = t.exercises.findIndex(e=>e.id===wbEditExId);
@@ -3014,7 +3650,7 @@ function wbSaveEx(cid, tid, keepOpen) {
   } else {
     t.exercises.push(ex);
   }
-  _wbSets = []; wbNewExName = ''; wbSetAdded = false; wbExOneRM = '';
+  _wbSets = []; wbNewExName = ''; wbSetAdded = false; wbExOneRM = ''; wbCDistUnit = 'km';
   wbSetUnilateral = false; wbSetTimed = false; wbSetAmrap = false; wbSetEffortType = 'rpe'; wbNewExMuscles = [];
   wbNewEx = !!keepOpen;
   save(); renderClient(c);
@@ -3022,25 +3658,54 @@ function wbSaveEx(cid, tid, keepOpen) {
 
 function wbStartLog(cid) {
   const sel = document.getElementById('wb-log-select')?.value;
-  wbLogTemplateId = sel ? parseInt(sel) : null;
+  wbLogTemplateId = sel ? (Number(sel) || sel) : null;
   wbLogForm = true;
   renderClient(find(cid));
+  setTimeout(() => document.getElementById('wb-logger-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 80);
 }
 
+function wbUpdateAvgPace(exId, setCount, paceUnit) {
+  const secs = [];
+  for (let i = 0; i < setCount; i++) {
+    const val = document.getElementById('log-pace-' + exId + '-' + i)?.value || '';
+    if (!val) continue;
+    const parts = val.split(':').map(Number);
+    let s = 0;
+    if (parts.length === 3) s = parts[0]*3600 + parts[1]*60 + parts[2];
+    else if (parts.length === 2) s = parts[0]*60 + parts[1];
+    if (s > 0) secs.push(s);
+  }
+  const el = document.getElementById('log-avg-pace-' + exId);
+  if (!el) return;
+  if (!secs.length) { el.textContent = '—'; return; }
+  const avg = secs.reduce((a,b)=>a+b,0) / secs.length;
+  function fmt(s) { const m=Math.floor(s/60); const sec=Math.round(s%60); return m+':'+String(sec).padStart(2,'0'); }
+  const isKm = paceUnit === '1km';
+  const avg500 = isKm ? avg/2 : avg;
+  const avg1km = isKm ? avg : avg*2;
+  el.innerHTML = '<span style="margin-right:12px">Avg /500m <strong>' + fmt(avg500) + '</strong></span>'
+    + '<span>Avg /1km <strong>' + fmt(avg1km) + '</strong></span>';
+}
 function wbSaveSession(cid) {
   const c = find(cid);
-  const t = wbLogTemplateId ? c.templates.find(t=>t.id===wbLogTemplateId) : null;
+  const t = wbLogTemplateId ? sessions.find(s=>s.id===wbLogTemplateId) : null;
   const date = document.getElementById('log-date')?.value || localDate();
+  const startTime = document.getElementById('log-start-time')?.value || '';
+  const endTime = document.getElementById('log-end-time')?.value || '';
   const name = document.getElementById('log-sname')?.value.trim() || (t ? t.name : 'Session');
   const wu = settings.unitPerf || 'kg';
   const exercises = (t?.exercises||[]).map(ex => {
-    if (ex.type === 'cardio') return {
-      id: ex.id, name: ex.name, type: 'cardio',
-      muscleGroups: ex.muscleGroups||[],
-      distance: parseFloat(document.getElementById('log-dist-' + ex.id)?.value)||0,
-      time: document.getElementById('log-time-' + ex.id)?.value||'',
-      avgHr: parseInt(document.getElementById('log-hr-' + ex.id)?.value)||null,
-    };
+    if (ex.type === 'cardio') {
+      const cSets = (ex.sets && ex.sets.length ? ex.sets : [{}]).map((s, si) => ({
+        targetTime: s.time||'', targetDistance: s.distance||null, targetDistUnit: s.distUnit||'km',
+        targetPace: s.intensity||'', targetPaceMax: s.intensityMax||'',
+        setMode: s.setMode||'duration', intensityMode: s.intensityMode||'pace', paceUnit: s.paceUnit||'',
+        actualDur: document.getElementById('log-cdur-' + ex.id + '-' + si)?.value.trim()||'',
+        actualPace: document.getElementById('log-pace-' + ex.id + '-' + si)?.value.trim()||'',
+        notes: document.getElementById('log-cnotes-' + ex.id + '-' + si)?.value.trim()||'',
+      }));
+      return { id: ex.id, name: ex.name, type: 'cardio', muscleGroups: ex.muscleGroups||[], sets: cSets };
+    }
     const setCount = (ex.sets && ex.sets.length) ? ex.sets.length : 1;
     const sets = Array.from({length:setCount},(_,si) => {
       const s = ex.sets?.[si] || {};
@@ -3054,9 +3719,58 @@ function wbSaveSession(cid) {
     });
     return { id: ex.id, name: ex.name, type: 'strength', muscleGroups: ex.muscleGroups||[], sets };
   });
-  c.sessions.push({ id: uid(), date, name, template: t?.name||'', exercises });
+  if (wbEditSessionId !== null) {
+    const idx = c.sessions.findIndex(s => s.id === wbEditSessionId);
+    if (idx !== -1) {
+      c.sessions[idx] = { ...c.sessions[idx], date, startTime, endTime, name, template: t?.name||c.sessions[idx].template||'', exercises };
+    }
+    wbEditSessionId = null;
+  } else {
+    c.sessions.push({ id: uid(), date, startTime, endTime, name, template: t?.name||'', exercises });
+  }
   wbLogForm = false; wbLogTemplateId = null;
   save(); renderClient(c);
+}
+
+function wbStartEditSession(cid, sid) {
+  const c = find(cid);
+  const sess = c.sessions.find(x => x.id === sid);
+  if (!sess) return;
+  wbEditSessionId = sid;
+  wbLogForm = true;
+  wbLogTemplateId = sessions.find(gl => gl.name === sess.template)?.id ?? null;
+  renderClient(c);
+  requestAnimationFrame(() => {
+    const dateEl = document.getElementById('log-date');
+    if (dateEl) dateEl.value = sess.date || '';
+    const startEl = document.getElementById('log-start-time');
+    if (startEl) startEl.value = sess.startTime || '';
+    const endEl = document.getElementById('log-end-time');
+    if (endEl) endEl.value = sess.endTime || '';
+    const nameEl = document.getElementById('log-sname');
+    if (nameEl) nameEl.value = sess.name || '';
+    (sess.exercises || []).forEach(ex => {
+      if (ex.type === 'cardio') {
+        (ex.sets || []).forEach((cs, si) => {
+          const durEl = document.getElementById('log-cdur-' + ex.id + '-' + si);
+          if (durEl) durEl.value = cs.actualDur || '';
+          const paceEl = document.getElementById('log-pace-' + ex.id + '-' + si);
+          if (paceEl) paceEl.value = cs.actualPace || '';
+          const notesEl = document.getElementById('log-cnotes-' + ex.id + '-' + si);
+          if (notesEl) notesEl.value = cs.notes || '';
+        });
+      } else {
+        (ex.sets || []).forEach((ss, si) => {
+          const repsEl = document.getElementById('log-reps-' + ex.id + '-' + si);
+          if (repsEl) repsEl.value = ss.repsDone || '';
+          const wtEl = document.getElementById('log-wt-' + ex.id + '-' + si);
+          if (wtEl) wtEl.value = ss.weight || '';
+          const rpeEl = document.getElementById('log-rpe-' + ex.id + '-' + si);
+          if (rpeEl) rpeEl.value = ss.rpe || '';
+        });
+      }
+    });
+  });
 }
 
 function wbDeleteSession(cid, sid) {
@@ -3068,10 +3782,14 @@ function wbDeleteSession(cid, sid) {
 // ── Events panel ──
 const EVENT_TYPES = {
   session:     { label: 'PT Session',      color: 'var(--accent)' },
+  workout:     { label: 'Workout Session', color: 'var(--cyan)' },
   review:      { label: 'Progress Review', color: 'var(--warning)' },
+  check_in:    { label: 'Check-In',        color: '#34d399' },
   competition: { label: 'Competition',     color: 'var(--danger)' },
+  race:        { label: 'Race / Event',    color: '#f97316' },
   birthday:    { label: 'Birthday',        color: '#a78bfa' },
-  other:       { label: 'Other',           color: 'var(--muted)' },
+  rest:        { label: 'Rest Day',        color: 'var(--muted)' },
+  other:       { label: 'Other',           color: 'var(--border)' },
 };
 
 let eventFormOpen = false;
@@ -3357,11 +4075,62 @@ const NOTE_CATS = [
 ];
 function applyBranding() {
   if (settings.accentColor) document.documentElement.style.setProperty('--accent', settings.accentColor);
-  const logoEl = document.getElementById('nav-logo');
-  const logoAcct = document.getElementById('nav-logo-acct');
-  const name = settings.businessName || 'PTHub';
-  if (logoEl) logoEl.innerHTML = name === 'PTHub' ? 'PT<span>Hub</span>' : name;
-  if (logoAcct) logoAcct.innerHTML = name === 'PTHub' ? 'PT<span>Hub</span>' : name;
+  const wordmark = 'PT<span>Hub</span>';
+  const imgHtml = settings.logoDark ? `<img src="${settings.logoDark}" style="height:32px;width:auto;object-fit:contain;margin-right:8px;vertical-align:middle"/>` : '';
+  ['nav-logo','nav-logo-acct'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = imgHtml + wordmark;
+  });
+}
+function uploadLogo(event, variant) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const key = variant === 'dark' ? 'logoDark' : 'logoLight';
+    settings[key] = e.target.result;
+    const previewEl = document.getElementById('logo-' + variant + '-preview');
+    if (previewEl) previewEl.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain"/>`;
+    if (variant === 'dark') applyBranding();
+  };
+  reader.readAsDataURL(file);
+}
+function removeLogo(variant) {
+  const key = variant === 'dark' ? 'logoDark' : 'logoLight';
+  delete settings[key];
+  const previewEl = document.getElementById('logo-' + variant + '-preview');
+  if (previewEl) previewEl.innerHTML = '<span style="font-size:1.2rem">🖼</span>';
+  save();
+  if (variant === 'dark') applyBranding();
+}
+function saveBranding() {
+  settings.businessName = document.getElementById('acct-biz').value.trim();
+  settings.accentColor = document.getElementById('acct-color').value;
+  save(); applyBranding();
+  const btn = document.querySelector('[onclick="saveBranding()"]');
+  if (btn) { btn.textContent='Saved ✓'; btn.style.background='var(--success)'; setTimeout(()=>{ btn.textContent='Save Branding'; btn.style.background=''; }, 1800); }
+}
+const ACCT_TABS = ['profile','branding','sessions','programs','notif','data'];
+function showAcctTab(tab) {
+  ACCT_TABS.forEach(t => {
+    document.getElementById('acct-panel-' + t)?.classList.toggle('hidden', t !== tab);
+    document.getElementById('acct-nav-' + t)?.classList.toggle('active', t === tab);
+  });
+  if (tab === 'sessions') renderSessionLibrary();
+  if (tab === 'programs') renderPrograms();
+  if (tab === 'data') updateLsUsage();
+  if (tab === 'notif') {
+    const notifOn = document.getElementById('acct-notif-on');
+    const notifDays = document.getElementById('acct-notif-days');
+    if (notifOn) notifOn.checked = !!settings.notifyEnabled;
+    if (notifDays) notifDays.value = settings.notifyDaysBefore || 1;
+    const notifStatus = document.getElementById('acct-notif-status');
+    if (notifStatus) {
+      const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+      notifStatus.textContent = perm === 'granted' ? 'Permission granted' : perm === 'denied' ? 'Permission denied — allow in browser settings' : perm === 'unsupported' ? 'Not supported in this browser' : 'Permission not yet granted';
+      notifStatus.style.color = perm === 'granted' ? 'var(--success)' : perm === 'denied' ? 'var(--danger)' : 'var(--muted)';
+    }
+  }
 }
 function showAccount() {
   document.getElementById('view-dashboard').classList.add('hidden');
@@ -3371,25 +4140,47 @@ function showAccount() {
   document.getElementById('acct-biz').value = settings.businessName || '';
   document.getElementById('acct-about').value = settings.about || '';
   document.getElementById('acct-color').value = settings.accentColor || '#4f8ef7';
+  ['dark','light'].forEach(v => {
+    const key = v === 'dark' ? 'logoDark' : 'logoLight';
+    const el = document.getElementById('logo-' + v + '-preview');
+    if (el) el.innerHTML = settings[key] ? `<img src="${settings[key]}" style="width:100%;height:100%;object-fit:contain"/>` : '<span style="font-size:1.2rem">🖼</span>';
+  });
   const currEl = document.getElementById('acct-currency');
   if (currEl) currEl.value = settings.currency || 'GBP';
-  updateLsUsage();
-  const notifOn = document.getElementById('acct-notif-on');
-  const notifDays = document.getElementById('acct-notif-days');
-  if (notifOn) notifOn.checked = !!settings.notifyEnabled;
-  if (notifDays) notifDays.value = settings.notifyDaysBefore || 1;
-  const notifStatus = document.getElementById('acct-notif-status');
-  if (notifStatus) {
-    const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
-    notifStatus.textContent = perm === 'granted' ? 'Permission granted' : perm === 'denied' ? 'Permission denied — allow in browser settings' : perm === 'unsupported' ? 'Not supported in this browser' : 'Permission not yet granted';
-    notifStatus.style.color = perm === 'granted' ? 'var(--success)' : perm === 'denied' ? 'var(--danger)' : 'var(--muted)';
-  }
-  renderPrograms();
+  showAcctTab('profile');
 }
 const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_LABELS = {mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
 const DAY_NUMS   = {mon:1,tue:2,wed:3,thu:4,fri:5,sat:6,sun:0};
 
+function renderSessionLibrary() {
+  const el = document.getElementById('acct-sessions');
+  if (!el) return;
+  const listHtml = sessions.length
+    ? sessions.map(s => {
+        const exCount = s.exercises ? s.exercises.length : 0;
+        const summary = (s.exercises||[]).slice(0,3).map(e=>e.name).join(', ') + (exCount>3?` +${exCount-3} more`:'');
+        const assignedTo = clients.filter(c=>(c.assignedSessionIds||[]).includes(s.id)).map(c=>c.first+' '+c.last).join(', ');
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600;font-size:0.92rem">${s.name}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${exCount} exercise${exCount!==1?'s':''} · ${summary||'Empty'}</div>
+            ${assignedTo ? `<div style="font-size:0.72rem;color:var(--accent);margin-top:2px">Assigned to: ${assignedTo}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-xs" style="color:var(--danger)" onclick="slDeleteSession(${s.id})">Delete</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--muted);font-size:0.82rem;font-style:italic">No sessions yet. Create one from a client\'s Workout Builder.</div>';
+  el.innerHTML = listHtml;
+}
+function slDeleteSession(sid) {
+  if (!confirm('Delete this session from the library? It will be unassigned from all clients.')) return;
+  sessions = sessions.filter(s => s.id !== sid);
+  clients.forEach(c => { c.assignedSessionIds = (c.assignedSessionIds||[]).filter(id=>id!==sid); });
+  save(); renderSessionLibrary();
+}
 function renderPrograms() {
   const el = document.getElementById('acct-programs');
   if (!el) return;
@@ -3467,8 +4258,12 @@ function progRemoveSlot(i) {
 }
 function progSave() {
   progFlushSlots();
-  const name = document.getElementById('prog-name')?.value.trim();
-  if (!name) return;
+  const nameEl = document.getElementById('prog-name');
+  const name = nameEl?.value.trim();
+  if (!name) {
+    if (nameEl) { nameEl.style.borderColor='var(--danger)'; setTimeout(()=>nameEl.style.borderColor='',1500); nameEl.focus(); }
+    return;
+  }
   const weeks = parseInt(document.getElementById('prog-weeks')?.value) || 4;
   const slots = progSlots.filter(s => s.label);
   if (progEditId) {
@@ -3494,10 +4289,6 @@ function saveAccount() {
   save(); applyBranding();
   const btn = document.querySelector('[onclick="saveAccount()"]');
   if (btn) { btn.textContent='Saved ✓'; btn.style.background='var(--success)'; setTimeout(()=>{ btn.textContent='Save Profile'; btn.style.background=''; }, 1800); }
-}
-function saveAccentColor() {
-  settings.accentColor = document.getElementById('acct-color').value;
-  save(); applyBranding();
 }
 function exportData() {
   const data = { version: 2, exportedAt: new Date().toISOString(), clients, settings };
@@ -3621,21 +4412,19 @@ const MEAS_FIELDS = ['Waist','Hips','Chest','Upper Arm','Thigh','Calf'];
 function measUnit() { return settings.measureUnit || 'cm'; }
 function measConvert(v) { return measUnit()==='in' ? Math.round(v/2.54*10)/10 : v; }
 function measFromDisplay(v) { return measUnit()==='in' ? Math.round(v*2.54*10)/10 : v; }
-function measurementsPanel(c) {
+function measurementsBody(c) {
   const mu = measUnit();
-  const unitTabs2 = '<div class="unit-tabs"><button class="unit-tab'+(mu==='cm'?' active':'')+'" onclick="settings.measureUnit=\'cm\';save();renderClient(find(activeId))">cm</button><button class="unit-tab'+(mu==='in'?' active':'')+'" onclick="settings.measureUnit=\'in\';save();renderClient(find(activeId))">in</button></div>';
   const sorted = [...(c.measurements||[])].sort((a,b)=>b.date.localeCompare(a.date));
   const latest = sorted[0];
-
   const earliest = sorted[sorted.length - 1];
-  const summary = latest ? '<div class="meas-grid">' + MEAS_FIELDS.map(f => {
+  const summary = latest ? '<div class="meas-grid" style="margin-top:8px">' + MEAS_FIELDS.map(f => {
     const key = f.toLowerCase().replace(' ','');
     const val = latest[key];
     const firstVal = earliest && earliest !== latest ? earliest[key] : null;
     const delta = (val && firstVal) ? measConvert(val) - measConvert(firstVal) : null;
     const deltaStr = delta !== null ? '<div style="font-size:0.68rem;color:'+(delta<0?'var(--success)':delta>0?'var(--danger)':'var(--muted)')+'">'+( delta<0?'':'+')+(Math.round(delta*10)/10)+' '+mu+'</div>' : '';
     return '<div class="meas-item"><div class="meas-label">'+f+'</div><div class="meas-value">'+(val ? measConvert(val)+' '+mu : '—')+'</div>'+deltaStr+'</div>';
-  }).join('') + '</div>' : '<div style="color:var(--muted);font-size:0.82rem;font-style:italic;margin-bottom:12px">No measurements logged yet.</div>';
+  }).join('') + '</div>' : '<div style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:8px 0">No measurements logged yet.</div>';
 
   const history = sorted.length > 1 ? '<table class="perf-table" style="margin-top:10px"><thead><tr><th>Date</th>'
     + MEAS_FIELDS.map(f=>'<th>'+f+'</th>').join('') + '<th></th></tr></thead><tbody>'
@@ -3652,9 +4441,9 @@ function measurementsPanel(c) {
     + '<button class="btn-sm" onclick="logMeasurement('+c.id+')">Log Measurements</button>'
     + '</div>';
 
-  return '<div class="panel col-8"><div class="panel-title"><div class="panel-title-left"><span class="panel-title-dot" style="background:var(--cyan)"></span>Body Measurements</div>'+unitTabs2+'</div>'
-    + summary + history + addForm + '</div>';
+  return summary + history + addForm;
 }
+function measurementsPanel(c) { return ''; }
 function logMeasurement(cid) {
   const c = find(cid);
   const date = document.getElementById('meas-date')?.value;
@@ -3979,6 +4768,20 @@ function deleteCommEntry(cid, eid) {
 // ── Init ──
 boot();
 renderDashboard();
+</script>
+<script>
+if (location.hostname === 'localhost') {
+  let _hash = '';
+  const _h = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 ^ s.charCodeAt(i)) >>> 0; return h; };
+  setInterval(async () => {
+    try {
+      const txt = await fetch('/?_=' + Date.now()).then(r => r.text());
+      const h = String(_h(txt));
+      if (_hash && h !== _hash) location.reload();
+      _hash = h;
+    } catch {}
+  }, 1500);
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,76 @@
+# Vision OS 3.0 — .gitignore
+# THIS FILE IS THE BOUNDARY RECORD. Git tracks the markdown wiki + framework. Binaries, secrets,
+# machine state, and everything listed under "Confidential" stay local — never committed, anywhere.
+#
+# The one-boundary model: everything owner-specific lives in Vault/. In the owner's own PRIVATE
+# repo, non-sensitive Vault/ markdown IS committed (that is the backup). /export removes Vault/
+# wholesale, leaving a clean shareable framework.
+#
+# Flagging a project confidential = appending its folder under "Confidential" below, in the same
+# breath. This file is the ONLY confidentiality record — there is no lock file and no registry.
+
+# ── Confidential — whole-folder, never committed ────────────────────────────
+# (confidential folders are appended here by flagging a project confidential)
+
+# ── Obsidian & plugin machine data ──────────────────────────────────────────
+.obsidian/
+.smart-env/
+.makemd/
+
+# ── Claude Code local settings (machine-specific) ───────────────────────────
+.claude/settings.local.json
+.claude/launch.json
+
+# ── Local app sandboxes — disposable working copies, their own git, never backed up ──
+Vault/projects/*/*-app-draft/
+
+# ── Binary / large source files — local only, never git ────────────────────
+*.pdf
+*.PDF
+*.xlsx
+*.xls
+*.xlsm
+*.docx
+*.doc
+*.pptx
+*.ppt
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.svg
+*.ico
+*.mp3
+*.mp4
+*.mov
+*.zip
+*.7z
+
+# ── Credentials & secrets ───────────────────────────────────────────────────
+*.key
+*.pem
+*.p12
+*.pfx
+.env
+.env.*
+.envrc
+credentials
+credentials.*
+secrets
+secrets.*
+*recovery*code*
+*backup*code*
+
+# ── Python bytecode ──────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ── OS / editor noise ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.tmp.*
+*~

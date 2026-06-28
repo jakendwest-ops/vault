@@ -1,5 +1,17 @@
 # CoachApp / PTHub — LOG
 
+## 2026-06-28 — Vault wired to GitHub, /save skill updated
+
+**Done:**
+- `jakendwest-ops/pthub` renamed to `jakendwest-ops/vault` on GitHub — PTHub code repo was redundant; Vault is now its only purpose
+- Local Vault (`C:\Users\jaken\Claude\Vault\`) wired with remote origin and all 17 files pushed for the first time
+- `/save` skill updated (Step 8) to auto-commit and push Vault at session end — was previously writing files but never committing
+
+**Decided:**
+- Keep the repo public for now (no sensitive data in Vault). Why: no action needed to change it and it matches the coachapp repo's visibility.
+
+---
+
 ## 2026-06-28 — UI consistency pass, E2E smoke test (v135–v143)
 
 **Done:**

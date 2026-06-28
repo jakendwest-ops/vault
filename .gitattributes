@@ -1,0 +1,9 @@
+# Vision OS 3.0 — line-ending normalisation
+* text=auto eol=lf
+
+# PowerShell scripts keep CRLF on Windows.
+*.ps1 text eol=crlf
+
+# Append-only stores keep LF.
+*.jsonl text eol=lf
+*.json  text eol=lf

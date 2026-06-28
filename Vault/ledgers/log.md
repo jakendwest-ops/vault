@@ -26,3 +26,4 @@
 2026-06-26 | CoachApp | 12-week Hyrox program built (44 Option B templates, W2-W12), client_1rms table, client calendar tab + day detail modal, PT template filter, dashboard strip removed | v120-v121 | Discuss-then-approve working agreement established
 2026-06-27 | CoachApp | Runner feature pack (timed sets, unilateral, My Programs accordion, runner redesign, skip rest fix, session detail fix), Playwright hardened (15/15 green) | v134 local � push pending | jake
 2026-06-28 | CoachApp | v135→v143 | UI consistency pass (client day modal, PT Programs accordion, client Workouts page — all surfaces aligned); edit start date feature; normalizeDuration cardio fix; Test Client created; E2E smoke test 9/9 PASS | Open: verify calendar on live, Test Client auth invite
+2026-06-28b | Vault | — | pthub repo renamed to vault; Vault remote wired + first push; /save skill updated to auto-commit vault at session end | No open items

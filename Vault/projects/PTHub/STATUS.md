@@ -1,8 +1,10 @@
 # CoachApp — ACTIVE PROJECT
 
-> PTHub is **frozen** — reference spec only. No new features built there.
+> PTHub repo renamed to **vault** (`jakendwest-ops/vault`) — stores this Vault only, no active code.
 > All active development is in CoachApp.
 > Full product blueprint: `Vault/projects/CoachApp/blueprint.md`
+
+**Vault:** `C:\Users\jaken\Claude\Vault\` → https://github.com/jakendwest-ops/vault (committed + pushed at every /save)
 
 **Location:** `C:\Users\jaken\coachapp\`
 **Git:** master branch — pushed to https://github.com/jakendwest-ops/coachapp

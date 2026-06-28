@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "deny": [
+      "Write(Vault/ledgers/**)",
+      "Edit(Vault/ledgers/**)"
+    ],
+    "allow": [
+      "Read(**)",
+      "Glob(**)",
+      "Grep(**)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push backup:*)",
+      "Bash(git ls-files:*)",
+      "Bash(qmd:*)",
+      "Bash(gitleaks:*)",
+      "PowerShell(git status:*)",
+      "PowerShell(git log:*)",
+      "PowerShell(git diff:*)",
+      "PowerShell(git add:*)",
+      "PowerShell(git commit:*)",
+      "PowerShell(git push backup:*)",
+      "PowerShell(qmd:*)",
+      "PowerShell(Add-Content:*)",
+      "PowerShell(Get-ChildItem:*)",
+      "PowerShell(Get-Content:*)",
+      "mcp__qmd__query",
+      "mcp__qmd__get",
+      "mcp__qmd__multi_get",
+      "mcp__qmd__status"
+    ]
+  },
+  "sandbox": {
+    "filesystem": {
+      "allowWrite": [
+        "Vault/ledgers/**"
+      ]
+    }
+  }
+}
