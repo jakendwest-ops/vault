@@ -4,6 +4,44 @@ Newest first.
 
 ---
 
+## 2026-06-28 — Branding + security/GDPR hardening + OS self-audit (v134→v152)
+
+**Done:**
+- v150: Edit sessions from Programs page; exercise library dropdown in edit modal; `program_id` clone bug fix; timed set render fix (1:30 not 90 reps); PII stripped from 16 log sites; pre-push checks expanded to 10
+- v151: PT branding — `coach_branding` table, private `logos` bucket, signed URL (604800s), sidebar + PT dashboard + client dashboard display
+- v152: Security/GDPR hardening — `progress-photos` bucket made private, signed URLs for photos (3600s), consent checkbox on signup, Data & privacy card in Settings (data export + delete account), `delete_current_user()` Postgres RPC
+
+**Bugs found + fixed:**
+- `hello-claude` skill reading `PTHub\STATUS.md` instead of `CoachApp\STATUS.md` — every session started with wrong project context
+- `/save` skill writing to `PTHub\STATUS.md` and `PTHub\LOG.md` — every session save went to the wrong project; STATUS.md was 18 versions stale
+- `alert()` in `deleteAccount()` blocked by pre-push hook — replaced with inline DOM message
+- `progress-photos` bucket was public — made private, migrated display from `getPublicUrl` to `createSignedUrls` batch
+
+**Decided:**
+- Signed URL expiry standards: logos = 604800s (7 days), progress-photos = 3600s (1hr)
+- `delete_current_user()` as `security definer` Postgres RPC — avoids needing service role key on client side
+- Double-confirm for account deletion: `confirm()` + `prompt()` requiring "DELETE" typed verbatim
+- Pre-push hook must use inline DOM message, never `alert()` (blocked by hook check 6)
+
+**Skills created/updated:**
+- `/security-audit` — new skill; 7-point checklist covering buckets, RLS, PII, GDPR, new tables, signed URLs
+- `deploy-check` — expanded to 9 checks (added 5b: buckets private, 5c: GDPR features)
+- `hello-claude` (both account-level and CoachApp-level) — fixed PTHub paths, added 4 security gates, sounding board, approve-before-build, regression sweep, blast radius sweep
+- `/save` — fixed PTHub paths in Steps 3 and 4
+
+**Memory created:**
+- `feedback_security_gdpr.md` — comprehensive security/GDPR rules
+- `project_coachapp_patterns.md` — modal pattern, program_id constraint, timed sets format, dbq(), master account, nav context, save functions
+
+**UNVERIFIED (banked):**
+- Branding display in preview (confirmed in session), but not tested on live GitHub Pages
+- `delete_current_user()` RPC — runs in DB but full end-to-end deletion not tested with a real account
+
+**Why:**
+- Security was missed because no proactive gates existed, lessons stayed in volatile STATUS.md not permanent memory, and skills were never audited after creation. This session adds all three missing layers.
+
+---
+
 ## 2026-06-27 — Runner feature pack + regression fixes + Playwright hardening (v134)
 
 ### What was done

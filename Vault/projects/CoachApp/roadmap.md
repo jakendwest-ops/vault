@@ -1,6 +1,6 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-06-20_
+_Last updated: 2026-06-28_
 
 ---
 
@@ -26,30 +26,29 @@ Features inside a section are in priority order. Update status tags during each 
 |---|---|---|
 | Client list | ✅ Done | |
 | Add client | ✅ Done | |
-| Client profile (tabs) | ✅ Done | Overview / Goals / Workouts / Weight / Performance |
-| Edit client details | ✅ Done | Verified working post-deploy |
-| Update client email (modal) | ✅ Done | Verified working post-deploy |
+| Client profile (tabs) | ✅ Done | Overview / Goals / Workouts / Weight / Performance / Programs / Photos |
+| Edit client details | ✅ Done | |
+| Update client email (modal) | ✅ Done | |
 | Invite client via email | ✅ Done | Edge Function — stamps user_id + invited_at at send time |
-| Resend invite | ✅ Done | State driven by invited_at |
+| Resend invite | ✅ Done | |
 | Client compliance tracking | ✅ Done | Sessions per client this week — colour-coded card on PT dashboard |
 | In-app PT→client messaging / notes thread | 💡 Future | Supabase Realtime; simple thread per client profile |
 
-### PT dashboard (Monday morning view)
+### PT dashboard
 | Feature | Status | Notes |
 |---|---|---|
 | Stats row (active clients, sessions this week) | ✅ Done | |
 | Recent activity feed (weight + workout logs, last 7 days) | ✅ Done | |
-| This week's sessions compliance card | ✅ Done | Replaces "Needs check-in" — colour-coded per client, capped at 6 |
+| This week's sessions compliance card | ✅ Done | |
 | Goals due soon (next 14 days) | ✅ Done | |
 
 ### Calendar
 | Feature | Status | Notes |
 |---|---|---|
-| Calendar page (monthly grid) | ✅ Done | Mon-start, coloured event dots |
+| Calendar page (monthly grid) | ✅ Done | |
 | Month navigation | ✅ Done | |
 | Add event (modal — title, date, type, client, notes) | ✅ Done | |
 | Delete event | ✅ Done | |
-| `created_by` bug fix in saveEvent() | ✅ Done | Fixed: added created_by: user.id to insert |
 | Per-client calendar view | 💡 Future | Filter calendar to one client's events |
 
 ### Exercise library
@@ -65,9 +64,26 @@ Features inside a section are in priority order. Update status tags during each 
 | Create / edit / delete templates | ✅ Done | |
 | Add exercises to template | ✅ Done | |
 | Set form — AMRAP / Uni / Timed, Reps, Weight, %1RM, Rest, RPE/RIR, Tempo, Notes | ✅ Done | |
+| Cardio set form — Pace/500m, Pace/km, HR Zone, Rest, Stroke rate, Duration, Distance | ✅ Done | |
+| Template card set preview | ✅ Done | |
+| Section labels ([WARM-UP] / [MAIN SET] / [COOL-DOWN]) | ✅ Done | |
 | Log workout against template | ✅ Done | |
 | View workout log | ✅ Done | |
 | Custom exercise demo videos (YouTube link) | 💡 Future | Per exercise in library |
+
+### Workout runner
+| Feature | Status | Notes |
+|---|---|---|
+| Real-time gym logger | ✅ Done | |
+| Cardio mode + interval timer | ✅ Done | |
+| Rest timer | ✅ Done | |
+| Bodyweight / assisted / superset support | ✅ Done | |
+| Timed sets | ✅ Done | |
+| Unilateral L/R logging | ✅ Done | |
+| Set X of Y header + edit logged sets | ✅ Done | |
+| Session summary / finish screen | ✅ Done | PR badge, stats row, exercise cards |
+| Runner target chips (pace, duration, stroke rate, rest HR) | ✅ Done | |
+| Client notes per exercise | ✅ Done | Saves to workout_log_exercises.client_notes |
 
 ### Weight tracking
 | Feature | Status | Notes |
@@ -94,22 +110,35 @@ Features inside a section are in priority order. Update status tags during each 
 | Milestones | ✅ Done | |
 | Check-ins | ✅ Done | |
 | Goals due soon on PT dashboard | ✅ Done | |
+| Goals overhaul — granular mini-goals and milestones | 🗓 Planned | Week 3 priority |
 
 ### Programs (phase-based training plans)
 | Feature | Status | Notes |
 |---|---|---|
-| Programs schema (4 tables) | ✅ Done | programs, program_phases, program_phase_workouts, client_programs |
-| Programs UI — create / edit / delete programs | 🔧 In progress | v94 build started; needs testing + review |
-| Program phases (weeks, ordering) | 🔧 In progress | |
-| Assign workout templates to phase days | 🔧 In progress | |
-| Assign program to client with start date | 🔧 In progress | "Assign to client" button built; not fully verified |
+| Programs schema (4 tables) | ✅ Done | |
+| Programs UI — create / edit / delete programs | ✅ Done | |
+| Program phases (weeks, ordering) | ✅ Done | |
+| Assign workout templates to phase days | ✅ Done | |
+| Assign program to client with start date | ✅ Done | |
+| Edit start date | ✅ Done | Shifts entire calendar |
+| Remove program from client | ✅ Done | |
+| PT client programs accordion (Phase → Day → SESSION N/M → exercises) | ✅ Done | |
+| Client plan editing (PT edits client's sessions) | ✅ Done | Apply-to-all propagation |
 | Auto-create calendar events from program schedule | 💡 Future | |
-| Progression rules engine | 💡 Future | PT defines rules per exercise (linear/wave/peaking); runner calculates target weight — eliminates need for per-week template clones |
+| Progression rules engine | 💡 Future | Auto-calculates target weight per session |
+| Individual session skip/move on client calendar | 💡 Future | Defer until real PT usage data |
+
+### Branding / UI
+| Feature | Status | Notes |
+|---|---|---|
+| Branding — logo upload, display on dashboards | ✅ Done | v151 — private logos bucket, signed URLs, sidebar + PT/client dashboards |
+| UI consistency pass | ✅ Done | SESSION N/M labels + exercise lists unified across all surfaces (v143) |
+| Metric / imperial toggle | 🗓 Planned | Week 3 priority |
 
 ### Leaderboards
 | Feature | Status | Notes |
 |---|---|---|
-| Client leaderboard (most weight lost, heaviest squat, etc.) | 💡 Future | Low effort, high engagement — uses existing data |
+| Client leaderboard (most weight lost, heaviest squat, etc.) | 💡 Future | |
 
 ---
 
@@ -118,20 +147,30 @@ Features inside a section are in priority order. Update status tags during each 
 ### Client dashboard
 | Feature | Status | Notes |
 |---|---|---|
-| Client login (invite acceptance — set password) | ✅ Done | |
-| Client-facing dashboard (what the client sees after login) | 🗓 Planned | **Next priority** — RLS foundations now in place |
-| Client logs own weight | 🗓 Planned | |
-| Client logs own workouts | 🗓 Planned | |
-| Client views own goals + progress | 🗓 Planned | |
-| Client views own calendar | 🗓 Planned | |
-| Client adds own PBs | 🗓 Planned | |
-| Client video submission (form review) | 💡 Future | PT reviews and leaves feedback |
+| Client login (invite acceptance) | ✅ Done | |
+| Client dashboard (this-week banner, check-in, recent sessions, weight chart) | ✅ Done | |
+| Client calendar | ✅ Done | Monthly grid; program workouts mapped to dates; day detail modal |
+| Client Workouts page | ✅ Done | Phase → Day → SESSION N/M → exercise list → Start button |
+| Client logs own weight | ✅ Done | |
+| Client logs own workouts (runner) | ✅ Done | |
+| Client views own goals + progress | ✅ Done | |
+| Client adds own PBs | ✅ Done | |
+| Client video submission (form review) | 💡 Future | |
 
 ### Solo user (self-coached)
+
+_Someone who signs up without a PT. Uses the app to write their own programs, log workouts, and track weight/PBs. No coach relationship._
+
 | Feature | Status | Notes |
 |---|---|---|
-| Solo signup flow (no PT invite needed) | 🗓 Planned | Role: solo; coach_id null |
-| Solo dashboard | 🗓 Planned | Same as client dashboard but self-serve |
+| Solo signup flow (no PT invite needed) | 🗓 Planned | Role: `solo`; `coach_id` null; standard email signup |
+| Solo dashboard | 🗓 Planned | Same shell as client dashboard — this week, recent sessions, weight chart |
+| Solo can create workout templates | 🗓 Planned | Same template builder as PT; coach_id = own user id |
+| Solo can create programs | 🗓 Planned | Same program builder; self-assign |
+| Solo weight + PB tracking | 🗓 Planned | Already works for clients — should need minimal extra work |
+| Solo workout runner | 🗓 Planned | Already works for clients — likely zero extra work |
+| Upgrade path: solo → PT-coached | 💡 Future | Solo accepts PT invite, coach_id stamped, retains history |
+| Upgrade path: solo → becomes a PT | 💡 Future | Role change; gains coach dashboard + client management |
 
 ---
 
@@ -139,10 +178,10 @@ Features inside a section are in priority order. Update status tags during each 
 
 | Feature | Status | Notes |
 |---|---|---|
-| Branding / custom logo | 💡 Future | White-label for gym owners |
-| Marketplace — sell programs to non-clients | 💡 Future | Long-term monetisation path; program schema already supports it |
-| Assistant coach support (multi-coach) | 💡 Future | Relevant for gym/team settings |
-| MFP / nutrition CSV import | 💡 Future | Macro tracking, actual intake vs targets |
+| Branding / custom logo | ✅ Done | v151 — coach_branding table, RLS, logo signed URLs, business name |
+| Marketplace — sell programs to non-clients | 💡 Future | |
+| Assistant coach support (multi-coach) | 💡 Future | |
+| MFP / nutrition CSV import | 💡 Future | |
 
 ---
 
@@ -152,23 +191,19 @@ Features inside a section are in priority order. Update status tags during each 
 |---|---|---|
 | Supabase project (avilxuiacmtgeoxxhfhc) | ✅ Done | |
 | RLS policies — coach-scoped | ✅ Done | |
-| RLS policies — client-scoped | ✅ Done | 11 SELECT policies; using `in` subquery pattern; auth.email() not auth.users |
-| Broken policy fix (`Client stamps own user_id`) | ✅ Done | Was querying auth.users directly — replaced with auth.email() |
+| RLS policies — client-scoped | ✅ Done | Optimised 2026-06-23; (SELECT auth.uid()) caching |
 | Audit log (DB-side triggers on 17 tables) | ✅ Done | |
-| Structured console logging (JS-side) | ✅ Done | log.info/ok/error/warn throughout app.js |
-| Silent failure audit | ✅ Done | All error handlers now log + show inline; no alert() remaining |
+| Structured console logging (JS-side) | ✅ Done | |
+| Silent failure audit + dbq() wrapper | ✅ Done | |
 | Edge Function — invite-client | ✅ Done | |
-| Git (master branch) | ✅ Done | |
-| Netlify deploy | ✅ Done | https://superlative-khapse-b92582.netlify.app (v=22 pending deploy) |
-| SQL safety skill | ✅ Done | `coachapp/.claude/skills/sql-safety/SKILL.md` |
-| Session protocols (hello claude / /save) | ✅ Done | |
-| RLS extension for client accounts | ✅ Done | |
+| Git (master branch) + GitHub Pages deploy | ✅ Done | Auto-deploys on push |
+| Pre-push git hook + GitHub Actions CI | ✅ Done | 10 checks; blocks bad pushes |
+| Playwright E2E suite | ✅ Done | 14 tests passing; runner + client + auth flows |
+| SQL safety skill | ✅ Done | |
+| Vault → GitHub backup | ✅ Done | jakendwest-ops/vault; auto-pushed on /save |
 
 ---
 
-## Pending actions for Jake (manual steps)
-
-| Action | Priority |
-|---|---|
-| Deploy v=22 to Netlify (drag files inside coachapp/ to dropzone) | High |
-| Commit sql-safety skill to CoachApp git repo | Medium |
+## Beta prep (Week 5 — Jul 22–31)
+- Full walkthrough, Playwright suite, Supabase redirect URL audit
+- Beta invites staggered: Jul 25, Jul 28, Jul 31
