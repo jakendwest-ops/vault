@@ -5,10 +5,10 @@ _Last updated: 2026-06-29_
 
 ## Live state
 
-**App version:** v157 (app.js)
+**App version:** v162 (app.js)
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 401f309 — v157 settings smoke tests + delete modal position fix (pushed 2026-06-29, CI green)
+**Last push:** a875118 — hello-claude process improvements (pushed 2026-06-29, CI green)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -36,7 +36,8 @@ _Last updated: 2026-06-29_
 - Check-ins — weekly form, history
 - Goals — create, edit, milestones, check-ins, due-soon on PT dashboard
 - My Progress (client) — 4 tabs: Body Weight, Strength, Cardio, Personal Bests
-- View switcher — PT ↔ client for master account (sidebar desktop + mobile pill)
+- View switcher — PT | Client | Personal three-pill for master account (sidebar desktop + mobile); Personal pill shown only when solo client record exists
+- Personal (solo) account — Jake's client record severed from PT (coach_id = null); personal dashboard, solo nav, self-assign programs, Workouts shows program session accordion with Start buttons
 - Exercise library — add / edit / delete / muscle groups / library dropdown in template exercise editor
 - Programs builder — Hyrox Hero (12-week, 4 templates × 12 phases = 48 master templates)
 - **Branding** — PT logo upload (private logos bucket, signed URLs), business name, sidebar, PT dashboard, client dashboard
@@ -52,14 +53,16 @@ _Last updated: 2026-06-29_
 
 ## In progress / known gaps
 
-- **Privacy policy page** — consent checkbox links to `#`; real policy needed before first beta invite
+- **Privacy policy page** — ✅ Done (v158, pushed 2026-06-29) — `/privacy-policy.html` live, consent link updated
+- **Personal account (solo view)** — ✅ Done (v158–v162, pushed 2026-06-29) — PT | Personal view switcher, solo dashboard, programs self-assign, Workouts session accordion, RLS policies added
+- **Performance logs RLS** — ✅ Done (2026-06-29) — 5 clean policies confirmed via pg_policies query
 - **Invite email logo** — PT branding not yet included in invite email HTML (Edge Function not updated)
 - **Signed URLs for progress-photos expire after 1hr** — images break in long-lived tabs; acceptable for now
 - **My Programs accordion Playwright tests** — conditional (skip if test client has no program). Test client may not have program assigned.
 - **My Progress Strength tab** — PostgREST `!inner` join; not verified on live with real data
-- **Performance logs RLS** — client-scoped SELECT policy for `performance_logs` unconfirmed in production
 - **Program builder desktop layout** — cards may not span full width at wider viewports
 - **Weekly check-in notification** — always shows Due if >7 days; no dismiss until submitted
+- **Solo account: no Playwright tests** — entire solo flow (dashboard, programs, workouts, calendar, progress) has zero test coverage; needs smoke tests before beta
 
 ---
 
@@ -93,14 +96,14 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 ### Save functions own no navigation
 `save*` functions save only. Navigation is role-aware at the call site.
 
-### Master account
-`window._masterAccount = true` when user has both coach profile and client record. `currentProfile.role` flips between `'coach'` and `'client'` via `switchView()`. `localStorage._activeView` persists choice.
+### Master account / solo account
+`window._masterAccount = true` when coach user has any client record (coached or personal). `window._soloClientId` = personal client record ID (coach_id = null). `window._masterClientId` = coached client record ID (coach_id set). `currentProfile.role` cycles between `'coach'`, `'client'`, `'solo'` via `switchView()`. `localStorage._activeView` persists choice. Client pill only shown when `_masterClientId` set; Personal pill only when `_soloClientId` set.
 
 ### Storage — signed URLs
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-app.js is at `?v=157`. Next commit that changes app.js must bump to `?v=158`.
+app.js is at `?v=162`. Next commit that changes app.js must bump to `?v=163`.
 
 ---
 
@@ -108,10 +111,11 @@ app.js is at `?v=157`. Next commit that changes app.js must bump to `?v=158`.
 
 | Action | Priority |
 |---|---|
-| Write and publish privacy policy page; update consent checkbox href | **High — blocks beta** |
-| Live smoke test on GitHub Pages — branding, data export, delete account modal (v157 — modal position fixed) | **High** |
+| Live smoke test — personal account end-to-end: Dashboard, Workouts (program accordion), Calendar (program workouts on grid), Progress, start a session from Workouts | **High** |
+| Remove Hyrox Hero from Sarah Mitchell's Programs tab (was assigned during testing) | **High** |
+| Add Playwright smoke tests for solo/personal account flow before beta | High |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
-| Test My Progress page on live — Strength tab and Personal Bests (RLS on performance_logs) | Medium |
+| Test My Progress Strength tab on live with real data | Medium |
 | Assign a program to the Playwright test client so accordion tests are not no-ops | Medium |
 | ICO breach notification procedure — document before beta | Medium |
 
@@ -121,6 +125,11 @@ app.js is at `?v=157`. Next commit that changes app.js must bump to `?v=158`.
 
 | Version | What shipped |
 |---|---|
+| v162 | Solo Workouts shows program session accordion (renderClientWorkoutsPage); renderWorkoutTemplates excludes client_id-tagged templates |
+| v161 | Start button on template detail for solo + client context; sql-safety RLS role audit section; hello-claude golden path walk behaviour |
+| v160 | Solo Programs audit — "Add to my plan" button; showAssignProgramToClientModal solo path; empty state copy |
+| v159 | Fix calendar ReferenceError (currentView not defined — broke all roles) |
+| v158 | Personal account (solo view) — three-pill view switcher, solo dashboard, _getCurrentClientId helper, progress functions fixed, privacy policy page |
 | v157 | Settings smoke tests (5 tests); delete modal anchored to viewport top when page scrolled |
 | v156 | Delete modal position fix — align-items:flex-start so modal not clipped when triggered scrolled |
 | v155 | XSS fix — escapeHtml() on all businessName innerHTML injection points; downloadMyData error handling |

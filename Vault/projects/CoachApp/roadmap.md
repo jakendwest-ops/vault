@@ -157,17 +157,26 @@ Features inside a section are in priority order. Update status tags during each 
 | Client adds own PBs | ✅ Done | |
 | Client video submission (form review) | 💡 Future | |
 
-### Solo user (self-coached)
+### Solo user / Personal account (self-coached)
 
-_Someone who signs up without a PT. Uses the app to write their own programs, log workouts, and track weight/PBs. No coach relationship._
+_Jake's master account gets a third "Personal" pill in the view switcher. A solo user is their own coach: `coach_id = auth.uid()`. Existing coach-scoped and client-scoped RLS covers them with minimal new policies._
+
+**Agreed design (2026-06-29):**
+- Third pill: PT | Client | Personal in both desktop sidebar + mobile switcher
+- Solo nav: Dashboard, Workouts, Programs, Calendar, Progress — no Clients section
+- One-time SQL clone: Jake's existing client record data copied into new self-owned record (coach_id = auth.uid()), then independent — no link to PT account
+- Program "assign to client" defaults to self in solo view
+- Existing Jake West client record under PT account stays as-is (still appears in PT dashboard stats)
+- **Decided (2026-06-29):** Delete the Jake West client record from the PT account after clone — PT account should only have real/test clients (Alex Turner, Sarah Mitchell, Test Client). Keeps the test environment clean.
 
 | Feature | Status | Notes |
 |---|---|---|
-| Solo signup flow (no PT invite needed) | 🗓 Planned | Role: `solo`; `coach_id` null; standard email signup |
-| Solo dashboard | 🗓 Planned | Same shell as client dashboard — this week, recent sessions, weight chart |
-| Solo can create workout templates | 🗓 Planned | Same template builder as PT; coach_id = own user id |
-| Solo can create programs | 🗓 Planned | Same program builder; self-assign |
-| Solo weight + PB tracking | 🗓 Planned | Already works for clients — should need minimal extra work |
+| Third pill — Personal view in master account switcher | 🗓 Planned | `switchView('solo')` — full session required |
+| Solo nav + dashboard | 🗓 Planned | Client shell + self-create access |
+| Self-coached client record (coach_id = auth.uid()) | 🗓 Planned | One new RLS insert policy on clients table |
+| One-time data migration SQL | 🗓 Planned | Clone 8 tables from existing Jake West client record |
+| Program self-assign flow | 🗓 Planned | Assign to self in solo view without client picker |
+| Solo weight + PB tracking | 🗓 Planned | Already works for clients — minimal extra work |
 | Solo workout runner | 🗓 Planned | Already works for clients — likely zero extra work |
 | Upgrade path: solo → PT-coached | 💡 Future | Solo accepts PT invite, coach_id stamped, retains history |
 | Upgrade path: solo → becomes a PT | 💡 Future | Role change; gains coach dashboard + client management |
