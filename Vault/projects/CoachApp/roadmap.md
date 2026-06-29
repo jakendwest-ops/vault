@@ -1,6 +1,6 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-06-29_
+_Last updated: 2026-06-29 (session 3)_
 
 ---
 
@@ -70,13 +70,14 @@ Features inside a section are in priority order. Update status tags during each 
 | Log workout against template | ✅ Done | |
 | View workout log | ✅ Done | |
 | Template propagation → syncs client plan copies | ✅ Done | Apply-to-all now updates client plan copies via program_phase_workout_id FK |
-| Custom exercise demo videos (YouTube link) | 💡 Future | Per exercise in library |
+| Custom exercise demo videos (YouTube link) | 🗓 Planned | Per exercise in library; competitor standard (TrainHeroic 1,500+, PT Distinction 1,656) |
 
 ### Workout runner
 | Feature | Status | Notes |
 |---|---|---|
 | Real-time gym logger | ✅ Done | |
 | Cardio mode + interval timer | ✅ Done | |
+| AMRAP / EMOM / circuit timer mode | 🗓 Planned | Dedicated timer for AMRAP (count-down), EMOM (minute boundary beep), circuit (rounds × work/rest); competitor standard on TrainHeroic |
 | Rest timer | ✅ Done | |
 | Bodyweight / assisted / superset support | ✅ Done | |
 | Timed sets — Start button + countdown overlay | ✅ Done | v169 — ▶ Start → fullscreen ring timer → auto-fills duration on complete |
@@ -206,6 +207,8 @@ _Jake's master account gets a third "Personal" pill. Solo user is their own coac
 | Silent failure audit + dbq() wrapper | ✅ Done | |
 | Edge Function — invite-client | ✅ Done | |
 | Git (master branch) + GitHub Pages deploy | ✅ Done | Auto-deploys on push |
+| PWA — manifest.json + service worker | 🗓 Planned | Makes app installable on iOS/Android from browser; no app store required; use PWABuilder (free, Microsoft) |
+| Native app (Capacitor wrapper) | 💡 Future | Wraps existing JS in native shell; enables push notifications + app store listing |
 | Pre-push git hook + GitHub Actions CI | ✅ Done | 10 static checks + Playwright (local only; CI skips — no credentials) |
 | Playwright E2E suite | ✅ Done | 18 tests; 10 passing in CI, 8 solo skipped (need Jake's account); runner + client + auth + settings flows |
 | SQL safety skill | ✅ Done | |
