@@ -117,10 +117,11 @@ app.js is at `?v=179`. Next commit that changes app.js must bump to `?v=180`.
 
 | Action | Priority |
 |---|---|
+| **NEXT SESSION: 1RM system — plan approved, ready to build (v181)** — (1) Runner inline 1RM prompt: if no 1RM + %1RM set → orange tap target → bottom sheet with kg input + Epley toggle → saves to client_1rms → live recalc in session. (2) Epley estimator in Add 1RM modal: "I know my 1RM" / "Estimate from a set" toggle → weight × reps → auto-calculates. (3) Big 5 quick-start on empty 1RM tab: Back Squat / Deadlift / Bench / OHP / Barbell Row pre-filled, save all at once. (4) Post-session 1RM suggestion: after save, offer "Save estimated 1RM from today's sets?". No schema changes needed — client_1rms already exists. | **High** |
 | Run /deploy-check before next beta invite | **High** |
 | Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (all 9 tests skip against E2E account; only pass against Jake's account) | **High** |
 | Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops | High |
-| **BUG: Session detail slide-in invisible on iOS Safari** — panel is in DOM with correct styles (position:fixed;inset:0;z-index:1000) but doesn't paint. Works in Chrome/local preview. Root cause: likely iOS Safari stacking context issue with `position:fixed` + `inset` shorthand. Fix: replace `inset:0` with explicit `top:0;right:0;bottom:0;left:0`, or switch panel children back to `position:fixed` with explicit viewport coords, or use `-webkit-` prefixed properties. Test fix on real iOS device before closing. | **High** |
+| Verify iOS Safari slide-in fix on real device — `inset:0` replaced with explicit `top/right/bottom/left` in v180, pushed. Test on iPhone and close if working. | **High** |
 | Run Rowing/Running/SkiErg DELETE SQL in Supabase (safety check first — see below) | High |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress Strength tab on live with real data | Medium |
