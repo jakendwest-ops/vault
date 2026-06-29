@@ -39,7 +39,7 @@ _Always-relevant facts. Changes append to the timeline block at the bottom — n
 | Data export | ✅ `downloadMyData()` in Settings |
 | Right to erasure | ✅ `delete_current_user()` RPC + Settings UI |
 | Data residency | ✅ eu-west-1 (Ireland) |
-| Privacy policy page | ❌ Needed before beta — consent checkbox links to `#` |
+| Privacy policy page | ✅ `/privacy-policy.html` live (v158, 2026-06-29); consent checkbox links to it |
 | ICO breach notification | ❌ Process not documented — needed before beta |
 
 ---

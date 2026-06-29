@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-06-29 (session 2)_
+_Last updated: 2026-06-29 (session 3)_
 
 ---
 
 ## Live state
 
-**App version:** v175 (app.js)
+**App version:** v179 (app.js)
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 6c63c85 — v175 activity feed fix (pushed 2026-06-29, CI green)
+**Last push:** bf3bac7 — smoke test hasPhase guard (pushed 2026-06-29, CI green)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -48,10 +48,11 @@ _Last updated: 2026-06-29 (session 2)_
 - **Security/GDPR** — private storage buckets, PII-free logs, consent checkbox, data export, delete account (delete_current_user RPC)
 - Pre-push hook — 10-check bug scan (JS syntax, column names, query scoping, cache bust, no alert, no hardcoded IDs, no set_type, no swallowed errors, no bare clearInterval, no PII in logs, no timed set guard bypass, no duplicate functions)
 - GitHub Actions CI — mirrors pre-push hook
-- Playwright E2E — 31 tests covering runner, client session, auth flows, settings (timeout bumped to 20s)
+- Playwright E2E — 39 tests (added 8 solo-account tests + session detail slide-in smoke test); 19 smoke tests in pre-push hook
 - Delete account — custom modal, typed DELETE confirmation, proper error handling, anchored to top of viewport (no browser dialogs, no clipping when page scrolled)
 - XSS protection — `escapeHtml()` applied to all coach-controlled strings in innerHTML
-- Playwright E2E — 31 tests (5 new settings smoke tests: sections render, delete modal open/cancel/validation, download data)
+- Session detail slide-in — right-side drawer showing exercises/sets/reps for a session; works in solo and client mode; `position:fixed;inset:0;z-index:1000` wrapper pattern
+- `sudoAsClient()` server-side guard — in-function email check prevents DevTools exploitation by non-Jake users
 
 ---
 
@@ -66,7 +67,7 @@ _Last updated: 2026-06-29 (session 2)_
 - **My Progress Strength tab** — PostgREST `!inner` join; not verified on live with real data
 - **Program builder desktop layout** — cards may not span full width at wider viewports
 - **Weekly check-in notification** — always shows Due if >7 days; no dismiss until submitted
-- **Solo account: no Playwright tests** — entire solo flow (dashboard, programs, workouts, calendar, progress) has zero test coverage; needs smoke tests before beta
+- **Solo account Playwright tests** — ✅ 8 smoke tests added (v176); session detail slide-in smoke test added (v179); tests skip gracefully when E2E account has no solo client record
 
 ---
 
@@ -107,7 +108,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-app.js is at `?v=175`. Next commit that changes app.js must bump to `?v=176`.
+app.js is at `?v=179`. Next commit that changes app.js must bump to `?v=180`.
 
 ---
 
@@ -115,13 +116,27 @@ app.js is at `?v=175`. Next commit that changes app.js must bump to `?v=176`.
 
 | Action | Priority |
 |---|---|
-| Run /deploy-check before next beta invite (Jul 25) | **High** |
-| Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (8 tests currently skipped every run) | **High** |
+| Run /deploy-check before next beta invite | **High** |
+| Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (all 9 tests skip against E2E account; only pass against Jake's account) | **High** |
 | Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops | High |
-| Live smoke test — solo/personal account: Dashboard, Workouts, Calendar, Progress, start a session (Jake to do manually) | High |
+| Live smoke test — session detail slide-in on live site: open a session, verify drawer animates in, close it (Jake to do on phone) | High |
+| Run Rowing/Running/SkiErg DELETE SQL in Supabase (safety check first — see below) | High |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress Strength tab on live with real data | Medium |
 | ICO breach notification procedure — document before beta | Medium |
+| Verify `workout_template_exercises` RLS policy exists (check pg_policies for that table) | Medium |
+
+**Rowing/Running/SkiErg SQL (run in Supabase SQL editor):**
+```sql
+-- Step 1: safety check — confirm not in use
+SELECT e.name, count(wte.id) as in_use
+FROM public.exercises e
+LEFT JOIN public.workout_template_exercises wte ON wte.exercise_id = e.id
+WHERE e.name IN ('Rowing', 'Running', 'SkiErg')
+GROUP BY e.name;
+-- Step 2 (only if all counts = 0):
+DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
+```
 
 ---
 
@@ -129,6 +144,10 @@ app.js is at `?v=175`. Next commit that changes app.js must bump to `?v=176`.
 
 | Version | What shipped |
 |---|---|
+| v179 | `sudoAsClient()` in-function email guard (security fix); session detail slide-in smoke test |
+| v178 | Re-fix session detail slide-in — panel wrapper changed to `position:fixed;inset:0;z-index:1000` |
+| v177 | Solo 1RM library fix (was gated by isClientPlan); propagation toast for shared templates |
+| v176 | `openSessionDetail()` slide-in drawer; 39/39 Playwright green; 8 solo smoke tests |
 | v175 | PT dashboard activity feed scoped to coach's clients only — solo sessions no longer show as "Unknown" |
 | v174 | Sudo/impersonation mode — "View as" button on client list, amber banner, exitSudo() |
 | v173 | Dashboard layout rework (all 3 dashboards); hero card, stats strip, two-column grid; Progress tab add buttons |
