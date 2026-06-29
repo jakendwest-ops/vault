@@ -4,6 +4,27 @@ Newest first.
 
 ---
 
+## 2026-06-29 — Tooling session: iOS fix, graphify knowledge graph, .claudeignore (v179–v180)
+
+**Done:**
+- iOS Safari session detail slide-in fix (v180) — replaced `inset:0` with explicit `top:0;right:0;bottom:0;left:0` on both the panel wrapper and backdrop div in `openSessionDetail()`; pushed, CI green
+- `.claudeignore` created — excludes node_modules, test-results, lock files, .git, scripts from AI context search
+- `graphify` installed and full semantic knowledge graph built — 298 nodes, 545 edges, 26 named communities (App Core, Workout Runner, Goals, Calendar, etc.); wired into Claude Code via CLAUDE.md + PreToolUse hooks; costs $0.15 one-time, future updates are free AST-only
+- 1RM build plan approved and banked in STATUS.md for next session
+
+**UNVERIFIED (banked):**
+- iOS Safari slide-in fix — confirmed via code review + Playwright (Chromium), not tested on real iPhone
+
+**Decided:**
+- Session approach going forward: "Nothing in isolation, everything looking at the big picture" — every feature filtered through product principles before building
+- Product principles: (1) Friction at point of use, (2) All features no hidden fees, (3) Copy-paste simplicity — ship with defaults not blank canvas
+- Rotate Anthropic API key after use in chat — Jake confirmed deleted
+
+**Why:**
+- graphify reduces context burn per session — `graphify query` instead of 10 grep passes through 7k-line app.js; article cited 40-60% context reduction from .claudeignore alone
+
+---
+
 ## 2026-06-29 — Supabase security hardening pass (no version bump)
 
 **Done:**

@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-06-29 (session 4)_
+_Last updated: 2026-06-29 (session 5)_
 
 ---
 
 ## Live state
 
-**App version:** v179 (app.js)
+**App version:** v180 (app.js)
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** bf3bac7 — smoke test hasPhase guard (pushed 2026-06-29, CI green)
+**Last push:** 7c16292 — graphify semantic graph (pushed 2026-06-29, CI green)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -109,7 +109,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-app.js is at `?v=179`. Next commit that changes app.js must bump to `?v=180`.
+app.js is at `?v=180`. Next commit that changes app.js must bump to `?v=181`.
 
 ---
 
@@ -147,6 +147,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
+| v180 | iOS Safari session detail slide-in fix — `inset:0` → explicit `top/right/bottom/left` |
 | v179 | `sudoAsClient()` in-function email guard (security fix); session detail slide-in smoke test |
 | v178 | Re-fix session detail slide-in — panel wrapper changed to `position:fixed;inset:0;z-index:1000` |
 | v177 | Solo 1RM library fix (was gated by isClientPlan); propagation toast for shared templates |
