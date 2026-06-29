@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-06-29 (session 3)_
+_Last updated: 2026-06-29 (session 4)_
 
 ---
 
@@ -53,6 +53,7 @@ _Last updated: 2026-06-29 (session 3)_
 - XSS protection — `escapeHtml()` applied to all coach-controlled strings in innerHTML
 - Session detail slide-in — right-side drawer showing exercises/sets/reps for a session; works in solo and client mode; `position:fixed;inset:0;z-index:1000` wrapper pattern
 - `sudoAsClient()` server-side guard — in-function email check prevents DevTools exploitation by non-Jake users
+- **DB security hardening** — OpenAPI schema mocked; `lock_created_at` BEFORE UPDATE triggers on 11 tables; `events` UPDATE USING clause fixed; REVOKE EXECUTE on 4 internal functions; `delete_current_user` search_path locked; max_rows 200; auto-expose new tables off; secure password change on; min password 8 chars; Security Advisor: 0 errors
 
 ---
 
@@ -125,6 +126,7 @@ app.js is at `?v=179`. Next commit that changes app.js must bump to `?v=180`.
 | Test My Progress Strength tab on live with real data | Medium |
 | ICO breach notification procedure — document before beta | Medium |
 | Verify `workout_template_exercises` RLS policy exists (check pg_policies for that table) | Medium |
+| Upgrade Supabase to Pro plan when ready for beta — unlocks leaked password protection (HaveIBeenPwned) | Low |
 
 **Rowing/Running/SkiErg SQL (run in Supabase SQL editor):**
 ```sql

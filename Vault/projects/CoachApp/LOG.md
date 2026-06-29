@@ -4,6 +4,30 @@ Newest first.
 
 ---
 
+## 2026-06-29 — Supabase security hardening pass (no version bump)
+
+**Done:**
+- OpenAPI schema mocked via `public.mock_openapi()` — schema structure no longer publicly readable via anon key
+- `public.lock_created_at()` trigger function created; applied as BEFORE UPDATE trigger on 11 core tables (workout_logs, weight_logs, performance_logs, goals, goal_check_ins, goal_milestones, events, client_check_ins, client_1rms, sessions, logged_sessions) — created_at is now immutable
+- `delete_current_user` search_path tightened from `search_path=public,auth` to `search_path=''`
+- `events` UPDATE policy ("Client manages own personal events") fixed — USING clause was `true` (open), now scoped to `EXISTS (clients where user_id = auth.uid()) AND is_pt_assigned = false`
+- REVOKE EXECUTE on `handle_new_user`, `lock_created_at`, `log_audit_event`, `mock_openapi` from both anon and authenticated — these are internal/trigger functions that should never be callable via API
+- REVOKE EXECUTE on `delete_current_user` from anon only (authenticated keeps access — that's the delete account flow)
+- Max rows: 1000 → 200 (Data API settings)
+- Auto-expose new tables: toggled off (new tables no longer get API access automatically)
+- Secure password change: enabled (requires recent login to change password)
+- Minimum password length: 6 → 8
+- Security Advisor result: 0 errors; remaining warnings are Pro-plan features or intentional patterns
+
+**Decided:**
+- Supabase book ("Building Production-Grade Web Applications with Supabase", Packt 2024) fully assessed; 5 priority actions all executed this session
+- OpenAPI schema exposure is a known Supabase default — now mitigated
+- Leaked password protection skipped — Pro plan only, not available on Free tier
+
+**Why:**
+- Events UPDATE USING clause was a real gap — any authenticated user could select any event row for updating (WITH_CHECK was correct but USING was open)
+- Internal trigger functions were callable via REST API — revoking EXECUTE removes them from the public API surface without breaking their trigger behaviour
+
 ## 2026-06-29 — Session detail slide-in bug fix + security hardening (v176–v179)
 
 **Done:**
