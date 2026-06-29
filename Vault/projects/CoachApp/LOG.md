@@ -4,6 +4,42 @@ Newest first.
 
 ---
 
+## 2026-06-29 — OS self-audit continuation + code review + XSS fix + push (v152→v155)
+
+**Done:**
+- v153: Code audit fixes — `removeBrandingLogo` fire-and-forget DB write now error-handled; dead code block removed from `renderClientPhotos`; `openClientByName` (orphaned, unscoped query) deleted
+- v154: `deleteAccount` replaced `confirm()`+`prompt()` with custom modal — type DELETE to confirm, inline validation error, button disabled during deletion
+- v155: XSS fix — added `escapeHtml()` helper; applied to all `businessName` innerHTML injection points (sidebar, client dashboard, PT dashboard subtitle, settings input value); wrapped `downloadMyData` in try/catch so network errors show a message instead of leaving UI stuck
+- All 11 commits pushed to master; GitHub Pages deployed; CI green (both workflows passed)
+- Open RLS policy fixed: `workout_templates` "Client reads workout templates" was `qual = true` (any client could read all coaches' templates); rewritten to scope to `coach_id = (SELECT coach_id FROM clients WHERE user_id = auth.uid())`
+
+**Bugs found + fixed:**
+- XSS (HIGH): `coach_branding.business_name` injected raw into `innerHTML` visible to clients — a coach could execute script in clients' sessions. Fixed with `escapeHtml()` at all 5 injection points
+- `downloadMyData`: no try/catch — `Promise.all` rejection left UI permanently showing "Preparing download…". Fixed with try/catch + user-visible error message
+- `removeBrandingLogo`: storage.remove() was error-handled but the subsequent db.update() was not — inconsistent state if update failed. Fixed
+- `renderClientPhotos`: duplicate unreachable empty-state check. Removed
+- `openClientByName`: orphaned function never called, contained unscoped `clients` query (no coach_id filter). Deleted
+- Playwright test timeout 10s too tight under full-suite load after `_loadBranding()` added extra login round-trip. Bumped to 20s — 26/26 stable
+- Open RLS policy on `workout_templates` — clients could read any coach's templates. Fixed in Supabase
+
+**OS audit completed:**
+- Both `hello-claude` files (account + CoachApp) were reading PTHub paths, missing 4 standing behaviours, saying "Seven checks" (now Nine)
+- `run-coachapp` and `mobile-check` at both levels still referenced Netlify
+- Playwright skills said "X/14" — suite is 26 tests
+- 7 skills were CoachApp-level only (not account-level) — added: deploy-check, save, security-audit, sql-safety, mobile-check, playwright, run-coachapp
+- `/code-review ultra` confirmed not available in Jake's desktop app — behaviour updated: run local multi-agent review inline before every push
+- LOG.md 2026-06-28 entry written (entire prior session had no log record)
+- Roadmap corrected: Branding marked Done in both rows
+
+**Decided:**
+- `escapeHtml()` is now the mandatory pattern for any coach-controlled string in innerHTML
+- Pre-deploy code review runs as inline multi-agent (3 finders + verifier), not as a slash command
+
+**UNVERIFIED (banked):**
+- Live smoke test on GitHub Pages post-push (branding, GDPR features, delete account modal) — not tested in browser on live URL
+
+---
+
 ## 2026-06-28 — Branding + security/GDPR hardening + OS self-audit (v134→v152)
 
 **Done:**

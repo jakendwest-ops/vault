@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-06-28_
+_Last updated: 2026-06-29_
 
 ---
 
 ## Live state
 
-**App version:** v152 (app.js)
+**App version:** v155 (app.js)
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 466bfc6 — security skill updates (not yet pushed to GitHub Pages — commits are local)
+**Last push:** 4308574 — v155 XSS fix + downloadMyData error handling (pushed 2026-06-29, CI green)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -43,7 +43,9 @@ _Last updated: 2026-06-28_
 - **Security/GDPR** — private storage buckets, PII-free logs, consent checkbox, data export, delete account (delete_current_user RPC)
 - Pre-push hook — 10-check bug scan (JS syntax, column names, query scoping, cache bust, no alert, no hardcoded IDs, no set_type, no swallowed errors, no bare clearInterval, no PII in logs, no timed set guard bypass, no duplicate functions)
 - GitHub Actions CI — mirrors pre-push hook
-- Playwright E2E — 14+ tests covering runner, client session, auth flows
+- Playwright E2E — 26 tests covering runner, client session, auth flows (timeout bumped to 20s)
+- Delete account — custom modal, typed DELETE confirmation, proper error handling (no browser dialogs)
+- XSS protection — `escapeHtml()` applied to all coach-controlled strings in innerHTML
 
 ---
 
@@ -97,7 +99,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-app.js is at `?v=152`. Next commit that changes app.js must bump to `?v=153`.
+app.js is at `?v=155`. Next commit that changes app.js must bump to `?v=156`.
 
 ---
 
@@ -105,10 +107,12 @@ app.js is at `?v=152`. Next commit that changes app.js must bump to `?v=153`.
 
 | Action | Priority |
 |---|---|
-| Push local commits to GitHub (master branch → GitHub Pages) | **High** |
 | Write and publish privacy policy page; update consent checkbox href | **High — blocks beta** |
+| Live smoke test on GitHub Pages — branding, data export, delete account modal | **High** |
+| Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress page on live — Strength tab and Personal Bests (RLS on performance_logs) | Medium |
 | Assign a program to the Playwright test client so accordion tests are not no-ops | Medium |
+| ICO breach notification procedure — document before beta | Medium |
 
 ---
 
@@ -116,6 +120,9 @@ app.js is at `?v=152`. Next commit that changes app.js must bump to `?v=153`.
 
 | Version | What shipped |
 |---|---|
+| v155 | XSS fix — escapeHtml() on all businessName innerHTML injection points; downloadMyData error handling |
+| v154 | deleteAccount custom modal — typed DELETE confirmation, replaces confirm()/prompt() |
+| v153 | Code audit fixes — fire-and-forget DB write, dead code, orphaned unscoped function |
 | v152 | Security/GDPR hardening — progress-photos private, consent checkbox, data export, delete account |
 | v151 | PT branding — logo upload, business name, sidebar/PT dashboard/client dashboard display |
 | v150 | Edit sessions from Programs page; exercise library dropdown in edit modal; program_id clone bug fix; timed set render fix (1:30 not 90 reps); PII stripped from 16 log sites; pre-push checks added |
