@@ -119,7 +119,7 @@ app.js is at `?v=179`. Next commit that changes app.js must bump to `?v=180`.
 | Run /deploy-check before next beta invite | **High** |
 | Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (all 9 tests skip against E2E account; only pass against Jake's account) | **High** |
 | Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops | High |
-| Live smoke test — session detail slide-in on live site: open a session, verify drawer animates in, close it (Jake to do on phone) | High |
+| **BUG: Session detail slide-in invisible on iOS Safari** — panel is in DOM with correct styles (position:fixed;inset:0;z-index:1000) but doesn't paint. Works in Chrome/local preview. Root cause: likely iOS Safari stacking context issue with `position:fixed` + `inset` shorthand. Fix: replace `inset:0` with explicit `top:0;right:0;bottom:0;left:0`, or switch panel children back to `position:fixed` with explicit viewport coords, or use `-webkit-` prefixed properties. Test fix on real iOS device before closing. | **High** |
 | Run Rowing/Running/SkiErg DELETE SQL in Supabase (safety check first — see below) | High |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress Strength tab on live with real data | Medium |
