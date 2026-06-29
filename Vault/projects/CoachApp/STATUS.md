@@ -5,10 +5,10 @@ _Last updated: 2026-06-29_
 
 ## Live state
 
-**App version:** v155 (app.js)
+**App version:** v157 (app.js)
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 4308574 — v155 XSS fix + downloadMyData error handling (pushed 2026-06-29, CI green)
+**Last push:** 401f309 — v157 settings smoke tests + delete modal position fix (pushed 2026-06-29, CI green)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -43,9 +43,10 @@ _Last updated: 2026-06-29_
 - **Security/GDPR** — private storage buckets, PII-free logs, consent checkbox, data export, delete account (delete_current_user RPC)
 - Pre-push hook — 10-check bug scan (JS syntax, column names, query scoping, cache bust, no alert, no hardcoded IDs, no set_type, no swallowed errors, no bare clearInterval, no PII in logs, no timed set guard bypass, no duplicate functions)
 - GitHub Actions CI — mirrors pre-push hook
-- Playwright E2E — 26 tests covering runner, client session, auth flows (timeout bumped to 20s)
-- Delete account — custom modal, typed DELETE confirmation, proper error handling (no browser dialogs)
+- Playwright E2E — 31 tests covering runner, client session, auth flows, settings (timeout bumped to 20s)
+- Delete account — custom modal, typed DELETE confirmation, proper error handling, anchored to top of viewport (no browser dialogs, no clipping when page scrolled)
 - XSS protection — `escapeHtml()` applied to all coach-controlled strings in innerHTML
+- Playwright E2E — 31 tests (5 new settings smoke tests: sections render, delete modal open/cancel/validation, download data)
 
 ---
 
@@ -99,7 +100,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-app.js is at `?v=155`. Next commit that changes app.js must bump to `?v=156`.
+app.js is at `?v=157`. Next commit that changes app.js must bump to `?v=158`.
 
 ---
 
@@ -108,7 +109,7 @@ app.js is at `?v=155`. Next commit that changes app.js must bump to `?v=156`.
 | Action | Priority |
 |---|---|
 | Write and publish privacy policy page; update consent checkbox href | **High — blocks beta** |
-| Live smoke test on GitHub Pages — branding, data export, delete account modal | **High** |
+| Live smoke test on GitHub Pages — branding, data export, delete account modal (v157 — modal position fixed) | **High** |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress page on live — Strength tab and Personal Bests (RLS on performance_logs) | Medium |
 | Assign a program to the Playwright test client so accordion tests are not no-ops | Medium |
@@ -120,6 +121,8 @@ app.js is at `?v=155`. Next commit that changes app.js must bump to `?v=156`.
 
 | Version | What shipped |
 |---|---|
+| v157 | Settings smoke tests (5 tests); delete modal anchored to viewport top when page scrolled |
+| v156 | Delete modal position fix — align-items:flex-start so modal not clipped when triggered scrolled |
 | v155 | XSS fix — escapeHtml() on all businessName innerHTML injection points; downloadMyData error handling |
 | v154 | deleteAccount custom modal — typed DELETE confirmation, replaces confirm()/prompt() |
 | v153 | Code audit fixes — fire-and-forget DB write, dead code, orphaned unscoped function |
