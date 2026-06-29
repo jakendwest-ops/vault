@@ -115,13 +115,12 @@ app.js is at `?v=175`. Next commit that changes app.js must bump to `?v=176`.
 
 | Action | Priority |
 |---|---|
-| Live smoke test — personal account end-to-end: Dashboard, Workouts (program accordion), Calendar, Progress, start a session | **High** |
-| Remove Hyrox Hero from Sarah Mitchell's Programs tab (assigned during testing) | **High** |
-| Run /deploy-check before next beta invite | **High** |
-| Add Playwright smoke tests for solo/personal account flow before beta | High |
+| Run /deploy-check before next beta invite (Jul 25) | **High** |
+| Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (8 tests currently skipped every run) | **High** |
+| Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops | High |
+| Live smoke test — solo/personal account: Dashboard, Workouts, Calendar, Progress, start a session (Jake to do manually) | High |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress Strength tab on live with real data | Medium |
-| Assign a program to the Playwright test client so accordion tests are not no-ops | Medium |
 | ICO breach notification procedure — document before beta | Medium |
 
 ---
