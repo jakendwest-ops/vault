@@ -1,6 +1,6 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-06-28_
+_Last updated: 2026-06-29_
 
 ---
 
@@ -26,7 +26,7 @@ Features inside a section are in priority order. Update status tags during each 
 |---|---|---|
 | Client list | ✅ Done | |
 | Add client | ✅ Done | |
-| Client profile (tabs) | ✅ Done | Overview / Goals / Workouts / Weight / Performance / Programs / Photos |
+| Client profile (tabs) | ✅ Done | Overview / Goals / Workouts / Weight / Performance / Programs / Photos / 1RMs |
 | Edit client details | ✅ Done | |
 | Update client email (modal) | ✅ Done | |
 | Invite client via email | ✅ Done | Edge Function — stamps user_id + invited_at at send time |
@@ -69,6 +69,7 @@ Features inside a section are in priority order. Update status tags during each 
 | Section labels ([WARM-UP] / [MAIN SET] / [COOL-DOWN]) | ✅ Done | |
 | Log workout against template | ✅ Done | |
 | View workout log | ✅ Done | |
+| Template propagation → syncs client plan copies | ✅ Done | Apply-to-all now updates client plan copies via program_phase_workout_id FK |
 | Custom exercise demo videos (YouTube link) | 💡 Future | Per exercise in library |
 
 ### Workout runner
@@ -78,12 +79,15 @@ Features inside a section are in priority order. Update status tags during each 
 | Cardio mode + interval timer | ✅ Done | |
 | Rest timer | ✅ Done | |
 | Bodyweight / assisted / superset support | ✅ Done | |
-| Timed sets | ✅ Done | |
+| Timed sets — Start button + countdown overlay | ✅ Done | v169 — ▶ Start → fullscreen ring timer → auto-fills duration on complete |
 | Unilateral L/R logging | ✅ Done | |
-| Set X of Y header + edit logged sets | ✅ Done | |
+| Set X of Y counter + progress dots | ✅ Done | Positioned below last-session strip, above inputs |
 | Session summary / finish screen | ✅ Done | PR badge, stats row, exercise cards |
 | Runner target chips (pace, duration, stroke rate, rest HR) | ✅ Done | |
 | Client notes per exercise | ✅ Done | Saves to workout_log_exercises.client_notes |
+| Voice cue at 10s rest + beeps at 3/2/1 | ✅ Done | v169 — Web Speech API; unlocked on first gesture |
+| Last session data accuracy | ✅ Done | v169 — fixed stale query ordering |
+| Stats bar removed — timer only in header | ✅ Done | v169 — cleaner runner layout |
 
 ### Weight tracking
 | Feature | Status | Notes |
@@ -110,7 +114,7 @@ Features inside a section are in priority order. Update status tags during each 
 | Milestones | ✅ Done | |
 | Check-ins | ✅ Done | |
 | Goals due soon on PT dashboard | ✅ Done | |
-| Goals overhaul — granular mini-goals and milestones | 🗓 Planned | Week 3 priority |
+| Goals overhaul — granular mini-goals and milestones | 🗓 Planned | Medium priority |
 
 ### Programs (phase-based training plans)
 | Feature | Status | Notes |
@@ -123,8 +127,9 @@ Features inside a section are in priority order. Update status tags during each 
 | Edit start date | ✅ Done | Shifts entire calendar |
 | Remove program from client | ✅ Done | |
 | PT client programs accordion (Phase → Day → SESSION N/M → exercises) | ✅ Done | |
-| Client plan editing (PT edits client's sessions) | ✅ Done | Apply-to-all propagation |
+| Client plan editing (PT edits client's sessions) | ✅ Done | Apply-to-all propagation + client copy sync |
 | Auto-create calendar events from program schedule | 💡 Future | |
+| 1RM system + percentage-based loading in Programs builder | 🗓 Planned | Next major feature — 1RMs drive %1RM target weights in program phases |
 | Progression rules engine | 💡 Future | Auto-calculates target weight per session |
 | Individual session skip/move on client calendar | 💡 Future | Defer until real PT usage data |
 
@@ -133,7 +138,8 @@ Features inside a section are in priority order. Update status tags during each 
 |---|---|---|
 | Branding — logo upload, display on dashboards | ✅ Done | v151 — private logos bucket, signed URLs, sidebar + PT/client dashboards |
 | UI consistency pass | ✅ Done | SESSION N/M labels + exercise lists unified across all surfaces (v143) |
-| Metric / imperial toggle | 🗓 Planned | Week 3 priority |
+| Progress tabs — pill grid (no scroll) | ✅ Done | v171 — flex-wrap pills, all 5 visible at once on mobile |
+| Metric / imperial toggle | 🗓 Planned | Medium priority |
 
 ### Leaderboards
 | Feature | Status | Notes |
@@ -159,25 +165,19 @@ Features inside a section are in priority order. Update status tags during each 
 
 ### Solo user / Personal account (self-coached)
 
-_Jake's master account gets a third "Personal" pill in the view switcher. A solo user is their own coach: `coach_id = auth.uid()`. Existing coach-scoped and client-scoped RLS covers them with minimal new policies._
-
-**Agreed design (2026-06-29):**
-- Third pill: PT | Client | Personal in both desktop sidebar + mobile switcher
-- Solo nav: Dashboard, Workouts, Programs, Calendar, Progress — no Clients section
-- One-time SQL clone: Jake's existing client record data copied into new self-owned record (coach_id = auth.uid()), then independent — no link to PT account
-- Program "assign to client" defaults to self in solo view
-- Existing Jake West client record under PT account stays as-is (still appears in PT dashboard stats)
-- **Decided (2026-06-29):** Delete the Jake West client record from the PT account after clone — PT account should only have real/test clients (Alex Turner, Sarah Mitchell, Test Client). Keeps the test environment clean.
+_Jake's master account gets a third "Personal" pill. Solo user is their own coach: `coach_id = auth.uid()`. RLS covers them via existing coach-scoped + client-scoped policies._
 
 | Feature | Status | Notes |
 |---|---|---|
-| Third pill — Personal view in master account switcher | 🗓 Planned | `switchView('solo')` — full session required |
-| Solo nav + dashboard | 🗓 Planned | Client shell + self-create access |
-| Self-coached client record (coach_id = auth.uid()) | 🗓 Planned | One new RLS insert policy on clients table |
-| One-time data migration SQL | 🗓 Planned | Clone 8 tables from existing Jake West client record |
-| Program self-assign flow | 🗓 Planned | Assign to self in solo view without client picker |
-| Solo weight + PB tracking | 🗓 Planned | Already works for clients — minimal extra work |
-| Solo workout runner | 🗓 Planned | Already works for clients — likely zero extra work |
+| Third pill — Personal view in master account switcher | ✅ Done | `switchView('solo')` — both desktop sidebar + mobile |
+| Solo nav + dashboard | ✅ Done | No Clients section; personal dashboard |
+| Self-coached client record (coach_id = auth.uid()) | ✅ Done | Jake West record migrated; severed from PT account |
+| One-time data migration SQL | ✅ Done | 8 tables cloned from old Jake West client record |
+| Program self-assign flow | ✅ Done | Hyrox Hero assigned to solo account |
+| Solo weight + PB tracking | ✅ Done | |
+| Solo workout runner | ✅ Done | |
+| My Progress — 5 tabs incl. 1RMs | ✅ Done | v170 — Body Weight, Strength, Cardio, Personal Bests, 1RMs |
+| Delete old Jake West PT-account client record | 🗓 Planned | Clean up PT dashboard — only real/test clients should remain |
 | Upgrade path: solo → PT-coached | 💡 Future | Solo accepts PT invite, coach_id stamped, retains history |
 | Upgrade path: solo → becomes a PT | 💡 Future | Role change; gains coach dashboard + client management |
 
@@ -206,8 +206,8 @@ _Jake's master account gets a third "Personal" pill in the view switcher. A solo
 | Silent failure audit + dbq() wrapper | ✅ Done | |
 | Edge Function — invite-client | ✅ Done | |
 | Git (master branch) + GitHub Pages deploy | ✅ Done | Auto-deploys on push |
-| Pre-push git hook + GitHub Actions CI | ✅ Done | 10 checks; blocks bad pushes |
-| Playwright E2E suite | ✅ Done | 14 tests passing; runner + client + auth flows |
+| Pre-push git hook + GitHub Actions CI | ✅ Done | 10 static checks + Playwright (local only; CI skips — no credentials) |
+| Playwright E2E suite | ✅ Done | 18 tests; 10 passing in CI, 8 solo skipped (need Jake's account); runner + client + auth + settings flows |
 | SQL safety skill | ✅ Done | |
 | Vault → GitHub backup | ✅ Done | jakendwest-ops/vault; auto-pushed on /save |
 
@@ -216,3 +216,5 @@ _Jake's master account gets a third "Personal" pill in the view switcher. A solo
 ## Beta prep (Week 5 — Jul 22–31)
 - Full walkthrough, Playwright suite, Supabase redirect URL audit
 - Beta invites staggered: Jul 25, Jul 28, Jul 31
+- **Before beta:** 1RM system built + tested (drives %1RM in programs)
+- **Before beta:** Delete old Jake West client record from PT account

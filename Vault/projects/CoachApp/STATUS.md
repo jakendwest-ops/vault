@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-06-29_
+_Last updated: 2026-06-29 (session 2)_
 
 ---
 
 ## Live state
 
-**App version:** v162 (app.js)
+**App version:** v175 (app.js)
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** a875118 — hello-claude process improvements (pushed 2026-06-29, CI green)
+**Last push:** 6c63c85 — v175 activity feed fix (pushed 2026-06-29, CI green)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -25,7 +25,11 @@ _Last updated: 2026-06-29_
 - Workout runner — set-by-set flow, timed sets, unilateral L/R, rest timer, skip rest, last session strip
 - Edit logged sets in runner; PT notes always shown; client notes textarea
 - Runner save lands on correct page per role (client → Workouts, PT → client profile)
-- Client dashboard — goals, weight, upcoming events, PBs, recent sessions, active program card; PT branding header when set
+- Client dashboard — hero "Up next" card (program + phase + week), goals, weight, upcoming events, PBs, recent sessions; PT branding header when set
+- PT dashboard — hero card, stats strip, two-column grid, activity feed (coach-scoped, no solo bleed), compliance cards, goals due
+- Solo dashboard — hero card, stats strip (hidden on mobile), two-column grid
+- Sudo/impersonation mode — "View as" button on client list (email-gated), amber banner, exit restores PT view
+- Progress tabs — Body Weight and Personal Bests tabs have add buttons; Cardio explains auto-population
 - Programs — create / edit / delete / phases / assign template to day / assign to client / edit start date / remove
 - Edit sessions directly from Programs page (backFn context pattern)
 - Program phases: client plan clones have program_id: null (bug fixed 2026-06-28)
@@ -103,7 +107,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-app.js is at `?v=162`. Next commit that changes app.js must bump to `?v=163`.
+app.js is at `?v=175`. Next commit that changes app.js must bump to `?v=176`.
 
 ---
 
@@ -111,8 +115,9 @@ app.js is at `?v=162`. Next commit that changes app.js must bump to `?v=163`.
 
 | Action | Priority |
 |---|---|
-| Live smoke test — personal account end-to-end: Dashboard, Workouts (program accordion), Calendar (program workouts on grid), Progress, start a session from Workouts | **High** |
-| Remove Hyrox Hero from Sarah Mitchell's Programs tab (was assigned during testing) | **High** |
+| Live smoke test — personal account end-to-end: Dashboard, Workouts (program accordion), Calendar, Progress, start a session | **High** |
+| Remove Hyrox Hero from Sarah Mitchell's Programs tab (assigned during testing) | **High** |
+| Run /deploy-check before next beta invite | **High** |
 | Add Playwright smoke tests for solo/personal account flow before beta | High |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress Strength tab on live with real data | Medium |
@@ -125,6 +130,9 @@ app.js is at `?v=162`. Next commit that changes app.js must bump to `?v=163`.
 
 | Version | What shipped |
 |---|---|
+| v175 | PT dashboard activity feed scoped to coach's clients only — solo sessions no longer show as "Unknown" |
+| v174 | Sudo/impersonation mode — "View as" button on client list, amber banner, exitSudo() |
+| v173 | Dashboard layout rework (all 3 dashboards); hero card, stats strip, two-column grid; Progress tab add buttons |
 | v162 | Solo Workouts shows program session accordion (renderClientWorkoutsPage); renderWorkoutTemplates excludes client_id-tagged templates |
 | v161 | Start button on template detail for solo + client context; sql-safety RLS role audit section; hello-claude golden path walk behaviour |
 | v160 | Solo Programs audit — "Add to my plan" button; showAssignProgramToClientModal solo path; empty state copy |
