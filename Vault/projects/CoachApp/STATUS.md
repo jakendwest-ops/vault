@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-06-29 (session 5)_
+_Last updated: 2026-06-30 (session 6)_
 
 ---
 
 ## Live state
 
-**App version:** v180 (app.js)
+**App version:** v1 per module (app-core/dashboard/programs/clients/calendar-goals/workouts/runner/progress)
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 7c16292 — graphify semantic graph (pushed 2026-06-29, CI green)
+**Last push:** 97d9543 — chore: ignore desktop.ini and PDFs (pushed 2026-06-30, CI pending)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -46,9 +46,10 @@ _Last updated: 2026-06-29 (session 5)_
 - Programs builder — Hyrox Hero (12-week, 4 templates × 12 phases = 48 master templates)
 - **Branding** — PT logo upload (private logos bucket, signed URLs), business name, sidebar, PT dashboard, client dashboard
 - **Security/GDPR** — private storage buckets, PII-free logs, consent checkbox, data export, delete account (delete_current_user RPC)
-- Pre-push hook — 10-check bug scan (JS syntax, column names, query scoping, cache bust, no alert, no hardcoded IDs, no set_type, no swallowed errors, no bare clearInterval, no PII in logs, no timed set guard bypass, no duplicate functions)
+- Pre-push hook — scans all 8 module files (updated 2026-06-30); JS syntax, column names, query scoping, cache bust, no alert, no hardcoded IDs, no set_type, no swallowed errors, no bare clearInterval, no PII in logs, no timed set guard bypass, no duplicate functions
 - GitHub Actions CI — mirrors pre-push hook
-- Playwright E2E — 39 tests (added 8 solo-account tests + session detail slide-in smoke test); 19 smoke tests in pre-push hook
+- Playwright E2E — 40 tests (39 + 1 from 40/40 green on 2026-06-30); 19 smoke tests in pre-push hook
+- **Codebase modularised** — app.js split into 8 modules: app-core, app-dashboard, app-programs, app-clients, app-calendar-goals, app-workouts, app-runner, app-progress
 - Delete account — custom modal, typed DELETE confirmation, proper error handling, anchored to top of viewport (no browser dialogs, no clipping when page scrolled)
 - XSS protection — `escapeHtml()` applied to all coach-controlled strings in innerHTML
 - Session detail slide-in — right-side drawer showing exercises/sets/reps for a session; works in solo and client mode; `position:fixed;inset:0;z-index:1000` wrapper pattern
@@ -109,7 +110,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-app.js is at `?v=180`. Next commit that changes app.js must bump to `?v=181`.
+All 8 module files are at `?v=1`. Any commit that changes a module file must bump that file's `?v=N` in index.html. Bump only the files that changed — not all 8.
 
 ---
 
@@ -147,6 +148,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
+| modular | app.js (7,968 lines) split into 8 modules; pre-push hook updated; preview server path fixed; .gitignore updated |
 | v180 | iOS Safari session detail slide-in fix — `inset:0` → explicit `top/right/bottom/left` |
 | v179 | `sudoAsClient()` in-function email guard (security fix); session detail slide-in smoke test |
 | v178 | Re-fix session detail slide-in — panel wrapper changed to `position:fixed;inset:0;z-index:1000` |

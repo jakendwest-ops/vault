@@ -4,6 +4,30 @@ Newest first.
 
 ---
 
+## 2026-06-30 — Codebase modularisation: app.js → 8 modules (no version bump)
+
+**Done:**
+- app.js (7,968 lines) split into 8 module files: app-core.js, app-dashboard.js, app-programs.js, app-clients.js, app-calendar-goals.js, app-workouts.js, app-runner.js, app-progress.js; loaded in order via 8 script tags in index.html
+- Pre-push hook (`scripts/checks.sh`) updated — was hardcoded to `js/app.js`; now scans all 8 module files; cache bust check updated to verify all 8 script tags have `?v=`
+- Preview server path fixed in both `.claude/launch.json` files — was pointing to `C:/Users/jaken/coachapp`, now correctly `C:/Users/jaken/OneDrive/coachapp`; this bug was masked by an old copy of app.js and had existed since project start
+- `.gitignore` updated — `desktop.ini` and `*.pdf` added; removed from VS Code Source Control
+- 40/40 Playwright green post-split; 19/19 smoke tests green on push
+
+**Bugs found + fixed:**
+- Preview server 404: launch.json had stale path `C:/Users/jaken/coachapp` (project is in OneDrive). Fixed in worktree launch.json and CoachApp launch.json.
+- checks.sh BOM encoding: PowerShell wrote UTF-8 with BOM, causing `﻿#!/bin/sh` warning on each push. Cosmetic only — all checks pass. Fix encoding next session.
+
+**Decided:**
+- No rewrite to Next.js — continuing vanilla JS to beta; developer can rewrite frontend against existing Supabase schema post-beta
+- Modularisation chosen over full rewrite: same globals, no ES module refactor needed, one session to complete
+- 1RM build held for next session (plan already banked in STATUS.md)
+
+**Why:**
+- Session felt sluggish with graphify — 7,968-line single file was the root cause; split reduces per-session context load significantly
+- No version bump: split is a pure refactor, zero feature changes
+
+---
+
 ## 2026-06-29 — Tooling session: iOS fix, graphify knowledge graph, .claudeignore (v179–v180)
 
 **Done:**
