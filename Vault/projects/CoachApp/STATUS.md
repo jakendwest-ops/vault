@@ -5,10 +5,10 @@ _Last updated: 2026-06-30 (session 6)_
 
 ## Live state
 
-**App version:** v1 per module (app-core/dashboard/programs/clients/calendar-goals/workouts/runner/progress)
+**App version:** app-core/dashboard/programs/clients/calendar-goals v=1 · app-workouts v=3 · app-runner v=2 · app-progress v=2
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 97d9543 — chore: ignore desktop.ini and PDFs (pushed 2026-06-30, CI pending)
+**Last push:** c0cb58f — fix: raise template list limit to 2000 in runner setup modal (pushed 2026-06-30)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -148,6 +148,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
+| app-workouts v=3 | Runner template list limit raised to 2000; startWorkoutRunner fetches template by ID to bypass max_rows=200 cap |
 | modular | app.js (7,968 lines) split into 8 modules; pre-push hook updated; preview server path fixed; .gitignore updated |
 | v180 | iOS Safari session detail slide-in fix — `inset:0` → explicit `top/right/bottom/left` |
 | v179 | `sudoAsClient()` in-function email guard (security fix); session detail slide-in smoke test |

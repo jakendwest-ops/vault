@@ -4,6 +4,17 @@ Newest first.
 
 ---
 
+## 2026-06-30 — Runner template bug fixes (app-workouts v=2→3)
+
+**Done:**
+- `startWorkoutRunner` now fetches the template by ID directly when called from a program Start button, instead of scanning the full coach template list. Fixes blank exercise names and missing set targets for any template beyond position 200 alphabetically.
+- Runner setup modal dropdown query raised to `.limit(2000)` — was silently truncating at PostgREST default max_rows=200.
+
+**Bugs found + fixed:**
+- Root cause: PostgREST `max_rows=200` cap on both the runner template list query and the setup modal dropdown. Templates beyond position 200 alphabetically returned empty results. Fix: ID-scoped fetch for runner start; explicit `.limit(2000)` for the modal list.
+
+---
+
 ## 2026-06-30 — Codebase modularisation: app.js → 8 modules (no version bump)
 
 **Done:**
