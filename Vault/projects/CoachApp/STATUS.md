@@ -5,10 +5,11 @@ _Last updated: 2026-07-01 (session 7)_
 
 ## Live state
 
-**App version (local, not yet pushed):** app-core/dashboard/clients v=1 · app-programs v=3 · app-calendar-goals v=2 · app-workouts v=4 · app-runner v=3 · app-progress v=2
+**App version:** app-core/dashboard/clients v=1 · app-programs v=4 · app-calendar-goals v=2 · app-workouts v=5 · app-runner v=3 · app-progress v=2
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** c0cb58f — fix: raise template list limit to 2000 in runner setup modal (pushed 2026-06-30) — today's session (periodization + 1RM assignment check + solo RLS fix) is in the working tree, not yet committed or pushed
+**Last push:** 76cb53f — periodization + assignment-time 1RM check + inline assign grid, plus previously-uncommitted Big 5/Epley 1RM UI (pushed 2026-07-01). Pre-push hook: all checks + 19 smoke tests green.
+**Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -48,7 +49,7 @@ _Last updated: 2026-07-01 (session 7)_
 - **Security/GDPR** — private storage buckets, PII-free logs, consent checkbox, data export, delete account (delete_current_user RPC)
 - Pre-push hook — scans all 8 module files (updated 2026-06-30); JS syntax, column names, query scoping, cache bust, no alert, no hardcoded IDs, no set_type, no swallowed errors, no bare clearInterval, no PII in logs, no timed set guard bypass, no duplicate functions
 - GitHub Actions CI — mirrors pre-push hook
-- Playwright E2E — 44 tests (40 + 4 new in tests/programs.spec.js on 2026-07-01: periodization Linear/Undulating, 1RM assignment-check missing/have); 19 smoke tests in pre-push hook
+- Playwright E2E — 47 tests (40 + 7 new in tests/programs.spec.js on 2026-07-01: periodization Linear/Undulating, 1RM assignment-check missing/have, inline grid render+search, race-guard, create-workout back-link); 19 smoke tests in pre-push hook
 - **Codebase modularised** — app.js split into 8 modules: app-core, app-dashboard, app-programs, app-clients, app-calendar-goals, app-workouts, app-runner, app-progress
 - Delete account — custom modal, typed DELETE confirmation, proper error handling, anchored to top of viewport (no browser dialogs, no clipping when page scrolled)
 - XSS protection — `escapeHtml()` applied to all coach-controlled strings in innerHTML
@@ -58,6 +59,7 @@ _Last updated: 2026-07-01 (session 7)_
 - **Periodization (Linear / Undulating)** — phase-level %1RM automation; PT builds Week 1 once, picks a scheme, clicks "Generate weeks"; propagates to already-assigned clients automatically; idempotent regeneration; shrinking a phase's week count prunes orphaned generated weeks (2026-07-01)
 - **1RM assignment-time check** — when assigning a program, shows which needed %1RM lifts the client is missing, with inline quick-fill (direct kg or Epley estimate); never blocks; covers both assign entry points + solo (2026-07-01)
 - **Solo account write access to `client_1rms` and `client_programs`** — fixed a real gap where solo users had no write policy for saving 1RMs or removing/editing an assigned program (silently broken since solo accounts were built); 5 new RLS policies added (2026-07-01)
+- **Inline assign-workout grid** — replaced the old "+ Assign workout" modal (day → session → template, one slot at a time) with an always-visible 7-day searchable grid on the phase card; picking a template assigns immediately, no modal, no separate day/session step. Search + exercise-preview hints per option. Picker excludes client-owned clones and periodization-generated week-clones (`generated_from_phase_id` column). Race-condition guard re-checks a slot is still free immediately before inserting. "Create new workout" now returns to the program via a working "Back to program" link instead of stranding the coach (2026-07-01)
 
 ---
 
@@ -127,9 +129,9 @@ Each of the 8 module files has its own independent `?v=N`. Any commit that chang
 
 | Action | Priority |
 |---|---|
-| **Push today's session** (periodization + 1RM assignment check + solo RLS fix — see "What's working" above for full detail) — nothing committed yet, Jake wanted to try it live first | **High** |
 | Run /deploy-check before next beta invite | **High** |
 | **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
+| **`deleteProgram()` doesn't clean up cloned workout_templates** — deleting a program cascades away phases/program_phase_workouts but orphans any templates cloned into it (periodization-generated or otherwise). Found via leftover E2E test debris, not a live bug on Jake's account yet, but will recur for any real program with generated weeks that gets deleted. Fix: before deleting the program, collect template_ids via program_phase_workouts and delete those too. | Medium |
 | Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (all 9 tests skip against E2E account; only pass against Jake's account) | **High** |
 | Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops | High |
 | Verify iOS Safari slide-in fix on real device — `inset:0` replaced with explicit `top/right/bottom/left` in v180, pushed. Test on iPhone and close if working. | **High** |
@@ -158,7 +160,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
-| app-programs v=3 / calendar-goals v=2 / workouts v=4 / runner v=3 | Periodization (Linear/Undulating) + assignment-time 1RM check + solo RLS fix (5 new policies on client_1rms/client_programs) — see STATUS "What's working" for full detail. Not yet pushed. |
+| app-programs v=4 / calendar-goals v=2 / workouts v=5 / runner v=3 | Periodization (Linear/Undulating) + assignment-time 1RM check + solo RLS fix + inline assign-workout grid (replaces the old modal) — see STATUS "What's working" for full detail. Not yet pushed. |
 | app-workouts v=3 | Runner template list limit raised to 2000; startWorkoutRunner fetches template by ID to bypass max_rows=200 cap |
 | modular | app.js (7,968 lines) split into 8 modules; pre-push hook updated; preview server path fixed; .gitignore updated |
 | v180 | iOS Safari session detail slide-in fix — `inset:0` → explicit `top/right/bottom/left` |
