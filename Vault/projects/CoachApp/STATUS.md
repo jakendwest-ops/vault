@@ -8,7 +8,7 @@ _Last updated: 2026-07-01 (session 7)_
 **App version:** app-core/dashboard/clients v=1 · app-programs v=4 · app-calendar-goals v=2 · app-workouts v=5 · app-runner v=3 · app-progress v=2
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 76cb53f — periodization + assignment-time 1RM check + inline assign grid, plus previously-uncommitted Big 5/Epley 1RM UI (pushed 2026-07-01). Pre-push hook: all checks + 19 smoke tests green.
+**Last push:** 7eabcc0 — removed 8 project-level `.claude/skills/` duplicates (golden-path consolidation, see LOG). Pre-push hook: all checks + 19 smoke tests green. (Previous: 76cb53f — periodization + assignment-time 1RM check + inline assign grid + Big 5/Epley 1RM UI, pushed 2026-07-01.)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -128,7 +128,6 @@ Each of the 8 module files has its own independent `?v=N`. Any commit that chang
 
 | Action | Priority |
 |---|---|
-| **Commit the 8 skill-file deletions in the CoachApp repo?** — tonight's golden-path consolidation deleted 8 redundant `.claude/skills/*/SKILL.md` duplicates from the CoachApp project (they now live only at the global `C:\Users\jaken\.claude\skills\` path). The deletions are sitting uncommitted in the CoachApp repo's working tree — didn't commit without asking since it's a repo-history action. Low risk (skill files, not app code), but needs a yes. | High |
 | Run /deploy-check before next beta invite | **High** |
 | **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
 | **`deleteProgram()` doesn't clean up cloned workout_templates** — deleting a program cascades away phases/program_phase_workouts but orphans any templates cloned into it (periodization-generated or otherwise). Found via leftover E2E test debris, not a live bug on Jake's account yet, but will recur for any real program with generated weeks that gets deleted. Fix: before deleting the program, collect template_ids via program_phase_workouts and delete those too. | Medium |
