@@ -123,7 +123,7 @@ Features inside a section are in priority order. Update status tags during each 
 | Programs schema (4 tables) | ✅ Done | |
 | Programs UI — create / edit / delete programs | ✅ Done | |
 | Program phases (weeks, ordering) | ✅ Done | |
-| Assign workout templates to phase days | ✅ Done | |
+| Assign workout templates to phase days — inline 7-day grid, no modal | ✅ Done | 2026-07-01 — replaced the old "+ Assign workout" modal (day→session→template, one at a time) with an always-visible searchable grid on the phase card; picking a template assigns immediately. Built to cut repetition, not just polish the old picker — matches the new "efficiency is the platform's spec" standing principle. |
 | Assign program to client with start date | ✅ Done | |
 | Edit start date | ✅ Done | Shifts entire calendar |
 | Remove program from client | ✅ Done | |

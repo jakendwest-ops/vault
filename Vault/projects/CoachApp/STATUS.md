@@ -10,7 +10,6 @@ _Last updated: 2026-07-01 (session 7)_
 **CSS version:** v=3 (main.css)
 **Last push:** 76cb53f — periodization + assignment-time 1RM check + inline assign grid, plus previously-uncommitted Big 5/Epley 1RM UI (pushed 2026-07-01). Pre-push hook: all checks + 19 smoke tests green.
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
-**Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
 
@@ -115,7 +114,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-Each of the 8 module files has its own independent `?v=N`. Any commit that changes a module file must bump that file's own version in index.html — bump only the files that changed, not all 8. Current: core/dashboard/clients v=1 · programs v=3 · calendar-goals v=2 · workouts v=4 · runner v=3 · progress v=2.
+Each of the 8 module files has its own independent `?v=N`. Any commit that changes a module file must bump that file's own version in index.html — bump only the files that changed, not all 8. Current: core/dashboard/clients v=1 · programs v=4 · calendar-goals v=2 · workouts v=5 · runner v=3 · progress v=2.
 
 ### Periodization — week_number / tier
 `program_phases.periodization_type` (`'linear'`/`'undulating'`/null) + `periodization_config` (jsonb). `program_phase_workouts.week_number` (default 1) lets one phase hold distinct day/template assignments per week — phases that never use periodization just have week_number=1 rows, which the client calendar/workouts-page render as repeating every week (legacy behaviour, unchanged). `program_phase_workouts.tier` (`'heavy'`/`'moderate'`/`'light'`) is undulating-only, set per day-slot. `generatePhasePeriodization(phaseId, programId)` clones Week 1's templates into weeks 2..duration_weeks, recalculating only sets where `intensityMin`/`intensityMax` is set — everything else (reps, rest, tempo) is copied unchanged. Regeneration is idempotent (`_cleanupPhaseWeeksBeyond` deletes stale weeks + their templates, both master and any already-propagated client copies, before regenerating) — the same helper runs when a phase's `duration_weeks` is edited down. Client propagation: assigning a program clones week_number through (`_cloneTemplateForClient`/`_cloneProgramForClient`); if a client is *already* assigned when new weeks are generated, `generatePhasePeriodization` propagates to them too.
@@ -129,6 +128,7 @@ Each of the 8 module files has its own independent `?v=N`. Any commit that chang
 
 | Action | Priority |
 |---|---|
+| **Commit the 8 skill-file deletions in the CoachApp repo?** — tonight's golden-path consolidation deleted 8 redundant `.claude/skills/*/SKILL.md` duplicates from the CoachApp project (they now live only at the global `C:\Users\jaken\.claude\skills\` path). The deletions are sitting uncommitted in the CoachApp repo's working tree — didn't commit without asking since it's a repo-history action. Low risk (skill files, not app code), but needs a yes. | High |
 | Run /deploy-check before next beta invite | **High** |
 | **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
 | **`deleteProgram()` doesn't clean up cloned workout_templates** — deleting a program cascades away phases/program_phase_workouts but orphans any templates cloned into it (periodization-generated or otherwise). Found via leftover E2E test debris, not a live bug on Jake's account yet, but will recur for any real program with generated weeks that gets deleted. Fix: before deleting the program, collect template_ids via program_phase_workouts and delete those too. | Medium |
@@ -160,7 +160,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
-| app-programs v=4 / calendar-goals v=2 / workouts v=5 / runner v=3 | Periodization (Linear/Undulating) + assignment-time 1RM check + solo RLS fix + inline assign-workout grid (replaces the old modal) — see STATUS "What's working" for full detail. Not yet pushed. |
+| app-programs v=4 / calendar-goals v=2 / workouts v=5 / runner v=3 | Periodization (Linear/Undulating) + assignment-time 1RM check + solo RLS fix + inline assign-workout grid (replaces the old modal) — see STATUS "What's working" for full detail. **Pushed 2026-07-01 (76cb53f).** |
 | app-workouts v=3 | Runner template list limit raised to 2000; startWorkoutRunner fetches template by ID to bypass max_rows=200 cap |
 | modular | app.js (7,968 lines) split into 8 modules; pre-push hook updated; preview server path fixed; .gitignore updated |
 | v180 | iOS Safari session detail slide-in fix — `inset:0` → explicit `top/right/bottom/left` |
