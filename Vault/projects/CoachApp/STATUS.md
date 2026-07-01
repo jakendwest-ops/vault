@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-06-30 (session 6)_
+_Last updated: 2026-07-01 (session 7)_
 
 ---
 
 ## Live state
 
-**App version:** app-core/dashboard/programs/clients/calendar-goals v=1 · app-workouts v=3 · app-runner v=2 · app-progress v=2
+**App version (local, not yet pushed):** app-core/dashboard/clients v=1 · app-programs v=3 · app-calendar-goals v=2 · app-workouts v=4 · app-runner v=3 · app-progress v=2
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** c0cb58f — fix: raise template list limit to 2000 in runner setup modal (pushed 2026-06-30)
+**Last push:** c0cb58f — fix: raise template list limit to 2000 in runner setup modal (pushed 2026-06-30) — today's session (periodization + 1RM assignment check + solo RLS fix) is in the working tree, not yet committed or pushed
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -48,13 +48,16 @@ _Last updated: 2026-06-30 (session 6)_
 - **Security/GDPR** — private storage buckets, PII-free logs, consent checkbox, data export, delete account (delete_current_user RPC)
 - Pre-push hook — scans all 8 module files (updated 2026-06-30); JS syntax, column names, query scoping, cache bust, no alert, no hardcoded IDs, no set_type, no swallowed errors, no bare clearInterval, no PII in logs, no timed set guard bypass, no duplicate functions
 - GitHub Actions CI — mirrors pre-push hook
-- Playwright E2E — 40 tests (39 + 1 from 40/40 green on 2026-06-30); 19 smoke tests in pre-push hook
+- Playwright E2E — 44 tests (40 + 4 new in tests/programs.spec.js on 2026-07-01: periodization Linear/Undulating, 1RM assignment-check missing/have); 19 smoke tests in pre-push hook
 - **Codebase modularised** — app.js split into 8 modules: app-core, app-dashboard, app-programs, app-clients, app-calendar-goals, app-workouts, app-runner, app-progress
 - Delete account — custom modal, typed DELETE confirmation, proper error handling, anchored to top of viewport (no browser dialogs, no clipping when page scrolled)
 - XSS protection — `escapeHtml()` applied to all coach-controlled strings in innerHTML
 - Session detail slide-in — right-side drawer showing exercises/sets/reps for a session; works in solo and client mode; `position:fixed;inset:0;z-index:1000` wrapper pattern
 - `sudoAsClient()` server-side guard — in-function email check prevents DevTools exploitation by non-Jake users
 - **DB security hardening** — OpenAPI schema mocked; `lock_created_at` BEFORE UPDATE triggers on 11 tables; `events` UPDATE USING clause fixed; REVOKE EXECUTE on 4 internal functions; `delete_current_user` search_path locked; max_rows 200; auto-expose new tables off; secure password change on; min password 8 chars; Security Advisor: 0 errors
+- **Periodization (Linear / Undulating)** — phase-level %1RM automation; PT builds Week 1 once, picks a scheme, clicks "Generate weeks"; propagates to already-assigned clients automatically; idempotent regeneration; shrinking a phase's week count prunes orphaned generated weeks (2026-07-01)
+- **1RM assignment-time check** — when assigning a program, shows which needed %1RM lifts the client is missing, with inline quick-fill (direct kg or Epley estimate); never blocks; covers both assign entry points + solo (2026-07-01)
+- **Solo account write access to `client_1rms` and `client_programs`** — fixed a real gap where solo users had no write policy for saving 1RMs or removing/editing an assigned program (silently broken since solo accounts were built); 5 new RLS policies added (2026-07-01)
 
 ---
 
@@ -110,7 +113,13 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-All 8 module files are at `?v=1`. Any commit that changes a module file must bump that file's `?v=N` in index.html. Bump only the files that changed — not all 8.
+Each of the 8 module files has its own independent `?v=N`. Any commit that changes a module file must bump that file's own version in index.html — bump only the files that changed, not all 8. Current: core/dashboard/clients v=1 · programs v=3 · calendar-goals v=2 · workouts v=4 · runner v=3 · progress v=2.
+
+### Periodization — week_number / tier
+`program_phases.periodization_type` (`'linear'`/`'undulating'`/null) + `periodization_config` (jsonb). `program_phase_workouts.week_number` (default 1) lets one phase hold distinct day/template assignments per week — phases that never use periodization just have week_number=1 rows, which the client calendar/workouts-page render as repeating every week (legacy behaviour, unchanged). `program_phase_workouts.tier` (`'heavy'`/`'moderate'`/`'light'`) is undulating-only, set per day-slot. `generatePhasePeriodization(phaseId, programId)` clones Week 1's templates into weeks 2..duration_weeks, recalculating only sets where `intensityMin`/`intensityMax` is set — everything else (reps, rest, tempo) is copied unchanged. Regeneration is idempotent (`_cleanupPhaseWeeksBeyond` deletes stale weeks + their templates, both master and any already-propagated client copies, before regenerating) — the same helper runs when a phase's `duration_weeks` is edited down. Client propagation: assigning a program clones week_number through (`_cloneTemplateForClient`/`_cloneProgramForClient`); if a client is *already* assigned when new weeks are generated, `generatePhasePeriodization` propagates to them too.
+
+### 1RM assignment-time check
+`_getProgramOneRMStatus(programId, clientId)` scans Week 1 only (sufficient — generated weeks reuse the same exercise names) for %1RM-tagged sets, diffs against `client_1rms` (trim+lowercase exact match — same limitation as the rest of the app; exercise_id-based matching is a deferred future decision, see roadmap). `_renderOneRMQuickEntry(idPrefix, name)` is the shared toggleable kg/Epley-estimate row component — parameterized by idPrefix so multiple rows coexist. `window._missingOneRMExercises` holds the current checklist's missing-name list (index-matched to `mor-N` DOM ids) between refresh and save. `_refreshMissingOneRMs` is token-guarded (`_oneRMRefreshToken`) so a stale in-flight refresh can't overwrite a newer one if the PT changes the client/program selection quickly. Wired into both assign entry points (`showAssignProgramModal`/`showAssignProgramToClientModal`) — 1RM entries must be saved *before* the modal is removed, not after (DOM reads fail silently on a detached modal).
 
 ---
 
@@ -118,8 +127,9 @@ All 8 module files are at `?v=1`. Any commit that changes a module file must bum
 
 | Action | Priority |
 |---|---|
-| **NEXT SESSION: 1RM system — plan approved, ready to build (v181)** — (1) Runner inline 1RM prompt: if no 1RM + %1RM set → orange tap target → bottom sheet with kg input + Epley toggle → saves to client_1rms → live recalc in session. (2) Epley estimator in Add 1RM modal: "I know my 1RM" / "Estimate from a set" toggle → weight × reps → auto-calculates. (3) Big 5 quick-start on empty 1RM tab: Back Squat / Deadlift / Bench / OHP / Barbell Row pre-filled, save all at once. (4) Post-session 1RM suggestion: after save, offer "Save estimated 1RM from today's sets?". No schema changes needed — client_1rms already exists. | **High** |
+| **Push today's session** (periodization + 1RM assignment check + solo RLS fix — see "What's working" above for full detail) — nothing committed yet, Jake wanted to try it live first | **High** |
 | Run /deploy-check before next beta invite | **High** |
+| **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
 | Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (all 9 tests skip against E2E account; only pass against Jake's account) | **High** |
 | Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops | High |
 | Verify iOS Safari slide-in fix on real device — `inset:0` replaced with explicit `top/right/bottom/left` in v180, pushed. Test on iPhone and close if working. | **High** |
@@ -148,6 +158,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
+| app-programs v=3 / calendar-goals v=2 / workouts v=4 / runner v=3 | Periodization (Linear/Undulating) + assignment-time 1RM check + solo RLS fix (5 new policies on client_1rms/client_programs) — see STATUS "What's working" for full detail. Not yet pushed. |
 | app-workouts v=3 | Runner template list limit raised to 2000; startWorkoutRunner fetches template by ID to bypass max_rows=200 cap |
 | modular | app.js (7,968 lines) split into 8 modules; pre-push hook updated; preview server path fixed; .gitignore updated |
 | v180 | iOS Safari session detail slide-in fix — `inset:0` → explicit `top/right/bottom/left` |

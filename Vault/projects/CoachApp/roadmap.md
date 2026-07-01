@@ -130,7 +130,10 @@ Features inside a section are in priority order. Update status tags during each 
 | PT client programs accordion (Phase → Day → SESSION N/M → exercises) | ✅ Done | |
 | Client plan editing (PT edits client's sessions) | ✅ Done | Apply-to-all propagation + client copy sync |
 | Auto-create calendar events from program schedule | 💡 Future | |
-| 1RM system + percentage-based loading in Programs builder | 🗓 Planned | Next major feature — 1RMs drive %1RM target weights in program phases |
+| Periodization (Linear / Undulating) — phase-level %1RM automation | ✅ Done | 2026-07-01 — generatePhasePeriodization(); propagates to already-assigned clients |
+| 1RM system — inline runner prompt, Epley estimator, Big 5 quick-start, post-session suggestion | ✅ Done | Found already built and live 2026-07-01 (STATUS.md v181 entry was stale) — `showRunnerOneRMSheet`, `showAdd1RMModal`, `saveBig5OneRMs`, `showPostSessionOneRMModal` |
+| 1RM assignment-time missing-1RM check | ✅ Done | 2026-07-01 — PT quick-fills known/estimated 1RMs inline on the Assign modal when a program needs lifts the client doesn't have; covers both assign entry points + solo; never blocks. Playwright smoke tests added. |
+| 1RM exercise-name matching — move from free-text to exercise-library-linked (exercise_id) entry | 🗓 Planned | Big design decision, deferred to its own scoping session. Currently `client_1rms.exercise_name` is free text with no exercise_id — matching is exact-string (trim+lowercase), same limitation the runner already has. Today's build uses one shared name-matching helper so swapping in exercise_id-based matching later is a contained change, not a rebuild. |
 | Progression rules engine | 💡 Future | Auto-calculates target weight per session |
 | Individual session skip/move on client calendar | 💡 Future | Defer until real PT usage data |
 
