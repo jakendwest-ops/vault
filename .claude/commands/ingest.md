@@ -4,6 +4,8 @@ description: Ingest a source or batch — classify up, convert on-device, merge 
 
 # /ingest
 
+> Not for the **LLM wiki** (`OneDrive/Documents/LLM wiki`) — that is a separate Karpathy-style knowledge base with its own workflow. Use the `wiki-ingest` skill for it. This command is the Vault-OS pipeline only.
+
 **Source:** $ARGUMENTS — a file path, a URL, a folder, or a mix. Nothing passed → ask what to ingest.
 
 The pipeline and its order are fixed in `System/conventions.md` § Ingestion. This file adds the operational detail; it is not a second copy of the rules.

@@ -1,8 +1,10 @@
 ---
-description: Consolidate the session into the vault
+description: Consolidate the session into the vault (renamed from /save — the bare /save verb belongs to the CoachApp end-of-session skill)
 ---
 
-# /save — the deposit ritual
+# /vault-save — the deposit ritual
+
+> Renamed from `/save` on 2026-07-02. The bare `/save` verb is owned by the account-level CoachApp end-of-session skill (`~/.claude/skills/save/`) — a different, legitimate system. This ritual is the Vault-OS deposit; invoke it as `/vault-save`.
 
 Move the session's value from chat to disk. Run the full ritual at session end; a light mid-session checkpoint is steps 2, 3 and 6 — escalate to the full ritual the moment a decision or new analysis warrants it. If no project is loaded, ask which one this saves to before touching anything.
 

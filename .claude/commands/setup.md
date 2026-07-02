@@ -46,4 +46,4 @@ A deferred offer becomes a line in `Vault/desk/questions.md` so a brief surfaces
 
 ## Close
 
-Tell them where things live in one breath, and that ending sessions with `/save` is the habit that makes all of this compound. If the clock is running long, cut scope, not corners: the profile and the first project are mandatory; anything else can become a question in `questions.md`. Then start on whatever they came here to do.
+Tell them where things live in one breath, and that ending sessions with `/vault-save` is the habit that makes all of this compound. If the clock is running long, cut scope, not corners: the profile and the first project are mandatory; anything else can become a question in `questions.md`. Then start on whatever they came here to do.
