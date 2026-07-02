@@ -271,5 +271,12 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 
 **No draft→ship diff available this session** (no external-facing prose drafted).
 
+**Additional signals — 2026-07-02 session 2 (runner redesign build)**
+
+- **Decision + orthogonal question in one message.** "1. Also, why is the preview now pulling from PT HUB?" — picked an option from a numbered list *and* raised an unrelated troubleshooting question in the same breath, expecting both handled. Different from the previously-banked "two micro-requests in one message" pattern (2026-06-19), which was two *related* asks — this pairs a closed decision with an open, orthogonal symptom report. Treat both halves of a message like this as live: answer the question in full before or alongside acting on the decision, don't let the decision swallow the question.
+- Otherwise highly terse this session: "approved" (×2), "run review", "commit" — all consistent with already-banked minimal-word green-light patterns once a process is trusted. No new delta from these beyond confirming the pattern holds under a longer, higher-stakes build (a full feature redesign, not a small tweak).
+
+**No draft→ship diff available this session** (no external-facing prose drafted).
+
 ## Public / formal register
 _No data yet — not observed this session._
