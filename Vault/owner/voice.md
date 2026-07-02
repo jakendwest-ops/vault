@@ -254,5 +254,13 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 
 **No draft→ship diff available this session.**
 
+**Additional signals — 2026-07-02 session (competitor research + product strategy)**
+
+- "When I have been designing coachapp i have been doing so from my perspective or what i want to see, rather than any market research." — candid self-diagnosis. Shown market evidence that contradicted an assumption (his "all features, no tiers" differentiator was already taken by a competitor), he didn't get defensive — he named his own blind spot and pivoted to a research-led approach. **Pattern: he updates his mental model fast when given concrete evidence, and treats being wrong as information, not a threat.** Willing to delay/not-rush beta to get it right.
+- "is that correct?" — after being given a strategic implication, he checks his own reasoning against mine rather than just accepting. He wants the sounding-board to confirm *or challenge* his synthesis, not just validate it.
+- "but /save first ... and then we will need to..." — continues to batch multi-part instructions with an explicit priority ordering, and expects the order followed. When he sequences the agenda himself, follow his sequence.
+
+**New pattern confirmed:** Concrete evidence changes his mind fast and without ego. When challenging an assumption, bring the evidence, not just an opinion.
+
 ## Public / formal register
 _No data yet — not observed this session._

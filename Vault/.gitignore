@@ -1,0 +1,3 @@
+# Obsidian creates this per-vault UI config folder if this folder is opened as a vault.
+# It's local editor state, not project data — keep it out of the backup repo.
+.obsidian/
