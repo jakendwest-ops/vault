@@ -4,6 +4,34 @@ Newest first.
 
 ---
 
+## 2026-07-02 (session 8, part 5) — Four recurring "workaround every session" problems fixed at the source — NO COACHAPP CODE
+
+**Context:** Jake's throughline all session — "this is the same 'keep working around it every session' problem as the launch.json path." Each fix converted a per-session patch into a root-cause fix + a self-check. No CoachApp module files touched (cache-bust + Playwright N/A this session).
+
+**Done — 4 permanent fixes:**
+1. **Preview stale-path (4th occurrence) → fixed at the seed.** Root cause: new worktrees are seeded by copying `.claude/` from the parent template `C:/Users/jaken/Claude/.claude/launch.json`, which itself held the stale `C:/Users/jaken/coachapp` root. Corrected the parent template + all 18 stale worktree copies. Future worktrees inherit the correct `OneDrive/coachapp` path. Memory `feedback_preview_verify.md` updated with the root cause.
+2. **`/ingest` misfire → dedicated `/wiki-ingest` skill.** The framework family (brief/checkup/ingest/review/save/setup/export/ultraplan) are **slash commands** in `Claude/.claude/commands/`, active because sessions run with cwd = a worktree of the Claude framework repo. The LLM wiki ingest had no trigger of its own, so `/ingest` could only ever hit the framework pipeline. Created global skill `wiki-ingest` (thin — points at the wiki's own CLAUDE.md) + a self-correcting pointer in `ingest.md`.
+3. **Token re-reading → `wiki/sources.md` manifest.** Every raw file's fate (ingested→where / skipped / discarded) in one machine-readable ledger; wired as read-first/update-last into the wiki CLAUDE.md workflow + the wiki-ingest skill. Reconstructed ground truth once from the citations already inside the wiki pages.
+4. **`/save` + `hello-claude` golden path.** Framework `save.md` → `vault-save.md`, **committed** (`f6f3c48`) because `.claude/commands/` is git-tracked (a disk-only rename would resurrect in every worktree checkout); references updated in CLAUDE.md/conventions.md/setup.md; CoachApp `save` skill now chains `vault-save.md` as its final step so predictions/voice/ledger still fire. Recycled a stale full copy of all 8 commands in the `epic-murdock` worktree; removed an empty `coachapp/.claude/skills/` drift-magnet dir (the save skill's step 5 had pointed at it as "the skills location" — corrected to global). **Added a daily golden-path self-check to hello-claude Step 9** (one `find` sweep, self-repair without approval on regression).
+
+**Done — LLM wiki batch-3 ingest (via the new `/wiki-ingest`):**
+- Triaged 55 raw clips: discarded 8 Web Clipper re-clips/failed captures (Recycle Bin, verified by URL+size+diff), skipped 2 Google search-results pages, kept 13 already-fed primaries as provenance, **ingested 32 new sources**.
+- New page **`coachapp-spreadsheet-competition.md`** (the ~20-thread Google-Sheets-vs-apps cluster: why PTs choose sheets, the RPE-auto-load power ceiling, where sheets break, the "program in a sheet / deliver an app" hybrid that is CoachApp's native shape). Appends to competitors (FitFocus + QuickCoach share a parent; FitFocus markets the exact client-experience wedge), competitor-pitfalls (won't-install-another-app; per-client pricing; coach-chosen demo videos), product-strategy (zero-install onboarding as underpriced advantage; "app for coaches who'd otherwise use sheets" positioning). Index/log/manifest updated.
+
+**Decided / reinforced (strategy, from the sheets batch):**
+- The real coach-side competitor is **Google Sheets**, not other apps. The switch trigger is ~5–15 clients. Positioning candidate: **"the app for coaches who'd otherwise use sheets."**
+- A competitor (FitFocus) is already marketing the client-experience wedge ("the platform your clients will actually open") — the wedge is validated but the window isn't infinite, which reinforces the runner redesign as the right next build.
+
+**Memory/skills touched:** `feedback_preview_verify.md`, `feedback_skill_golden_path.md`, `reference_llm_wiki.md`, `MEMORY.md` index all updated; new `wiki-ingest` skill created + registered in hello-claude standing behaviours + save step 5. Cleared the "skill-name collision" open to-do from STATUS.
+
+**UNVERIFIED (banked):**
+- The four self-checks are proven for *this* session (golden-path sweep returns exactly 2 artifacts; `/save` dispatched correctly to the CoachApp skill) but their *durability across a fresh future session/worktree* is by design unverifiable until the next one — captured as predictions instead.
+
+**Why:**
+- Every fix followed Jake's explicit template: don't patch the symptom in this worktree, find the one source that keeps re-emitting it (a seed template, a missing trigger, a git-tracked file), fix that, and add a cheap standing check so the fix can't silently rot.
+
+---
+
 ## 2026-07-02 (session 8, part 4) — Runner redesign decided (Hevy table logger); Hevy screenshots ingested to wiki — NO CODE SHIPPED
 
 **Done:**

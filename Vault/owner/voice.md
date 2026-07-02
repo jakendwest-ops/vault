@@ -262,5 +262,14 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 
 **New pattern confirmed:** Concrete evidence changes his mind fast and without ego. When challenging an assumption, bring the evidence, not just an opinion.
 
+**Additional signals — 2026-07-02 session (infrastructure hardening)**
+
+- **He now names recurring failure *classes* himself and points at a prior fix as the template.** "this is the same 'keep working around it every session' problem as the launch.json path." He's not just reporting a bug — he's holding a mental model of *the shape of the fix* (find the source, not the symptom) and demanding it be reapplied. Strongest signal yet of the "turn failures into permanent systems" trait becoming *his* explicit lens, not just an observed pattern. When he references a past fix, match its approach exactly.
+- **Compressed correction: quote-then-directive.** He pasted my own sentence back verbatim and added "Please fix." The quote *is* the spec — he uses my words to point at exactly what's wrong without re-explaining. Treat a quoted-back line as "this specific thing is the problem; fix the thing this describes."
+- **Attentive to the agent's operating cost, not just the product.** "Find a way to save tokens so you dont have to keep re-reading." First time he's optimised for *my* efficiency/economy as a goal in its own right — he treats wasted re-reading as a defect worth a permanent structural fix (the manifest), same standing as a product bug. Surface token/efficiency waste proactively; he values it fixed.
+- **"every" = make it exhaustive.** "fix it so that *every* hello-claude and *every* save are on the golden path" — his known completeness instinct ("and any existing", "all 4") now applied to infra hygiene: don't fix the one in front of you, fix the whole class and prove none are left.
+
+**No draft→ship diff available this session** (no external-facing prose drafted).
+
 ## Public / formal register
 _No data yet — not observed this session._

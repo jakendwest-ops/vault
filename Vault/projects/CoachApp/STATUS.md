@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-07-02 (session 8, part 4)_
+_Last updated: 2026-07-02 (session 8, part 5)_
 
 ---
 
@@ -133,7 +133,6 @@ Each of the 8 module files has its own independent `?v=N`. Any commit that chang
 | Action | Priority |
 |---|---|
 | Run /deploy-check before next beta invite | **High** |
-| **Skill-name collision** — `/ingest`, `/save` (and likely other bare names) dispatch to a global framework skill family (brief/checkup/ingest/review/save/setup/export/ultraplan, expects `System/conventions.md` + `Vault/ledgers/`), shadowing the CoachApp + LLM-wiki flows. `/ingest` misfired this session. Fix: either rename the CoachApp/wiki skills to unique names, or always invoke by explicit path. See [[feedback-skill-golden-path]]. | Medium |
 | Tighten `tests/client-workout.spec.js` "session history" locator to be onclick-scoped like its sibling tests (currently text-only match — safe today, would break under Playwright strict mode if a second "Session history" button ever appears) | Low |
 | **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
 | **`deleteProgram()` doesn't clean up cloned workout_templates** — deleting a program cascades away phases/program_phase_workouts but orphans any templates cloned into it (periodization-generated or otherwise). Found via leftover E2E test debris, not a live bug on Jake's account yet, but will recur for any real program with generated weeks that gets deleted. Fix: before deleting the program, collect template_ids via program_phase_workouts and delete those too. | Medium |
