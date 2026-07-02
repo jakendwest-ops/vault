@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-07-02 (session 8, part 3)_
+_Last updated: 2026-07-02 (session 8, part 4)_
 
 ---
 
@@ -65,6 +65,7 @@ _Last updated: 2026-07-02 (session 8, part 3)_
 
 ## In progress / known gaps
 
+- **Runner redesign → Hevy-style table logger** — 🔧 DECIDED, NOT BUILT (2026-07-02, next session). Move the runner from the one-set-at-a-time wizard to an all-sets-visible table: `SET · PREVIOUS · KG · REPS · ✓`, previous values pre-filled, tap-✓ to complete, rest timer fires on the tick. **v1 = plain strength (weight × reps) only**; cardio/timed/unilateral/%1RM stay on the current flow (phase 2). Free-edit any row; PREVIOUS keyed by exercise name + set index (reuse `fetchRunnerLastSession`). No paid gating. Next session: write the consolidated build plan → approve → build. Full detail in LOG (session 8 part 4) + wiki `coachapp-client-app-benchmarks` § Hevy logger UI teardown. Supersedes the old "Set input pre-fill" roadmap item (that was the small version of this).
 - **Runner bug fixes** — ✅ Done (61d8bc7, 2026-07-02): set-counter cap, rest-timer-before-render (×3 branches), beep window 3s→5s, audio-unlock on both entry points. Playwright 48/48 + CI green + deployed. Audio-unlock real-device check deferred by Jake — mobile-web audio is a known limit a native app (Capacitor) will resolve properly.
 - **Runner audit (vs the "Hevy" consumer-app bar)** — findings banked to roadmap.md as build items: (1) strength inputs aren't pre-filled → every set is a full retype vs Hevy's 1-tap repeat (biggest gap); (2) no plate calculator; (3) background rest-timer alerts need PWA/native; (4) last-session strip is strength-only. Rationale lives in the LLM wiki `coachapp-product-strategy` + `coachapp-client-app-benchmarks` pages.
 - **Privacy policy page** — ✅ Done (v158, pushed 2026-06-29) — `/privacy-policy.html` live, consent link updated
@@ -132,6 +133,7 @@ Each of the 8 module files has its own independent `?v=N`. Any commit that chang
 | Action | Priority |
 |---|---|
 | Run /deploy-check before next beta invite | **High** |
+| **Skill-name collision** — `/ingest`, `/save` (and likely other bare names) dispatch to a global framework skill family (brief/checkup/ingest/review/save/setup/export/ultraplan, expects `System/conventions.md` + `Vault/ledgers/`), shadowing the CoachApp + LLM-wiki flows. `/ingest` misfired this session. Fix: either rename the CoachApp/wiki skills to unique names, or always invoke by explicit path. See [[feedback-skill-golden-path]]. | Medium |
 | Tighten `tests/client-workout.spec.js` "session history" locator to be onclick-scoped like its sibling tests (currently text-only match — safe today, would break under Playwright strict mode if a second "Session history" button ever appears) | Low |
 | **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
 | **`deleteProgram()` doesn't clean up cloned workout_templates** — deleting a program cascades away phases/program_phase_workouts but orphans any templates cloned into it (periodization-generated or otherwise). Found via leftover E2E test debris, not a live bug on Jake's account yet, but will recur for any real program with generated weeks that gets deleted. Fix: before deleting the program, collect template_ids via program_phase_workouts and delete those too. | Medium |

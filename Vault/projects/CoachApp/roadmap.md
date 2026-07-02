@@ -89,7 +89,7 @@ Features inside a section are in priority order. Update status tags during each 
 | Voice cue at 10s rest + beeps at 3/2/1 | ✅ Done | v169 — Web Speech API; unlocked on first gesture |
 | Last session data accuracy | ✅ Done | v169 — fixed stale query ordering |
 | Stats bar removed — timer only in header | ✅ Done | v169 — cleaner runner layout |
-| **Set input pre-fill (last set's weight/reps) → 1-tap repeat sets** | 🗓 Planned | **High** — biggest gap vs Hevy (2026-07-02 competitor research). Strength inputs are currently empty every set; pre-filling the previous set's values makes a repeat set one tap. See LLM wiki `coachapp-client-app-benchmarks` / `coachapp-product-strategy` |
+| **Runner redesign → Hevy-style table logger** (supersedes "set input pre-fill") | 🔧 Decided, not built | **High** — 2026-07-02: escalated from simple pre-fill to a full all-sets-visible table (`SET · PREVIOUS · KG · REPS · ✓`), previous values pre-filled → 1-tap repeat, tap-✓ to complete, rest timer on the tick. **v1 = plain strength only**; cardio/timed/unilateral/%1RM stay on current flow (phase 2). No paid gating. Next session: consolidated plan → approve → build. See STATUS "In progress", LOG session 8 part 4, wiki `coachapp-client-app-benchmarks` |
 | **Plate calculator (what to load on the bar)** | 🗓 Planned | Repeatedly requested by lifters on Reddit; small, self-contained; sits next to the weight field (2026-07-02 research) |
 
 ### Weight tracking
