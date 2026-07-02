@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-07-01 (session 7)_
+_Last updated: 2026-07-02 (session 8)_
 
 ---
 
 ## Live state
 
-**App version:** app-core/dashboard/clients v=1 · app-programs v=4 · app-calendar-goals v=2 · app-workouts v=5 · app-runner v=3 · app-progress v=2
+**App version:** app-core/dashboard/clients v=1 · app-programs v=5 · app-calendar-goals v=2 · app-workouts v=6 · app-runner v=4 · app-progress v=3
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 7eabcc0 — removed 8 project-level `.claude/skills/` duplicates (golden-path consolidation, see LOG). Pre-push hook: all checks + 19 smoke tests green. (Previous: 76cb53f — periodization + assignment-time 1RM check + inline assign grid + Big 5/Epley 1RM UI, pushed 2026-07-01.)
+**Last push:** 0a0f89f — collapsible session history (client + PT), batched phase-workout query, delete-nav target fixes, dead "group by program" code removed. Found as uncommitted local work at session start (unknown prior authorship — no LOG entry existed for it); verified this session via Playwright (48/48) + 3-agent review before push. Pre-push hook: all checks + 19 smoke tests green. (Previous: 7eabcc0 — removed 8 project-level `.claude/skills/` duplicates, pushed 2026-07-01.)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -35,6 +35,7 @@ _Last updated: 2026-07-01 (session 7)_
 - Program phases: client plan clones have program_id: null (bug fixed 2026-06-28)
 - Client programs accordion — phase → day → SESSION N/M → exercise list → Start button
 - Calendar — monthly grid, add/delete events; client calendar shows program workouts
+- Session history (client Workouts page + PT client-profile Workouts tab) — collapsed behind a toggle by default instead of always showing the full list (2026-07-02)
 - Weight tracking — log, chart, stats row
 - Performance / PBs — log, best-per-exercise, chart, delete
 - Check-ins — weekly form, history
@@ -64,6 +65,7 @@ _Last updated: 2026-07-01 (session 7)_
 
 ## In progress / known gaps
 
+- **Runner bug fixes (session history double-display, phantom "Set 5 of 4", beep timing, audio unlock)** — root-caused and coded this session, cache-bust bumped, but **not yet verified or pushed** — session ended mid-testing. See Open to-dos.
 - **Privacy policy page** — ✅ Done (v158, pushed 2026-06-29) — `/privacy-policy.html` live, consent link updated
 - **Personal account (solo view)** — ✅ Done (v158–v162, pushed 2026-06-29) — PT | Personal view switcher, solo dashboard, programs self-assign, Workouts session accordion, RLS policies added
 - **Performance logs RLS** — ✅ Done (2026-06-29) — 5 clean policies confirmed via pg_policies query
@@ -114,7 +116,7 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-Each of the 8 module files has its own independent `?v=N`. Any commit that changes a module file must bump that file's own version in index.html — bump only the files that changed, not all 8. Current: core/dashboard/clients v=1 · programs v=4 · calendar-goals v=2 · workouts v=5 · runner v=3 · progress v=2.
+Each of the 8 module files has its own independent `?v=N`. Any commit that changes a module file must bump that file's own version in index.html — bump only the files that changed, not all 8. Current: core/dashboard/clients v=1 · programs v=5 · calendar-goals v=2 · workouts v=6 · runner v=4 · progress v=3.
 
 ### Periodization — week_number / tier
 `program_phases.periodization_type` (`'linear'`/`'undulating'`/null) + `periodization_config` (jsonb). `program_phase_workouts.week_number` (default 1) lets one phase hold distinct day/template assignments per week — phases that never use periodization just have week_number=1 rows, which the client calendar/workouts-page render as repeating every week (legacy behaviour, unchanged). `program_phase_workouts.tier` (`'heavy'`/`'moderate'`/`'light'`) is undulating-only, set per day-slot. `generatePhasePeriodization(phaseId, programId)` clones Week 1's templates into weeks 2..duration_weeks, recalculating only sets where `intensityMin`/`intensityMax` is set — everything else (reps, rest, tempo) is copied unchanged. Regeneration is idempotent (`_cleanupPhaseWeeksBeyond` deletes stale weeks + their templates, both master and any already-propagated client copies, before regenerating) — the same helper runs when a phase's `duration_weeks` is edited down. Client propagation: assigning a program clones week_number through (`_cloneTemplateForClient`/`_cloneProgramForClient`); if a client is *already* assigned when new weeks are generated, `generatePhasePeriodization` propagates to them too.
@@ -128,11 +130,15 @@ Each of the 8 module files has its own independent `?v=N`. Any commit that chang
 
 | Action | Priority |
 |---|---|
+| **Runner bug fixes sitting uncommitted** — `app-runner.js` + `app-workouts.js` locally modified (set-counter cap, rest-timer render-order fix, 5s beep window, earlier audio unlock), cache-bust already bumped (workouts v7, runner v5) but **not yet run through Playwright, not code-reviewed, not pushed**. Session ended mid-verification. Must go through the full pre-push discipline before pushing — do not push as-is. | **High** |
+| Live-device check the audio-unlock fix specifically once pushed — code-level fix applied but can't be confirmed by automated testing, only real playback on your phone | High |
+| **Obsidian wiki — 5-part follow-up requested, not yet done:** (1) check the Web Clipper browser extension is actually configured correctly right now — needs live inspection, not just written guidance; (2) expand `guide-web-clipper` with concrete usage scenarios — branding/UI inspiration, competitor sites, review pages/Reddit threads about competitors; (3) a guide page on whether/how Obsidian+Claude can be set up to "continually improve themselves" — needs scoping with Jake first, no such automated mechanism exists yet; (4) clarify in `guide-new-project-setup` whether each new project gets its own CLAUDE.md or shares the one at the wiki root (current design: one shared CLAUDE.md for the whole wiki) — Jake's question suggests this isn't explicit enough yet; (5) a full re-read/quality pass on all 10 existing guide pages for a true-novice audience | **High** |
 | Run /deploy-check before next beta invite | **High** |
+| Tighten `tests/client-workout.spec.js` "session history" locator to be onclick-scoped like its sibling tests (currently text-only match — safe today, would break under Playwright strict mode if a second "Session history" button ever appears) | Low |
 | **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
 | **`deleteProgram()` doesn't clean up cloned workout_templates** — deleting a program cascades away phases/program_phase_workouts but orphans any templates cloned into it (periodization-generated or otherwise). Found via leftover E2E test debris, not a live bug on Jake's account yet, but will recur for any real program with generated weeks that gets deleted. Fix: before deleting the program, collect template_ids via program_phase_workouts and delete those too. | Medium |
 | Create a solo client record on the E2E PT account so solo-account.spec.js tests stop skipping (all 9 tests skip against E2E account; only pass against Jake's account) | **High** |
-| Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops | High |
+| Assign a program to the Playwright test client (coachapp.e2e.client) so accordion tests are not no-ops. Confirmed wider this session: not one standalone workout template belonging to that client's coach has any exercises attached — blocked a live manual runner test entirely. Needs at least one real, populated template, not just a program assignment. | High |
 | Verify iOS Safari slide-in fix on real device — `inset:0` replaced with explicit `top/right/bottom/left` in v180, pushed. Test on iPhone and close if working. | **High** |
 | Run Rowing/Running/SkiErg DELETE SQL in Supabase (safety check first — see below) | High |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
@@ -159,6 +165,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
+| app-programs v=5 / workouts v=6 / runner v=4 / progress v=3 | Collapsible session history (client + PT), batched phase-workout query, delete-nav target fixes, dead "group by program" template-list code removed. Found as uncommitted local work at session start, unknown prior authorship; verified via Playwright (48/48) + 3-agent review before push. **Pushed 2026-07-02 (0a0f89f).** |
 | app-programs v=4 / calendar-goals v=2 / workouts v=5 / runner v=3 | Periodization (Linear/Undulating) + assignment-time 1RM check + solo RLS fix + inline assign-workout grid (replaces the old modal) — see STATUS "What's working" for full detail. **Pushed 2026-07-01 (76cb53f).** |
 | app-workouts v=3 | Runner template list limit raised to 2000; startWorkoutRunner fetches template by ID to bypass max_rows=200 cap |
 | modular | app.js (7,968 lines) split into 8 modules; pre-push hook updated; preview server path fixed; .gitignore updated |
