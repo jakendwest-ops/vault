@@ -1,6 +1,6 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-06-29 (session 3)_
+_Last updated: 2026-07-02 (session 9)_
 
 ---
 
@@ -89,7 +89,8 @@ Features inside a section are in priority order. Update status tags during each 
 | Voice cue at 10s rest + beeps at 3/2/1 | ✅ Done | v169 — Web Speech API; unlocked on first gesture |
 | Last session data accuracy | ✅ Done | v169 — fixed stale query ordering |
 | Stats bar removed — timer only in header | ✅ Done | v169 — cleaner runner layout |
-| **Runner redesign → Hevy-style table logger** (supersedes "set input pre-fill") | 🔧 Decided, not built | **High** — 2026-07-02: escalated from simple pre-fill to a full all-sets-visible table (`SET · PREVIOUS · KG · REPS · ✓`), previous values pre-filled → 1-tap repeat, tap-✓ to complete, rest timer on the tick. **v1 = plain strength only**; cardio/timed/unilateral/%1RM stay on current flow (phase 2). No paid gating. Next session: consolidated plan → approve → build. See STATUS "In progress", LOG session 8 part 4, wiki `coachapp-client-app-benchmarks` |
+| **Runner redesign → Hevy-style table logger** (supersedes "set input pre-fill") | ✅ Done (v1) | 2026-07-02, pushed 6e6402a: all-sets-visible table (`SET · PREVIOUS · KG · REPS · ✓`), previous values pre-filled → 1-tap repeat, tap-✓ to complete, non-blocking rest timer. **v1 = plain strength only**; cardio/timed/unilateral/%1RM stay on the wizard — phase 2 for those is still 🗓 Planned. No paid gating. See STATUS "What's working" + "In progress" for the two known v1 gaps (superset auto-switch, bodyweight live-verify) |
+| **Runner redesign phase 2** — extend table (or equivalent) to cardio/timed/unilateral/%1RM exercises | 🗓 Planned | Scope not yet defined; v1 deliberately excluded these to ship the strength-only case first |
 | **Plate calculator (what to load on the bar)** | 🗓 Planned | Repeatedly requested by lifters on Reddit; small, self-contained; sits next to the weight field (2026-07-02 research) |
 
 ### Weight tracking

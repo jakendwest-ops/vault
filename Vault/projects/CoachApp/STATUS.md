@@ -1,14 +1,14 @@
 # CoachApp — STATUS
-_Last updated: 2026-07-02 (session 8, part 5)_
+_Last updated: 2026-07-02 (session 9)_
 
 ---
 
 ## Live state
 
-**App version:** app-core/dashboard/clients v=1 · app-programs v=5 · app-calendar-goals v=2 · app-workouts v=7 · app-runner v=5 · app-progress v=3
+**App version:** app-core/dashboard/clients v=1 · app-programs v=5 · app-calendar-goals v=2 · app-workouts v=7 · app-runner v=6 · app-progress v=3
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp
 **CSS version:** v=3 (main.css)
-**Last push:** 61d8bc7 — runner fixes: set-counter cap, rest-timer-before-render (×3 log branches), beep window 3s→5s, audio-unlock on both entry points. Verified this session: Playwright 48/48 + pre-push hook (all static checks + 19 smoke) + CI green + GitHub Pages deployed. (Previous: 0a0f89f — collapsible session history, batched phase-workout query, delete-nav fixes.)
+**Last push:** 6e6402a — Hevy-style strength table in the workout runner (v1: plain strength only). Verified this session: Playwright 48/48 full suite + 12/12 runner.spec.js (incl. 2 new smoke tests) + 3-agent code review (security/scoping, solo-mode, duplicates+PII — all SHIP, no blocking findings) + pre-push hook (21 smoke tests) + CI green + GitHub Pages deployed. (Previous: 61d8bc7 — runner fixes: set-counter cap, rest-timer-before-render, beep window, audio-unlock.)
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ---
@@ -23,6 +23,7 @@ _Last updated: 2026-07-02 (session 8, part 5)_
 - Cardio set form — Pace, HR Zone, Rest, Stroke rate, Duration, Distance
 - Template card set preview — correct for all set types including timed (1:30 not 90 reps)
 - Workout runner — set-by-set flow, timed sets, unilateral L/R, rest timer, skip rest, last session strip
+- **Strength table (Hevy-style)** — plain-strength exercises show an all-sets-visible table (SET/PREVIOUS/KG/REPS/✓) instead of the one-set wizard; previous-session values pre-fill KG/REPS for 1-tap repeat; tap ✓ to complete a set (fires rest timer, non-blocking — table stays visible/editable underneath); uncheck to undo; "+ Add set" appends a row; free-edit any row any time, no forced order. Cardio/timed/unilateral/%1RM exercises stay on the existing wizard (phase 2). v1, shipped 2026-07-02 (6e6402a)
 - Edit logged sets in runner; PT notes always shown; client notes textarea
 - Runner save lands on correct page per role (client → Workouts, PT → client profile)
 - Client dashboard — hero "Up next" card (program + phase + week), goals, weight, upcoming events, PBs, recent sessions; PT branding header when set
@@ -65,7 +66,7 @@ _Last updated: 2026-07-02 (session 8, part 5)_
 
 ## In progress / known gaps
 
-- **Runner redesign → Hevy-style table logger** — 🔧 DECIDED, NOT BUILT (2026-07-02, next session). Move the runner from the one-set-at-a-time wizard to an all-sets-visible table: `SET · PREVIOUS · KG · REPS · ✓`, previous values pre-filled, tap-✓ to complete, rest timer fires on the tick. **v1 = plain strength (weight × reps) only**; cardio/timed/unilateral/%1RM stay on the current flow (phase 2). Free-edit any row; PREVIOUS keyed by exercise name + set index (reuse `fetchRunnerLastSession`). No paid gating. Next session: write the consolidated build plan → approve → build. Full detail in LOG (session 8 part 4) + wiki `coachapp-client-app-benchmarks` § Hevy logger UI teardown. Supersedes the old "Set input pre-fill" roadmap item (that was the small version of this).
+- **Runner redesign → Hevy-style table logger** — ✅ v1 SHIPPED 2026-07-02 (6e6402a). See "What's working" above. **Phase 2 not started:** extend the table pattern (or an equivalent) to cardio/timed/unilateral/%1RM exercises, which still use the old one-set wizard. Two known gaps in v1, not yet resolved: (1) superset auto-switch (wizard jumps to the paired exercise on log; table never auto-advances by design, so a superset pair just sits there until the PT/client manually taps Next — only matters if real templates use `supersetGroup`, not yet checked against Jake's actual data); (2) bodyweight-in-table is code-reviewed but not live-verified (didn't hit a live bodyweight exercise in this session's test data).
 - **Runner bug fixes** — ✅ Done (61d8bc7, 2026-07-02): set-counter cap, rest-timer-before-render (×3 branches), beep window 3s→5s, audio-unlock on both entry points. Playwright 48/48 + CI green + deployed. Audio-unlock real-device check deferred by Jake — mobile-web audio is a known limit a native app (Capacitor) will resolve properly.
 - **Runner audit (vs the "Hevy" consumer-app bar)** — findings banked to roadmap.md as build items: (1) strength inputs aren't pre-filled → every set is a full retype vs Hevy's 1-tap repeat (biggest gap); (2) no plate calculator; (3) background rest-timer alerts need PWA/native; (4) last-session strip is strength-only. Rationale lives in the LLM wiki `coachapp-product-strategy` + `coachapp-client-app-benchmarks` pages.
 - **Privacy policy page** — ✅ Done (v158, pushed 2026-06-29) — `/privacy-policy.html` live, consent link updated
@@ -118,7 +119,10 @@ Back-nav context for template editor. Always set `backFn` when opening template 
 Private buckets: logos (604800s = 7 days), progress-photos (3600s = 1hr). Never `getPublicUrl`. Use `createSignedUrl` (single) or `createSignedUrls` (batch).
 
 ### Cache busting
-Each of the 8 module files has its own independent `?v=N`. Any commit that changes a module file must bump that file's own version in index.html — bump only the files that changed, not all 8. Current: core/dashboard/clients v=1 · programs v=5 · calendar-goals v=2 · workouts v=7 · runner v=5 · progress v=3.
+Each of the 8 module files has its own independent `?v=N`. Any commit that changes a module file must bump that file's own version in index.html — bump only the files that changed, not all 8. Current: core/dashboard/clients v=1 · programs v=5 · calendar-goals v=2 · workouts v=7 · runner v=6 · progress v=3.
+
+### Strength table (Hevy-style runner v1)
+`_isPlainStrengthExercise(ex)` gates the table vs. wizard: excludes cardio, any set with `timed`/`unilateral`/`intensityMin`, and carry/sled/lunge-name exercises (regex-matched, same list used elsewhere). `ex.tableRows` = `[{weight, reps, done}]`, lazily built by `_ensureTableRows` (seeded from `_prevSetsByIndex`, keyed by `set_number - 1` against `_runner.lastSession[ex.name]`). `toggleTableSet(i)` flips `done` and calls `_syncLoggedSetsFromTable`, which **rebuilds** `ex.loggedSets` from scratch each time (`filter(done).map({weight,reps})`) rather than pushing — verified safe: every consumer (`saveRunnerSession`, `showRunnerFinish`, header dots) only reads `.length`/iterates, never holds a stale reference. `renderRunnerLastSession` was extended (not just the table added) to retroactively backfill blank rows if the async last-session fetch resolves after the table's first paint — guarded against re-triggering itself (row already non-blank → skip → no re-render loop).
 
 ### Periodization — week_number / tier
 `program_phases.periodization_type` (`'linear'`/`'undulating'`/null) + `periodization_config` (jsonb). `program_phase_workouts.week_number` (default 1) lets one phase hold distinct day/template assignments per week — phases that never use periodization just have week_number=1 rows, which the client calendar/workouts-page render as repeating every week (legacy behaviour, unchanged). `program_phase_workouts.tier` (`'heavy'`/`'moderate'`/`'light'`) is undulating-only, set per day-slot. `generatePhasePeriodization(phaseId, programId)` clones Week 1's templates into weeks 2..duration_weeks, recalculating only sets where `intensityMin`/`intensityMax` is set — everything else (reps, rest, tempo) is copied unchanged. Regeneration is idempotent (`_cleanupPhaseWeeksBeyond` deletes stale weeks + their templates, both master and any already-propagated client copies, before regenerating) — the same helper runs when a phase's `duration_weeks` is edited down. Client propagation: assigning a program clones week_number through (`_cloneTemplateForClient`/`_cloneProgramForClient`); if a client is *already* assigned when new weeks are generated, `generatePhasePeriodization` propagates to them too.
@@ -132,6 +136,10 @@ Each of the 8 module files has its own independent `?v=N`. Any commit that chang
 
 | Action | Priority |
 |---|---|
+| **GitHub PAT is embedded in plaintext in coachapp's `.git/config` remote URL** (`https://jakendwest-ops:ghp_...@github.com/...`) — noticed while pushing this session, not fixed. Anyone reading that file (backups, screen shares) gets a live token with push access. Rotate to a credential helper or SSH key. | Medium |
+| **Other git worktrees created before 2026-07-02 may still auto-start the dead "PT Dashboard" (PTHub) config instead of CoachApp** — today's fix removed it from this worktree + the parent seed template, but existing worktrees weren't swept (unlike the 18-worktree sweep done earlier today for the stale-path bug). Only bites if CoachApp's own server isn't already running when a worktree's preview auto-starts. | Medium |
+| Check whether any of Jake's real workout templates use `supersetGroup` — the new strength table doesn't auto-advance to a superset partner the way the old wizard did (by design — table is "tap Next when ready"), so paired exercises need a manual tap between them now. Only worth fixing if real templates actually use supersets. | Medium |
+| Live-verify a bodyweight exercise in the new strength table (code-reviewed, not tested against real bodyweight data this session) | Low |
 | Run /deploy-check before next beta invite | **High** |
 | Tighten `tests/client-workout.spec.js` "session history" locator to be onclick-scoped like its sibling tests (currently text-only match — safe today, would break under Playwright strict mode if a second "Session history" button ever appears) | Low |
 | **1RM exercise-name matching — exercise_id vs fuzzy string match** — big design decision, deferred to its own session (see roadmap.md). Today's build keeps name-matching in one shared helper so this swap is contained later. | Medium |
@@ -162,6 +170,7 @@ DELETE FROM public.exercises WHERE name IN ('Rowing', 'Running', 'SkiErg');
 
 | Version | What shipped |
 |---|---|
+| app-runner v=6 | Hevy-style strength table (v1: plain strength only) — all-sets-visible SET/PREVIOUS/KG/REPS/✓ table replaces the one-set wizard for non-cardio/timed/unilateral/%1RM exercises; previous-session pre-fill; non-blocking rest timer; 2 new Playwright smoke tests. Verified via Playwright (48/48 full suite + 12/12 runner.spec.js) + 3-agent review before push. **Pushed 2026-07-02 (6e6402a).** |
 | app-programs v=5 / workouts v=6 / runner v=4 / progress v=3 | Collapsible session history (client + PT), batched phase-workout query, delete-nav target fixes, dead "group by program" template-list code removed. Found as uncommitted local work at session start, unknown prior authorship; verified via Playwright (48/48) + 3-agent review before push. **Pushed 2026-07-02 (0a0f89f).** |
 | app-programs v=4 / calendar-goals v=2 / workouts v=5 / runner v=3 | Periodization (Linear/Undulating) + assignment-time 1RM check + solo RLS fix + inline assign-workout grid (replaces the old modal) — see STATUS "What's working" for full detail. **Pushed 2026-07-01 (76cb53f).** |
 | app-workouts v=3 | Runner template list limit raised to 2000; startWorkoutRunner fetches template by ID to bypass max_rows=200 cap |

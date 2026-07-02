@@ -4,6 +4,37 @@ Newest first.
 
 ---
 
+## 2026-07-02 (session 9) — Runner redesign v1 shipped: Hevy-style strength table (runner v5→v6) — PUSHED (6e6402a)
+
+**Done:**
+- **Preview tooling fix (no CoachApp code):** diagnosed why the preview flipped to serving PTHub — this worktree's `.claude/launch.json` listed a dead "PT Dashboard" (PTHub) config *before* the CoachApp config, and it auto-started once the other chat's real CoachApp server (port 3001) had shut down. Removed the dead PTHub config from this worktree's launch.json **and** the parent seed template (`C:/Users/jaken/Claude/.claude/launch.json`), so no future worktree can inherit it. Did not sweep other pre-existing worktrees — banked as a to-do.
+- **Runner redesign v1 — Hevy-style strength table.** Plain-strength exercises (excludes cardio, timed, unilateral, %1RM-tagged sets, carry/sled/lunge-name exercises) now render an all-sets-visible table (`SET · PREVIOUS · KG · REPS · ✓`) instead of the one-set-at-a-time wizard. Previous-session values pre-fill KG/REPS for 1-tap repeat sets (reuses `fetchRunnerLastSession`, keyed by `set_number`). Tap ✓ completes a set — fires the rest timer as a non-blocking bar while the table stays visible/editable underneath (the core design difference from the wizard's old blocking "Resting…" placeholder). Uncheck to undo. "+ Add set" appends a row. Free-edit any row, any time, no forced order — no auto-advance (PT/client taps "Next exercise" manually). New functions in `js/app-runner.js`: `_isPlainStrengthExercise`, `_prevSetsByIndex`, `_ensureTableRows`, `_syncLoggedSetsFromTable`, `toggleTableSet`, `addTableRow`, `renderStrengthTable`; `renderRunnerLastSession` extended to retroactively backfill blank rows if last-session data arrives after the table's first paint. Reuses the exact `{weight, reps}` shape `saveRunnerSession` already expects — zero save/schema changes. `app-runner.js` v5→v6.
+- 2 new Playwright smoke tests in `tests/runner.spec.js` (table renders with correct columns; checking a set logs it + starts rest without leaving the table) — both ran real assertions against the E2E account's actual assigned template, not skip-paths.
+
+**Bugs found + fixed:**
+- Strength-table checkbox tap target was 32×32px on first build — below the 44×44 standard minimum, and this is the single most-tapped element in the whole redesign (once per set, real gym conditions, sweaty/tired hands). Caught via live testing in the preview before declaring the feature done; bumped to 44×44 and reverified via exact pixel measurement.
+
+**Decided:**
+- v1 scope holds exactly as approved: plain strength only. Cardio/timed/unilateral/%1RM stay on the existing wizard as phase 2, not yet scoped.
+- Superset auto-switch (wizard behaviour: completing a set on a superset exercise auto-jumps to its pair) is **not** replicated in the table — the table's "no auto-advance, tap Next when ready" design makes this the correct call, but it means a superset pair now needs a manual tap between them. Not yet checked against whether Jake's real templates use `supersetGroup`.
+
+**UNVERIFIED (banked):**
+- Bodyweight exercise in the new table — code-reviewed (the `ex.bodyweight` branch exists and mirrors the wizard's BW display), but no live bodyweight exercise existed in this session's test data to exercise it against.
+- Whether any of Jake's real templates use `supersetGroup` (relevant to the superset gap above).
+- Whether other pre-existing worktrees still carry the dead PT-Dashboard launch config (only this worktree + the seed template were fixed this session).
+
+**Testing/review this session:**
+- Full Playwright suite: 48/48 green (zero regressions across PT/client/solo roles).
+- `tests/runner.spec.js` alone: 12/12 green (10 pre-existing + 2 new).
+- 3-agent code review (security+scoping, solo-mode correctness, duplicates+PII), each independently verifying rather than taking claims at face value — all three returned SHIP with no blocking findings. Notably, the duplicates+PII agent was specifically asked to trace whether the modified `renderRunnerLastSession` (which now conditionally calls `renderRunner()` again) could create an infinite render loop — traced the full call chain and confirmed it's bounded to exactly one extra render per exercise, not recursive.
+- Pre-push hook: 21/21 smoke tests + all static checks (only the expected sudo-gating hardcoded-email WARN). CI green, GitHub Pages deployed.
+
+**Why:**
+- The tap-target bug is exactly the kind of thing code review can't catch (it's a design/UX defect, not a logic bug) — only caught because live testing in the preview was done before declaring the feature done, consistent with the standing "verify before reporting done" rule.
+- Multi-agent review scope was deliberately narrow (3 fixed angles) rather than open-ended — each agent was asked to independently verify specific claims (e.g. "are there really zero new DB queries") rather than just skim and vibe-check, which is what surfaced the fully-traced render-loop proof rather than a hand-wave.
+
+---
+
 ## 2026-07-02 (session 8, part 5) — Four recurring "workaround every session" problems fixed at the source — NO COACHAPP CODE
 
 **Context:** Jake's throughline all session — "this is the same 'keep working around it every session' problem as the launch.json path." Each fix converted a per-session patch into a root-cause fix + a self-check. No CoachApp module files touched (cache-bust + Playwright N/A this session).
