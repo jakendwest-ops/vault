@@ -4,6 +4,45 @@ Newest first.
 
 ---
 
+## 2026-07-03 (session 12) — Runner build pushed + 2 scoping fixes + deleteProgram rewrite + GitHub Pages dual-workflow fix (programs v6→v8, workouts v8→v9, runner v7→v9) — PUSHED (1914e7b, dee1479, 66bf1fd)
+
+**Context:** Continuing straight from session 11's uncommitted runner build. Ran a fresh multi-agent review this session (none had run yet against this specific diff), pushed it, then a routine code-review scan turned up two real scoping bugs, then built and shipped the long-standing `deleteProgram()` orphan-cleanup fix — this time backed by actually querying Supabase's FK cascade rules first instead of assuming. A GitHub Pages deploy failure Jake forwarded led to finding and fixing a root-cause infrastructure issue unrelated to the code itself.
+
+**Done — runner build push (1914e7b):**
+- 3-agent review (security/scoping, solo-mode correctness, duplicates+render-safety) on session 11's set-accuracy build — all three came back clean. Two agents independently flagged the same dead-code nit (`curSig`, an unused variable in `renderStrengthTable`) — removed it, reran Playwright (56/56) before pushing.
+- One coverage gap noted, not fixed: `tests/runner.spec.js` has no solo-mode tests, though the role-sensitive code path (`showAddExerciseToTemplateModal`'s `isRunner` branch) itself checked out clean via manual trace.
+
+**Done — 2 scoping bugs found + fixed (dee1479, runner v9 / programs v7):**
+- `showLogSessionModal` (app-runner.js) queried `workout_templates` with **zero scoping** — no `coach_id`, no `client_id` filter at all. Its "Load from template" dropdown was pulling every coach's templates, not just the current one. Scoped it the same way `saveRunnerSession`/`saveWorkoutSession` already derive `coachId` (client's `coach_id`, falling back to `currentUser.id`).
+- `deleteProgram()` (app-programs.js) deleted by `id` only, no `coach_id` ownership check — inconsistent with `deleteTemplate`'s equivalent guard. RLS likely blocked cross-tenant deletes regardless, but added explicit scoping for defense-in-depth.
+- Both found during routine code review, not part of an existing feature. Verified live in preview (dropdown loads correctly scoped, no console errors) + Playwright 56/56.
+
+**Done — `deleteProgram()` full rewrite (66bf1fd, programs v8):**
+- **Researched actual Supabase FK cascade rules before writing any delete logic** (SQL Editor, `information_schema.referential_constraints`) rather than assuming, per sql-safety habit. Found: `programs→program_phases→program_phase_workouts` cascade automatically; `workout_templates→workout_template_exercises` cascades automatically; `client_programs→client_program_workouts` also cascades (queried live — **0 orphaned rows found**, confirming "Remove program from client" has been cleaning up correctly all along, DB-enforced not just app-code-enforced). The only real gap: `workout_templates` itself survives its `program_phase_workouts` row being removed (`SET NULL`, not `CASCADE`) — that's the actual leak.
+- This simplified the build significantly versus the originally-proposed plan (no manual FK-order deletes needed for phases/phase-workout-slots/template-exercises — cascade handles all of it).
+- New behavior: check `client_programs` for the program first — if any clients are assigned, show a toast and stop (no confirm dialog, nothing touched). Otherwise walk `program_phases → program_phase_workouts.template_id` to find the templates this program owns, delete those explicitly, then delete the `programs` row.
+- Verified both paths against **real, not simulated, conditions**: block path called directly against Jake's actual "Test 1" program (2 real clients assigned) — confirmed it returned early with the correct toast message and the program's phase content was unchanged afterward. Cleanup path tested against a disposable fixture program+phase+template+phase-workout-slot created via the app's own Supabase client and torn down in the same session — confirmed all four rows gone after one call. Playwright 56/56.
+
+**Done — GitHub Pages dual-workflow fix (no CoachApp code):**
+- Jake forwarded a "pages build and deployment: Some jobs were not successful" failure email. Investigated and found the repo's Pages config was in **legacy "deploy from branch" mode** (`build_type: legacy`) — which runs GitHub's own native build-and-deploy workflow on every push, *completely independently of and redundant with* the repo's custom "Check & Deploy" Action (which also builds and deploys via `actions/deploy-pages@v5`). Both fire on every push; both can independently hit GitHub's transient "Deployment failed, try again later" infra error — which is exactly why the 66bf1fd push generated two separate failure emails for the same underlying hiccup, and why the "Check & Deploy" job also failed on this push in isolation (confirmed via `gh run rerun` — same commit, second attempt succeeded clean).
+- **Got Jake's explicit approval before changing repo configuration**, then switched Pages source to Actions-only (`build_type: workflow`) via `gh api -X PUT repos/.../pages -f build_type=workflow`. Verified the live site was unaffected (still serving the correct version) immediately after.
+
+**Bugs found + fixed:**
+- `showLogSessionModal` unscoped query, `deleteProgram()` missing `coach_id` check — see above, the latter superseded by the same-session full rewrite.
+
+**Decided:**
+- GitHub Pages deploy source is now Actions-only — one deploy workflow going forward, not two.
+
+**UNVERIFIED (banked):**
+- The GitHub Pages source-switch fix is verified for this session (site unaffected, `build_type: workflow` confirmed via the API) but its durability across future pushes — whether the native workflow genuinely never fires again — is only provable by watching the next few pushes.
+- The ~993-template backlog on the main coach account (surfaced while researching `deleteProgram`'s FK behavior) is separate from and larger than what this session fixed — `deleteProgram()` now prevents *new* debris of this kind, but the historical backlog still needs its own cleanup pass.
+
+**Why:**
+- Checking the actual FK cascade rules in Supabase before writing delete logic (rather than the originally-proposed manual multi-step cleanup) both simplified the build and resolved a previously-open uncertainty about whether "Remove program from client" was reliably cleaning up client data — confirmed yes, and DB-enforced, not just app-code-enforced, which is a stronger guarantee than assumed.
+- The GitHub Pages fix follows the standing pattern of fixing root causes rather than re-explaining the same symptom every session: two workflows silently deploying redundantly would have kept generating confusing duplicate failure emails indefinitely otherwise.
+
+---
+
 ## 2026-07-03 (session 11) — Runner set-accuracy build + swap/add modal unification + orphan-template diagnosis — NOT YET PUSHED (app-runner v7→v8, app-workouts v8→v9)
 
 **Context:** Continuing session 10's same-day work. Jake gave a detailed PT + client-runner spec (program building, per-set target display, runner affordances) and approved scoping the runner "set-accuracy" bucket first, deferring program-assignment/calendar work. He then live-tested the build himself and returned two rounds of concrete, screenshot-driven feedback that reshaped the implementation.
