@@ -288,5 +288,12 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 
 **No draft→ship diff available this session** (no external-facing prose drafted).
 
+**Additional signals — 2026-07-03 session (runner UI correction round)**
+
+- **Live-tests his own approved build within the same session, not just competitor apps.** Sent a dense, itemized, screenshot-keyed list of four UI corrections on a feature he'd approved minutes earlier — same pattern as his competitor-research audits (session 10's "13-item report"), now turned on my own output immediately after building it. Confirms the "test everything, batch findings precisely" pattern applies to reviewing my work, not just his own product research.
+- **Corrects "the same X" precisely when a simplified-but-consistent version isn't what he meant.** "These 2 buttons do functionally the same thing. This is incorrect... you should be given the same modal that I have highlighted." Distinguishes between a stylistically-matching rebuild and literal component reuse — when he says "the same," he means the identical component, not an equivalent one.
+- **"Please ensure you are following my brief/spec, and also checking for consistencies across the platform."** — direct instruction to hold the build accountable to the literal spec and to proactively check for platform consistency, not just functional correctness. Matches (and validates) the feature-audit skill built earlier this same session.
+- No new sentence-shape or punctuation deltas beyond what's already banked.
+
 ## Public / formal register
 _No data yet — not observed this session._

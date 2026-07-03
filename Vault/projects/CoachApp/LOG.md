@@ -4,6 +4,45 @@ Newest first.
 
 ---
 
+## 2026-07-03 (session 11) — Runner set-accuracy build + swap/add modal unification + orphan-template diagnosis — NOT YET PUSHED (app-runner v7→v8, app-workouts v8→v9)
+
+**Context:** Continuing session 10's same-day work. Jake gave a detailed PT + client-runner spec (program building, per-set target display, runner affordances) and approved scoping the runner "set-accuracy" bucket first, deferring program-assignment/calendar work. He then live-tested the build himself and returned two rounds of concrete, screenshot-driven feedback that reshaped the implementation.
+
+**Done — runner set-accuracy (round 1, approved before building):**
+- **Per-set target display fixed** — the strength table's target bar was hardcoded to always read `sets_json[0]`, so sets 2/3 with different %/RPE/rest/reps never showed their own prescription. Now dynamic: tracks the current working set the same way the wizard already did.
+- **Delete a set** — wizard's logged-set edit sheet gets a Delete button; table rows get a delete affordance. Neither existed before.
+- **Live rep tally** — running total of reps logged for the current exercise vs. the same exercise's total last session, updating on every set registered (table mode + wizard reps/unilateral sets).
+- **Shared 1RM-aware exercise picker (v1)** — swap/add rebuilt to mirror the workout builder's "pick from library" pattern with a 1RM-lifts group, so a picked 1RM lift is linked for weight calculation. Session-only, unchanged from Jake's earlier decision.
+- New skill: **feature-audit** — runs after every feature build: affordance/permission audit (should this be editable/deletable, is the right control present, does RLS actually allow it), a PT lens and a gym-user lens, ending in proof (Playwright + preview) not claims. Registered in hello-claude + memory.
+- Playwright: 55/55 (5 new tests). Manually verified live in the preview (dynamic target bar, captions, tally, row delete, wizard delete, 1RM optgroup). Methodology note banked: `_runner` is a page-scoped `let` declared in app-workouts.js, not a `window` property — `window._runner = ...` silently no-ops; must assign the bare identifier.
+
+**Done — round 2, from Jake's live-test screenshots (four corrections):**
+- **Per-set correlation redesigned** — dropped the per-row caption text ("ugly UI" per Jake); the row for the set currently being worked is now highlighted instead, so the target bar's numbers are visually tied to a specific row rather than described in text.
+- **Tick checkbox redesigned** — was effectively invisible (faint border against the row background); now a plain white box with a visible 2px border, turns `var(--success)` green with a white check on completion (reused the existing green token, not a new colour).
+- **Delete button redesigned** — was a bare "✕" with no indication of what it did; now a small red-tinted box reading "Delete" (`var(--danger-light)`/`var(--danger)` — existing tokens).
+- **Swap/Add now open the literal same modal as the workout builder** — round 1 had built a simplified select-only picker matching the builder's *style*; Jake corrected this to mean literal component reuse. `showAddExerciseToTemplateModal` in app-workouts.js is now parameterised (`runnerCtx = {mode}`) so the runner's Swap/Add buttons open the exact same modal (library picker + 1RM group + full set-target builder + notes + superset), with a runner-specific confirm handler (`_confirmRunnerExerciseFromModal`) that applies the result to `_runner.exercises` in-memory instead of writing to `workout_template_exercises` — keeps swap/add session-only. Verified byte-identical modal markup between the two entry points in a Playwright test.
+- Playwright: 56/56 full suite (tests rewritten to match the real modal's fields, not the old simplified picker).
+
+**Diagnosed, not yet built (awaiting Jake):**
+- **Programs picker "Filter workouts below" search** — mechanism confirmed correct via two independent live-DOM tests (isolated, and on Jake's real "[E2E] Inline Grid Test" program); the actual problem is that a plain `<select>` gives no visible feedback until manually opened, so typing "looks like it does nothing." Ties directly to Jake's separate complaint that the list will keep growing unmanageably. Recommended: replace the select+search pattern with a tap-row list that live-filters — the same pattern just replaced in the runner's picker, ironically; flagged the tension honestly rather than silently.
+- **`deleteProgram()` orphan root cause reconfirmed** — enumerated every FK reference to `workout_templates` (`workout_template_exercises.template_id`, `program_phase_workouts.template_id`, `client_program_workouts.workout_template_id`); confirmed `deleteProgram()` (app-programs.js:755) deletes only the `programs` row, never its cloned master/periodization-week templates. Proposed: clean up owned templates on delete, and block deletion (clear message) if clients are currently assigned rather than silently failing or orphaning client data. **Awaiting Jake's decision on scope.**
+- **Read-only diagnostic SQL handed to Jake** (not yet run) to see exactly which `workout_templates` are orphaned vs. in-use, before any DELETE is drafted — sql-safety protocol, no destructive SQL written speculatively.
+- **New RLS gap found in passing:** a real `client_1rms` insert attempt (client role, own client_id) failed with an RLS violation during manual testing. Pre-existing — `saveRunnerOneRM` already writes to this table in production, untouched by this session's diff — but worth a dedicated `pg_policies` check; not yet investigated further.
+
+**Decided:**
+- "The same modal" in Jake's spec means literal component reuse, not a stylistically-matching simplified rebuild — corrected mid-session after his explicit screenshot feedback.
+- Runner swap/add stays session-only (reconfirmed, unaffected by the modal-unification change).
+- Program-assignment replace/update flow is deferred; calendar integration (when built) writes real per-session events, not a lighter marker.
+
+**UNVERIFIED (banked):**
+- All of this session's runner changes are Playwright + live-preview verified but **not pushed** — no multi-agent code review has run yet, and Jake has not said commit/push. Sitting locally: `index.html`, `js/app-runner.js` (v8), `js/app-workouts.js` (v9), `tests/runner.spec.js`.
+- Whether the fuller swap/add modal (Type/Notes/Superset/full set-target builder, not just a name field) feels like too much friction for a live mid-workout swap versus the simpler version originally built — banked as a prediction, only real gym use will tell.
+
+**Why:**
+- Jake's screenshot-driven correction round validated the new feature-audit skill's premise from the opposite direction: even with Playwright green and a live-preview pass done in the same session, his actual gym-context testing caught four real UX issues automated checks don't reason about (visual invisibility, ambiguous icon meaning, textual vs. visual correlation, literal-vs-equivalent component reuse). None were logic bugs — all four were judgment calls about what a real user sees and understands.
+
+---
+
 ## 2026-07-03 (session 10) — 13 fixes from Jake's live test run + orphaned-template cleanup + wiki docs (programs v6, workouts v8, runner v7) — PUSHED (5438aac)
 
 **Context:** Jake ran his own end-to-end test (create a program → generate 4 weeks → run it) and reported 13 numbered issues via screenshots. Traced all 13 to code, bucketed them (3 quick fixes / 4 confirmed bugs / 4 needing his decision / 2 new features), got his calls on the decision bucket, then built.
