@@ -302,5 +302,10 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 - **"deleted"** — one-word confirmation of completing an out-of-band action, consistent with his terse success reports ("success", "done"); trusts the agent to pick up and continue from the single word.
 - No new sentence-shape or punctuation deltas beyond what's already banked.
 
+**Additional signals — 2026-07-03 session (backup gap)**
+
+- **Interrogates a flagged carry-over rather than letting it slide.** When a save ended with an honest caveat ("skills/memory/wiki live outside any git repo"), he came back with "Is this an issue that needs addressing?" — he doesn't ignore a noted gap, he makes the agent assess and resolve it. Reinforces the banked "proactively audits tooling for gaps" trait: flag only what you're prepared to act on, and expect to act on what you flag.
+- No new sentence-shape or punctuation deltas beyond what's already banked.
+
 ## Public / formal register
 _No data yet — not observed this session._

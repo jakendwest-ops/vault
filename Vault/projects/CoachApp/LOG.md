@@ -4,6 +4,24 @@ Newest first.
 
 ---
 
+## 2026-07-03 (session 13, cont. 2) — ~/.claude backed up to private repo (jakendwest-ops/claude-config) — PUSHED
+
+**Context:** Jake pushed on the previous save's honest carry-over ("skills + memory + wiki live outside any git repo") — asked whether it actually needs addressing.
+
+**Done:**
+- Assessed: the LLM wiki is under OneDrive (cloud-synced) — not a loss risk, git would only add version history. But `~/.claude` (`skills/` = the OS, plus the auto-memory dir) is local-disk-only, no remote, no cloud sync — the least-protected yet most irreplaceable content, while the app and Vault both already have GitHub remotes. Real gap.
+- Created **private** repo `jakendwest-ops/claude-config` (verified PRIVATE). `git init` in `~/.claude` with an **allowlist `.gitignore`** tracking ONLY `skills/` + `projects/C--Users-jaken-Claude/memory/` — sessions, transcripts, `settings.json`, caches all excluded. Secret-scanned the staged content before each push (empty both times). Auth via `gh` (tokenless, no PAT in URL — same setup as coachapp). Initial commit `4f7d324` (55 files).
+- Made it durable: `/save` Step 5 now commits+pushes claude-config whenever a skill/memory file changed; documented in `reference_claude_config_backup.md` + MEMORY.md index. Commit `55dba6c`.
+
+**Decided:**
+- Wiki stays as-is (OneDrive backup is sufficient); git for it is optional/deferred.
+- The ~/.claude backup tracks skills + memory only, never `settings.json` or transient state — keeps secrets out even under `git add -A`.
+
+**Why:**
+- The layer that makes the app + Vault useful (the OS + accumulated memory/relationship) was the one thing with no offsite copy. Wiring the push into /save stops the backup silently going stale.
+
+---
+
 ## 2026-07-03 (session 13, cont.) — Vault repo-structure investigation + coachapp PAT security cleanup + accurate-steps feedback — PUSHED (coachapp ec30ebf; Vault this save)
 
 **Context:** After the session-13 audit push (f3706a1), Jake asked me to investigate a discrepancy in my own description of the Vault repo layout — which turned into a security incident and its fix.
