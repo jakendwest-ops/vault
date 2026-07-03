@@ -278,5 +278,15 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 
 **No draft→ship diff available this session** (no external-facing prose drafted).
 
+**Additional signals — 2026-07-03 session (live test run → 13 fixes + cleanup)**
+
+- **"do your thing" = broad pipeline autonomy, not just single-action approval.** "scope now, then you can run and do your thing" — after approving *scope*, he handed over the entire execution pipeline (build → test → multi-agent review → verify) without wanting a checkpoint at each step. This extends the banked minimal-word green-lights ("commit", "lets do it", "do both") from *approving one action* to *delegating a whole multi-stage process*. Once scope is agreed, don't stop to re-confirm the standard pipeline — run it end to end and report.
+- **Defers his own review to the live site, not the preview.** "i'll review myself once it is live. commit." — he no longer gates on eyeballing the preview himself before a push; he trusts the pipeline enough to push first and review on the deployed site. (He'd asked earlier this same session for the preview at desktop size to run his *own* test — so it's not that he won't use the preview, it's that for *verifying my changes* he now prefers live.)
+- **Runs a full end-to-end test himself, then delivers findings as a dense numbered list keyed to screenshots.** His 13-item report was terse, numbered, each item tied to a specific screenshot/element — visual-first and granular, exactly the banked pattern, now at the scale of a whole feature-area audit. When he tests, expect a batch of precisely-scoped issues, not prose.
+- **"success"** — one-word confirmation that the (destructive) SQL ran cleanly. Consistent with the banked minimum-word success reports ("success", "it worked!"). Notably calm for a 65-row irreversible delete — he trusted the safety scaffolding rather than asking for reassurance.
+- No new sentence-shape or punctuation deltas beyond what's already banked.
+
+**No draft→ship diff available this session** (no external-facing prose drafted).
+
 ## Public / formal register
 _No data yet — not observed this session._

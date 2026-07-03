@@ -4,6 +4,53 @@ Newest first.
 
 ---
 
+## 2026-07-03 (session 10) — 13 fixes from Jake's live test run + orphaned-template cleanup + wiki docs (programs v6, workouts v8, runner v7) — PUSHED (5438aac)
+
+**Context:** Jake ran his own end-to-end test (create a program → generate 4 weeks → run it) and reported 13 numbered issues via screenshots. Traced all 13 to code, bucketed them (3 quick fixes / 4 confirmed bugs / 4 needing his decision / 2 new features), got his calls on the decision bucket, then built.
+
+**Done — runner (v6→v7):**
+- **Target-info bar restored to the strength table** — the v1 table redesign had dropped the rep range/RPE-RIR/tempo/rest/%1RM prescription. Extracted the wizard's target-column logic into shared `_buildTargetCols`/`_renderTargetBarHtml` and rendered it above the table (incl. the %1RM→kg target + "set your 1RM" banner).
+- **Rest timer moved inline + reformatted** — for table-mode exercises the rest timer now renders as a plain `0:00` countdown bar *inside* the target section (kept `id=rest-timer-overlay` so existing tests still target it), instead of a `position:fixed;top:0` overlay that was covering the runner's own header. Wizard mode keeps the old floating overlay. `startRestTimer` now skips the floating `renderRestTimer()` in table mode and does a bounded `renderRunner()` on completion.
+- **Voice cue fixed** — `_unlockSpeech()` only called `speechSynthesis.cancel()`, which never registers the user gesture, so the 10s "10 seconds" cue was silently blocked. Now does a real (silent) gesture-tied `speak()`. Added `_pickFemaleVoice()` so `speakCue` uses a female voice.
+- **Visible tick button** — the unchecked set-complete ✓ button had no border and matched its row background (invisible); added a `1.5px` outline.
+- **Swap exercise mid-workout** (session-only) — `showExercisePicker('swap')` → `_swapRunnerExercise`: replaces the current exercise in-memory, clears its logged/table state, refetches previous-session data under the new name.
+- **Add exercise mid-workout** (session-only) — `_addRunnerExercise`: appends a new plain-strength exercise and jumps to it. Neither swap nor add writes to `workout_templates`.
+
+**Done — programs (v5→v6) + workouts (v7→v8):**
+- **Create-new-workout auto-assigns to its day slot** — `saveNewTemplate()` now inserts the `program_phase_workouts` row (with race-check) back into the `ctx.phaseId`/`ctx.dayOfWeek` it was created from, instead of leaving the slot empty and forcing the coach to re-find and re-assign.
+- **Edit button on the session-detail drawer** — `openSessionDetail(templateId, name, ctx)` now takes a ctx and shows an Edit button (gated `role !== 'client'`) routed through `openTemplate` so the propagate-to-all prompt still fires. All 3 call sites pass appropriate ctx.
+- **Phase card shows periodization range** — "Linear (70→80%)" / undulating tier %s from `periodization_config`, not just the type name.
+- **Clearer day-column search placeholder** ("Filter workouts below…").
+- **Tempo field capped at 4 chars** (workouts v8).
+
+**Done — data cleanup (Jake's account, via safety-checked SQL he ran in Supabase):**
+- Diagnosed ~114 duplicate standalone templates in the picker. Ran the full sql-safety path: FK-enumeration first (caught that `workout_template_exercises` also FKs to templates and must be deleted as a child) → per-name reference breakdown (orphaned vs used-in-program/client-plan/log) → a single self-guarded transaction that deletes only orphans (NOT EXISTS against all 3 "in use" tables) plus their exercise children. **65 orphaned templates deleted**, all in-use copies preserved.
+
+**Done — LLM wiki (separate from this Vault):**
+- Authored two architecture/reference pages at Jake's request: `coachapp-programs-architecture` (two-level Program/Client-Plan model, data model + the program_id/client_id/generated_from_phase_id triplet, build grid, periodization incl. %1RM-vs-RPE, assignment/cloning, propagation, known gaps) and `coachapp-runner-architecture` (the `_runner` object, table vs wizard modes, rest timer + voice cue, pre-fill, swap/add, save path, known gaps). Updated `coachapp-workflows` (pre-fill + swap/add now marked shipped), index, log.
+
+**Bugs found + fixed (during verification, not shipped broken):**
+- **Exercise-picker modal rendered behind the runner** — `.modal-overlay` is z-index 200, the runner's fullscreen div is 300, so the picker rendered underneath and Playwright's clicks were intercepted by the runner. Caught by the new smoke tests (not review). Fixed with an explicit `z-index:1000` on the picker overlay.
+- **Voice cue** (above) — a real bug the code review's premise surfaced, then confirmed empirically (6 voices present in the browser, so not an environment gap — the priming was the fault).
+- Review agent flagged the picker's `exercises` fetch had no error handling — added a toast on failure.
+
+**Tests:** Playwright pre-push hook full suite **51 passed** (1 flaky — a Supabase-timing phase-render assertion, passed on retry, unrelated to the diff). 2 new runner smoke tests (swap + add exercise pickers). 3-agent review (security/scoping, solo-mode, duplicates/render-safety) — all clean or pre-existing; the render-loop trace on the new inline rest timer came back bounded.
+
+**Decided:**
+- Swap and add exercise are **session-only** (Jake's call) — they change today's log, never the saved template.
+- %1RM vs RPE is not interchangeable: periodization only scales %1RM-tagged sets; RPE sets are untouched by design (documented, not a bug — it confused a test).
+- The `deleteProgram()` orphan bug is **confirmed live** — the deleted `— W2/W3/W4` clones were its debris. Bumped to High; fix before building more programs.
+
+**UNVERIFIED (banked):**
+- The runner UI changes (target bar, inline rest timer, swap/add) are verified via Playwright + 3-agent review, not a real-device gym session — banked as a prediction, mirrors the v1 table's pth-070.
+- CI "Check & Deploy" job failed on a transient GitHub Pages deploy race; the site is confirmed live on v7 via curl, and the native pages-build-deployment workflow succeeded. Not a code failure — watch whether it recurs on the next push.
+
+**Why:**
+- Bucketing the 13 items before building (and getting Jake's calls on the 4 decision items) avoided building the wrong thing for the ambiguous ones — e.g. #6 turned out to be no-bug-at-all (his test sets used RPE, so periodization correctly did nothing).
+- The SQL cleanup followed sql-safety to the letter precisely because it was 100+ irreversible deletes on Jake's real account — FK enumeration first is what caught the `workout_template_exercises` child dependency that a name-based delete would have failed on.
+
+---
+
 ## 2026-07-02 (session 9) — Runner redesign v1 shipped: Hevy-style strength table (runner v5→v6) — PUSHED (6e6402a)
 
 **Done:**
