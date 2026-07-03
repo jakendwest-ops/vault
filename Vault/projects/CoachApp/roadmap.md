@@ -223,7 +223,13 @@ _Jake's master account gets a third "Personal" pill. Solo user is their own coac
 ---
 
 ## Beta prep (Week 5 — Jul 22–31)
-- Full walkthrough, Playwright suite, Supabase redirect URL audit
+
+_Sessions 9–12 (Jul 2–3) went entirely into the runner redesign — a deliberate, research-backed pivot (approved after the Jul 2 competitor research), not drift. But with ~3 weeks to Jul 22, the pre-beta gates below have not moved in that window and are the real risk of being squeezed. Surfaced by the 2026-07-03 infra audit._
+
+- **⚠️ Pre-beta gates untouched for 4 sessions — action before Jul 22:**
+  - **ICO breach-notification procedure** — still undocumented (CRITICAL.md marks it ❌)
+  - **Delete old Jake West client record** from the PT account (see "Solo user" section)
+  - **Supabase Pro upgrade** — unlocks leaked-password (HaveIBeenPwned) protection
+- Full walkthrough, Playwright suite (56 tests), Supabase redirect URL audit
 - Beta invites staggered: Jul 25, Jul 28, Jul 31
-- **Before beta:** 1RM system built + tested (drives %1RM in programs)
-- **Before beta:** Delete old Jake West client record from PT account
+- ✅ **1RM system built + tested** (done 2026-07-01) — drives %1RM in programs

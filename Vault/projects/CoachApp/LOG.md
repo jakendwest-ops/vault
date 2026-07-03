@@ -4,6 +4,39 @@ Newest first.
 
 ---
 
+## 2026-07-03 (session 13) — Architecture & infrastructure audit + fixes — PUSHED (coachapp 609d5ee; Vault pushed)
+
+**Context:** Jake asked for a full audit of the build system itself — redundancies slowing sessions / eating tokens, whether the codebase split is right and graphify still needed, skills redundancy/contradictions, whether review agents test correctly (not rewriting themselves to dodge bugs), and whether the LLM wiki + roadmap are kept current. Ran it as a parallel multi-agent audit (codebase/graphify, skills, wiki) plus direct analysis of the hello-claude/save token cost and review rigor. On Jake's "all", actioned every fix; on "push all", pushed.
+
+**Done — graphify removed (coachapp 609d5ee, PUSHED):**
+- graphify was installed 2026-06-29 for the old 7,968-line app.js, made redundant one day later by the 8-module split, and never regenerated (stale — indexed the now-deleted app.js). Its two PreToolUse hooks in `.claude/settings.json` fired on every grep/find/Read/Glob injecting a "MANDATORY run graphify first" block — a per-action token tax for a tool that isn't even installed. Removed `graphify-out/`, the graphify-only `CLAUDE.md`, and emptied the hooks. Pushed clean: full pre-push hook incl. 27/27 Playwright (run against the live preview server since the default 3001 was down) — no app code changed.
+
+**Done — skills fixed (global `~/.claude/skills`, on disk, not a git repo):**
+- Dead path `C:\Users\jaken\coachapp\...\js\app.js` (wrong root + pre-split filename) repointed to `OneDrive\coachapp` + the 8 modules in deploy-check, security-audit, run-coachapp — these would have errored / false-passed on their next real run (deploy-check & security-audit run right before a beta invite).
+- mobile-check said 390px (contradicting Jake's own 480px "no exceptions" rule) → fixed to 480 in the skill + both memory files, with a note that Playwright's 390 test-viewport is a separate deliberate config. Stale test counts (47 / 14) → read the real total (suite is 56).
+- run-coachapp now documents autoPort (port 3001 no longer guaranteed).
+
+**Done — hello-claude/save efficiency + review rigor:**
+- Bounded the three unbounded session-start reads: LOG → first 150 lines (a full read cost 33k tokens today), voice.md → last ~150 lines, predictions → grep-first. Session-start cost is now flat instead of growing every session.
+- New pinned skill `multi-agent-review` (fixed 3 angles + verifier) replaces improvising the pre-push review each session, so rigor can't silently narrow. Added a weekly **full-file mode** (hello-claude Step 4) that reviews whole high-churn modules, not just the diff — closing the blind spot that let 5 unscoped `app-clients.js` queries survive ~12 diff-only reviews. Registered in hello-claude, save Step 5, deploy-check Step 2, and memory.
+
+**Done — wiki + roadmap:**
+- Fixed the one stale wiki line (`coachapp-programs-architecture.md` deleteProgram gap → marked fixed 66bf1fd) + wiki log entry. Wiki discipline otherwise intact (manifest current, no orphaned raw files).
+- `roadmap.md` beta-prep refreshed: flags that 3 pre-beta gates (ICO breach procedure, delete old Jake West client record, Supabase Pro for leaked-password protection) have sat untouched 4 sessions while the runner pivot absorbed everything — ~3 weeks to Jul 22.
+
+**Audit verdicts (no action needed):**
+- Codebase split is healthy — largest module app-runner.js ~1,948 lines, one coherent concern; leave it. No further splitting or graphify needed.
+- No evidence of review agents gaming tests / rewriting themselves to dodge bugs — gates have grown not shrunk, lessons log is self-critical. The real gap was structural (diff-only review), now addressed by full-file mode.
+- Sessions 9–12 runner focus was a deliberate, Jake-approved, research-backed pivot — not drift.
+
+**Not done (flag):**
+- Full `/save` ritual (STATUS full sweep, predictions grading, voice deltas) not run — this entry + roadmap + a STATUS last-push bump were pushed to keep the Vault coherent; a proper `/save` at wrap-up would round it out. The 6 edited skills, the new skill, and the 3 edited auto-memory files live on disk (`~/.claude`, not a git repo) and the 2 wiki edits live in the LLM wiki (not a git repo) — saved, but not pushable.
+
+**Why:**
+- Every fix served the audit brief: cut the per-action / per-session token tax (graphify hooks, unbounded Vault reads), stop checklists silently pointing at dead paths / wrong widths / wrong counts right before a beta gate, and make the code review a fixed recipe with a net for untouched code rather than an improvised diff-only pass.
+
+---
+
 ## 2026-07-03 (session 12) — Runner build pushed + 2 scoping fixes + deleteProgram rewrite + GitHub Pages dual-workflow fix (programs v6→v8, workouts v8→v9, runner v7→v9) — PUSHED (1914e7b, dee1479, 66bf1fd)
 
 **Context:** Continuing straight from session 11's uncommitted runner build. Ran a fresh multi-agent review this session (none had run yet against this specific diff), pushed it, then a routine code-review scan turned up two real scoping bugs, then built and shipped the long-standing `deleteProgram()` orphan-cleanup fix — this time backed by actually querying Supabase's FK cascade rules first instead of assuming. A GitHub Pages deploy failure Jake forwarded led to finding and fixing a root-cause infrastructure issue unrelated to the code itself.
