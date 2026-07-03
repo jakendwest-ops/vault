@@ -4,6 +4,29 @@ Newest first.
 
 ---
 
+## 2026-07-03 (session 13, cont.) — Vault repo-structure investigation + coachapp PAT security cleanup + accurate-steps feedback — PUSHED (coachapp ec30ebf; Vault this save)
+
+**Context:** After the session-13 audit push (f3706a1), Jake asked me to investigate a discrepancy in my own description of the Vault repo layout — which turned into a security incident and its fix.
+
+**Done — Vault repo structure clarified:**
+- Confirmed there is ONE git repo (remote `jakendwest-ops/vault.git`): the Vault-OS framework AND the `Vault/` content are the same repo, root `C:/Users/jaken/Claude`, `Vault/` a plain subdirectory (no nested `.git`, no submodule). My session runs in a linked worktree (`claude/vigorous-dewdney`), but hello-claude/save read+write the absolute `C:/Users/jaken/Claude/Vault/...` path — the MAIN checkout on `master` — so every session's Vault writes land on master directly, bypassing the per-session worktree branch. My statement ("root is C:/Users/jaken/Claude") was correct; the real finding is that framework and Vault are one repo, and 4 live worktrees share one Vault on master (concurrent `/save` could collide).
+
+**Security incident + fix (RESOLVED — clears the standing PAT to-do):**
+- While investigating I ran `git remote get-url origin` on coachapp, which printed the live `ghp_` PAT embedded in the remote URL straight into the chat — the exact leak the standing to-do warned about (I made it worse by surfacing the value). Flagged immediately.
+- Jake deleted the token. Then: stripped the token from the remote (`git remote set-url origin https://github.com/jakendwest-ops/coachapp.git`), cleared the stale/dead cached credential (`git credential reject`), and — since coachapp is a public repo (read needs no auth) and my non-interactive shell can't complete GitHub's interactive browser sign-in — pointed git at the already-authenticated `gh` CLI's keyring token via `gh auth setup-git` (valid `gho_` OAuth token, `repo` scope). Verified end-to-end with a trivial empty commit `ec30ebf` that pushed non-interactively through the full pre-push hook (27/27 Playwright green) with no token in the URL and no prompt.
+
+**Feedback banked:**
+- Jake: "when giving me steps, always provide accurate url and page names/settings because you use incorrect names and it adds to confusion." I'd said "Revoke" for a single classic token when GitHub's button is "Delete". Updated `feedback_step_by_step.md` with a non-negotiable accuracy rule (verify labels/URLs against the service's own docs before writing a step; never state a guessed UI label as fact) and re-checked the token-deletion steps against GitHub docs before giving them.
+
+**Decided:**
+- coachapp auth is now via the `gh` keyring token, not an embedded PAT — no secret in `.git/config`. `credential.helper` left as `manager` for other hosts.
+- Empty commit `ec30ebf` is a permanent no-op marker in coachapp history — accepted (not worth rewriting pushed history).
+
+**Why:**
+- Investigate-before-asserting (Jake's standing preference) turned a "did I mislabel the repo?" question into a real repo-topology finding and caught a live-credential exposure; fixing auth via the existing `gh` token was the cleanest tokenless path that also worked from a non-interactive shell.
+
+---
+
 ## 2026-07-03 (session 13) — Architecture & infrastructure audit + fixes — PUSHED (coachapp 609d5ee; Vault pushed)
 
 **Context:** Jake asked for a full audit of the build system itself — redundancies slowing sessions / eating tokens, whether the codebase split is right and graphify still needed, skills redundancy/contradictions, whether review agents test correctly (not rewriting themselves to dodge bugs), and whether the LLM wiki + roadmap are kept current. Ran it as a parallel multi-agent audit (codebase/graphify, skills, wiki) plus direct analysis of the hello-claude/save token cost and review rigor. On Jake's "all", actioned every fix; on "push all", pushed.

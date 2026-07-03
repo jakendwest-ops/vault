@@ -295,5 +295,12 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 - **"Please ensure you are following my brief/spec, and also checking for consistencies across the platform."** — direct instruction to hold the build accountable to the literal spec and to proactively check for platform consistency, not just functional correctness. Matches (and validates) the feature-audit skill built earlier this same session.
 - No new sentence-shape or punctuation deltas beyond what's already banked.
 
+**Additional signals — 2026-07-03 session (infra audit + security cleanup)**
+
+- **Names a recurring failure and demands it be fixed at the standard, not patched once.** "when giving me steps, always provide accurate url and page names/settings because you use incorrect names and it adds to confusion." Consistent with his "turn failures into permanent systems" trait, now applied to instruction *accuracy*: a wrong UI label ("Revoke" vs "Delete") is a real defect worth a standing rule, not a one-off slip. When giving him manual steps, verify every URL/label against the source before stating it — never reconstruct UI text from memory.
+- **"push all" / "make the trivial commit so we can clean this all up"** — extends the banked "all = execute everything" pattern to a whole multi-repo push/verify sequence; he wants loose ends closed AND verified, not just the one obvious action. "clean this all up" = drive to a fully-verified, no-dangling-state finish.
+- **"deleted"** — one-word confirmation of completing an out-of-band action, consistent with his terse success reports ("success", "done"); trusts the agent to pick up and continue from the single word.
+- No new sentence-shape or punctuation deltas beyond what's already banked.
+
 ## Public / formal register
 _No data yet — not observed this session._
