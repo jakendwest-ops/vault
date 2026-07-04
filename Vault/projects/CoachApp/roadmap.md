@@ -92,6 +92,7 @@ Features inside a section are in priority order. Update status tags during each 
 | **Runner redesign → Hevy-style table logger** (supersedes "set input pre-fill") | ✅ Done (v1) | 2026-07-02, pushed 6e6402a: all-sets-visible table (`SET · PREVIOUS · KG · REPS · ✓`), previous values pre-filled → 1-tap repeat, tap-✓ to complete, non-blocking rest timer. **v1 = plain strength only**; cardio/timed/unilateral/%1RM stay on the wizard — phase 2 for those is still 🗓 Planned. No paid gating. See STATUS "What's working" + "In progress" for the two known v1 gaps (superset auto-switch, bodyweight live-verify) |
 | **Runner redesign phase 2** — extend table (or equivalent) to cardio/timed/unilateral/%1RM exercises | 🗓 Planned | Scope not yet defined; v1 deliberately excluded these to ship the strength-only case first |
 | **Plate calculator (what to load on the bar)** | 🗓 Planned | Repeatedly requested by lifters on Reddit; small, self-contained; sits next to the weight field (2026-07-02 research) |
+| **Improve workout-tracking visuals + underlying data model** | 🗓 Planned | Jake, 2026-07-04: wants a better look at how a workout is tracked in the runner, and to reconsider where/how that data is stored. Not scoped yet — needs a sounding-board session before build (what specifically feels wrong about the current table/wizard visuals; is "where it's stored" about the DB schema, an autosave/draft gap, or both). Possibly connected to the same session's runner-crash finding that in-progress sessions aren't persisted until the final save. |
 
 ### Weight tracking
 | Feature | Status | Notes |
@@ -172,7 +173,7 @@ Features inside a section are in priority order. Update status tags during each 
 
 ### Solo user / Personal account (self-coached)
 
-_Jake's master account gets a third "Personal" pill. Solo user is their own coach: `coach_id = auth.uid()`. RLS covers them via existing coach-scoped + client-scoped policies._
+_Jake's master account gets a third "Personal" pill. Solo user's own client record has `coach_id = NULL` (not `auth.uid()` — corrected 2026-07-04, verified against `app-core.js:132`'s `.is('coach_id', null)` lookup), identified instead via `user_id = auth.uid()` + null coach_id. `window._soloClientId` holds that record's id. Solo write access to tables like `client_1rms`/`client_programs` needed its own explicit RLS policies (added 2026-07-01) precisely because they don't inherit coach-scoped policies through a `coach_id` match._
 
 | Feature | Status | Notes |
 |---|---|---|

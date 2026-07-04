@@ -4,6 +4,34 @@ Newest first.
 
 ---
 
+## 2026-07-04 (session 15) — Runner exercise-picker freeze fix + silent beep fix + client-query scoping quick win (workouts v10→11, runner v9→10, clients v1→2) — PUSHED (84f9267, f997474)
+
+**Context:** Jake reported a real production incident from his own personal-account gym session (19:42–19:45): tapping Swap exercise after Add exercise froze the runner solid, and a forced page reload wiped the entire in-progress session. He also asked for a check that saves/session-history are accurate, and flagged that the 10-second voice rest cue works but the 5-second countdown beeps don't.
+
+**Done:**
+- Diagnosed the freeze: `showAddExerciseToTemplateModal` (app-workouts.js) builds its overlay with a hardcoded, non-unique id (`add-to-template-modal`) and fetches its exercise list asynchronously *before* appending it — a window with no visible modal yet. A fast Swap-then-Add tap in that window fired the function twice, producing two overlays sharing one id; `getElementById`/`closeModal` only ever resolve to the first DOM match, so the visible (second) modal could never be closed from within the app.
+- Verified via Playwright (59/59, no console errors) that the save-on-finish path and session-history rendering are both clean and unaffected — the incident never reached `saveRunnerSession`, so no partial/orphaned `workout_logs` rows exist from it.
+- Diagnosed the beep gap as a hypothesis (not device-confirmed): the tone beeps depend on the Web Audio API, which iOS aggressively suspends on screen-lock/backgrounding — very plausible mid-rest in a live gym set — while the working "10 seconds" voice cue uses the separate Web Speech API, unaffected by that suspension.
+- Jake approved both fixes. Built: a pending-flag guard + button-disable (`wr-swap-btn`/`wr-add-btn`) while the picker's fetch is in flight, plus a `.catch()` error path that didn't exist before (previously a rejected fetch just silently never opened the modal). Replaced the 5-second tone-beep countdown with spoken numbers (`speakCue(String(n))`) across all three timers that had one: rest, timed-set, and cardio interval.
+- 3-agent review (security/scoping, solo-mode, duplicates/render-safety) — security and duplicates/render-safety came back clean (one low-severity theoretical edge case noted, not fixed, consistent with the rest of the codebase). Solo-mode agent found a real bug in the beep fix itself: the cardio interval timer's entry point (`startCardioTimer`) only called `_unlockAudio()`, never `_unlockSpeech()` — its new spoken countdown would have silently never fired. Fixed same session by adding the missing `_unlockSpeech()` call, mirroring the pattern already used elsewhere.
+- New Playwright regression test directly reproduces the double-tap race (calls `showExercisePicker('add')` then `('swap')` back-to-back mid-fetch, asserts exactly one modal opens, the first call wins, and both buttons re-enable after close). Manually reproduced and confirmed the fix live in the preview against the E2E test client account before committing (not just Playwright) — rapid double-invocation correctly produced one modal, the button-disable state, and a clean close.
+- Full suite green across three separate runs (59-60/60 passed each time); a different unrelated test flaked once per run and passed on retry — confirmed as pre-existing environmental/network-timing noise, not caused by this diff.
+- Pushed 84f9267; pre-push hook + CI green.
+
+**Also this session — quick wins (f997474):**
+- Scoped the 5 known unscoped `clients` queries in app-clients.js (`openClient`, `renderClientOverview`, `saveUpdateEmail`, `showEditClientModal`, `saveEditClient`) by `coach_id` in addition to `id` — a defense-in-depth gap surfaced by the 2026-07-03 review. 2-agent review confirmed all 5 are PT-only code paths (grepped every call site across all 8 modules), so no client/solo flow could regress.
+- Tightened the `client-workout.spec.js` "session history" locator to be onclick-scoped (`toggleClientPhase('client-session-history')`) instead of text-only, matching its sibling tests — the review agent confirmed the exact onclick string matches what app-workouts.js actually renders, so the test now genuinely exercises the toggle rather than risking a silent no-op.
+- **Correction:** while tracing call sites, the review agent found `roadmap.md` stated solo accounts' own client record has `coach_id = auth.uid()` — verified against `app-core.js:132` (`.is('coach_id', null)` lookup) that it's actually `coach_id = NULL`. Fixed the doc.
+- Pushed f997474. First push attempt was killed by a 2-minute Bash timeout mid-pre-push-hook (the hook runs the full Playwright suite) — retried with a longer timeout and it completed clean. Deploy step then hit the known transient "Deployment failed, try again later" GitHub Pages infra error (documented in lessons.jsonl les-017); `gh run rerun` succeeded on the first retry, confirmed green.
+
+**Not done (flagged, awaiting Jake):** actual session-autosave/draft persistence — the deeper fix behind "lost all my data," since `_runner` still lives only in memory until the final save tap. Scoped as its own decision, added to roadmap.md as "Improve workout-tracking visuals + underlying data model" alongside a separate Jake request to revisit the runner's tracking visuals.
+
+**New standing rule this session:** Jake asked that any new roadmap.md item always be mirrored into the LLM wiki (visual roadmap page + the relevant topic page) in the same turn, not batched for later — banked as `feedback_roadmap_wiki_sync.md` and wired into hello-claude. Applied immediately to this session's own roadmap addition, and again now to mark today's two fixes as done rather than open gaps.
+
+**Why:** A live incident during Jake's own gym session — the exact audience CoachApp is being built for — losing real training data is about as severe as a bug gets for this product. Diagnosed properly (found the actual root cause via code + a direct DOM reproduction, not guesswork) rather than patching symptoms, and the review process caught a real bug in the fix itself before it shipped.
+
+---
+
 ## 2026-07-04 (session 14) — Duplicate week + fork-on-edit + solo delete/PT toast fix (programs v8→v9, workouts v9→v10) — PUSHED (730738a)
 
 **Context:** Jake reviewed the Test 1/Foundation & Calibration program screenshots and asked for three things: a way to duplicate a week's worth of workouts, a fix so renaming a picked-from-library workout forks a new one instead of silently overwriting the shared original, and a fix to `deleteProgram()` so solo can delete their own self-assigned program and the PT block toast names the actual clients.

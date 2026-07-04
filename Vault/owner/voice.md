@@ -317,3 +317,10 @@ _No data yet — not observed this session._
 
 **No new voice-shape or punctuation deltas beyond what's already banked.**
 **No draft-\>ship diff available this session** (code build, no external-facing prose drafted).
+
+**Additional signals — 2026-07-04 session 15 (runner freeze/beep fix + client-query quick win)**
+
+- Terse, sequential delegation once trust is established: "Go ahead with your fixes", "push now and then lets look at quick wins on our to-do list", "approved", "push and then save" — all consistent with the already-banked minimal-word green-light pattern and the "batches multi-part instructions in one message with an explicit order" pattern. No new sentence-shape or punctuation deltas.
+
+**No new voice-shape or punctuation deltas beyond what's already banked.**
+**No draft->ship diff available this session** (code build + a live production bug fix, no external-facing prose drafted).
