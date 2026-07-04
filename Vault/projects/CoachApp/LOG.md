@@ -4,6 +4,34 @@ Newest first.
 
 ---
 
+## 2026-07-04 (session 14) — Duplicate week + fork-on-edit + solo delete/PT toast fix (programs v8→v9, workouts v9→v10) — PUSHED (730738a)
+
+**Context:** Jake reviewed the Test 1/Foundation & Calibration program screenshots and asked for three things: a way to duplicate a week's worth of workouts, a fix so renaming a picked-from-library workout forks a new one instead of silently overwriting the shared original, and a fix to `deleteProgram()` so solo can delete their own self-assigned program and the PT block toast names the actual clients.
+
+**Done:**
+- Asked two clarifying questions before building (per sounding-board/approve-before-build rules) — both resolved to the recommended option: "Duplicate week" makes weeks independently editable (not just a periodization shortcut), and any edit made through a phase slot forks a copy (not just renames).
+- **Duplicate week** — new `duplicatePhaseWeek()` (app-programs.js) copies a week's day/workout assignments into the next empty week as real `program_phase_workouts` rows (same `template_id`, cheap — only forks on actual edit). Replaced the old week-1-only `renderEditableWeek1Grid` + read-only `renderDayGrid` with one unified `renderPhaseWeekGrid` used for every week, so weeks 2+ (manual or periodization-generated) are now equally editable (add/remove/reassign a workout per day), not just viewable. `_quickAssignPhaseWorkout` generalized to accept a week number via `data-week` instead of hardcoding week 1. Propagates to already-assigned clients by cloning a fresh per-client template copy per new slot — same pattern `_cloneProgramForClient`/`generatePhasePeriodization` already use, never sharing a client-owned clone across slots.
+- **Fork-on-edit for shared master templates** — new `_cloneSharedMasterTemplate`/`_resolveEditableTemplateId` (app-workouts.js), wired into `saveEditTemplate`, `saveExerciseToTemplate`, `saveEditTemplateExercise`, `deleteTemplateExercise`, `moveTemplateExercise`. Before any of these write, checks whether the template is still referenced by more than one `program_phase_workouts` row (e.g. the same template picked into both Monday and Tuesday) — if so, clones it and repoints only the slot the edit came from (via a new `ctx.phaseWorkoutId` threaded through `openTemplate`/`openSessionDetail`), before applying the edit. Client-plan templates are deliberately excluded (guarded by `ctx.isClientPlan`) since each client slot already gets its own exclusive clone at assignment time — confirmed this via `_cloneProgramForClient`, so no fork logic was needed there. Removed the now-dead "shared template, changes apply to all" warning toast from `_checkClientPlanPropagation` — forking now prevents that scenario before it happens instead of just warning about it.
+- **`deleteProgram()` fix** — the "clients assigned, remove them first" block now excludes the user's own solo self-assignment (`window._soloClientId`) from the blocking count, so Personal-view users can always delete their own program. The PT-facing toast fetches and names the actual blocking clients (e.g. "Assigned to Sarah Mitchell, Alex Turner — remove them from this program first") instead of just a count.
+- 3-agent review (security/scoping, solo-mode, duplicates+render-safety) — all three came back mostly clean; the one real finding (confirmed by verifier pass): the `generatePhasePeriodization` confirm dialog said it only replaces "previously generated" weeks, but weeks 2+ can now hold manually-added/duplicated content too, and `_cleanupPhaseWeeksBeyond` wipes all of it unconditionally on regenerate. Fixed the dialog wording same session (app-programs.js:1013) rather than banking it as a to-do.
+- 3 new Playwright tests added to `tests/programs.spec.js` (duplicate-week copies rows correctly, fork-on-edit leaves the sibling slot untouched, delete-block toast names the client) — 59/59 green, no regressions in the existing 56.
+- Live-verified all three features against real Supabase data in the preview (not just Playwright): duplicated Foundation & Calibration's Week 1 into Week 2 and confirmed matching template IDs; renamed the shared "AAA" template via Monday's slot and confirmed Tuesday's reference was untouched, then confirmed a second edit to Tuesday no longer re-forks (ref count back to 1); confirmed the solo-delete block-filter and the PT toast's client-name resolution via direct query, without actually deleting Jake's real programs. All test data cleaned up after verification.
+
+**Bugs found + fixed:**
+- The `generatePhasePeriodization` confirm-dialog wording gap above — a genuine newly-possible silent-data-loss risk introduced by making weeks 2+ editable, caught by the render-safety review agent and fixed same session.
+- Mobile/UI consistency nit — the "Duplicate week" button was first styled smaller (`font-size:10px;padding:2px 8px`) than its sibling "Configure"/"Generate weeks" buttons in the same phase-card region; caught via `preview_inspect` and matched to `font-size:11px;padding:3px 9px`.
+
+**Decided:**
+- Client-plan template editing stays untouched by fork-on-edit — each client already gets an exclusive clone per slot at assignment/generation time, so the "shared template" problem this session fixes only exists on the master/program-builder side.
+- Duplicate-week client propagation clones fresh per slot rather than reusing the source week's existing client clone, matching the codebase's established "always clone fresh, sync via name-match prompt" pattern rather than introducing a new sharing model on the client side.
+
+**Why:**
+- Jake's screenshots showed two real gaps in the Programs builder (weeks 2+ effectively frozen without periodization; a shared "AAA" template silently editable from either slot with editors none the wiser) plus a solo/PT delete-toast usability gap. All three were scoped, questioned, approved, built, live-tested against real data, reviewed, and pushed in one session rather than banked as future to-dos.
+
+**Also this session:** banked `lessons.jsonl` les-020 (git-push-timeout / preview-screenshot-retry / network-dump efficiency lesson) after Jake asked why the session ran long — see LOG below or `lessons.jsonl` directly.
+
+---
+
 ## 2026-07-03 (session 13, cont. 2) — ~/.claude backed up to private repo (jakendwest-ops/claude-config) — PUSHED
 
 **Context:** Jake pushed on the previous save's honest carry-over ("skills + memory + wiki live outside any git repo") — asked whether it actually needs addressing.

@@ -309,3 +309,11 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 
 ## Public / formal register
 _No data yet — not observed this session._
+
+**Additional signals — 2026-07-04 session (Duplicate week / fork-on-edit / delete fix)**
+
+- Asked "Can you advise why this session took over an hour and 300k tokens" — a direct, after-the-fact audit of the agent's own operating cost, not the product. Confirms (doesn't newly reveal) the already-banked 2026-07-02 pattern "attentive to the agent's operating cost, not just the product" — same instinct, now applied retrospectively to a session rather than mid-session. No new pattern; reinforcement only.
+- "bank" — one word, in direct response to an offered specific action ("bank the last three as a standing lesson"). Consistent with the already-banked minimal-word delegation pattern once a concrete recommendation is on the table.
+
+**No new voice-shape or punctuation deltas beyond what's already banked.**
+**No draft-\>ship diff available this session** (code build, no external-facing prose drafted).
