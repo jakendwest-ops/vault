@@ -324,3 +324,13 @@ _No data yet — not observed this session._
 
 **No new voice-shape or punctuation deltas beyond what's already banked.**
 **No draft->ship diff available this session** (code build + a live production bug fix, no external-facing prose drafted).
+
+**Additional signals — 2026-07-05 session 16 (dashboard consistency pass + runner autosave scoping)**
+
+- "I think I would like to improve the design and flow of the dashboard" — soft, hedged opener ("I think I would like to") for a genuinely open-ended, not-yet-scoped ask, distinct from his usual terse direct instructions. Consistent with the exploratory-question register the system already treats differently ("what could we do about X" style) — when he opens this softly, the right move is to explore/ask before proposing a scoped plan, not jump straight to building.
+- **Quoting back a specific unclear sentence to request an explanation, not a correction** — "What do these mean: [pasted two exact roadmap-plan bullets]". Distinct from the already-banked "quote-then-directive" pattern (2026-07-02, quoting to say *this is wrong, fix it*): here the quote marks *this is the specific thing I don't understand*, not a complaint. Confirms quoting-back is his general mechanism for pointing at an exact span of text without re-describing it — the meaning (correction vs. clarification request) has to be read from context, not assumed from the act of quoting itself.
+- "1 and 2" — compressed multi-select answer to an AskUserQuestion-style menu, consistent with the already-banked batch-decision pattern, now confirmed working the same way through a structured question UI, not just free text.
+- "Please push task a, add task b to roadmap/to do, and then save" — three-part instruction with explicit sequencing in one message, mid-session, cutting off in-progress work (Task B build) to redirect. Consistent with "actually scrap that"-style clean redirects (2026-06-28): no explanation given for the pivot, and none needed — he trusts the agent to stop cleanly and pick up the new sequence.
+
+**No new voice-shape or punctuation deltas beyond what's already banked.**
+**No draft->ship diff available this session** (code build + planning, no external-facing prose drafted).

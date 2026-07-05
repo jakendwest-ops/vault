@@ -4,6 +4,38 @@ Newest first.
 
 ---
 
+## 2026-07-05 (session 16) — Dashboard CSS consistency pass (main.css v3→4, app-dashboard v1→2) — PUSHED (313bc74); runner autosave scoped + designed, not built
+
+**Context:** Jake asked to improve the design and flow of the dashboard. Explored the PT/client/solo dashboard code first — found real bugs, not just polish opportunities. Scoped to a consistency/bug-fix pass (Jake's choice, over a full shared-component rebuild or an information-architecture rework). In the same session, also picked up the standing High-priority runner-autosave to-do and scoped/designed it via a Plan agent, but the build was interrupted before any code was written — Jake redirected to push the dashboard work, log the autosave plan, and save.
+
+**Done — dashboard consistency pass:**
+- `.dashboard-card`/`.card-header`/`.card-title` were used ~37 times across all three dashboards (`renderDashboard`/PT, `renderClientDashboard`/client, `renderSoloDashboard`/solo in `js/app-dashboard.js`) but had zero CSS definitions anywhere in the repo — every "card" rendered with no background/border/shadow. Added real rules to `css/main.css`, scoped under `.dashboard-card` specifically so they can't leak into the different (already-working) `.card-header`/`.section-title` usage in `app-progress.js`/`app-calendar-goals.js`.
+- Consolidated three byte-for-byte duplicated inline `<style>` blocks (`.pt-grid`/`.client-grid`/`.solo-grid`) into one shared `.dashboard-split-grid` class in `main.css`.
+- Fixed 4 bare `class="btn"` Cancel buttons (no matching CSS rule — only `.btn-primary`/`.btn-secondary`/etc. exist) to `.btn-secondary`, matching the sitewide Cancel convention.
+- Replaced hardcoded hex colors with design tokens (`var(--danger)`/`var(--warning)`/`var(--success)`/`var(--accent)`). One deliberate visible change: the "on track"/holiday green shifts from `#22c55e` to the design system's actual `--success` (`#10b981`) — flagged in the commit message, not silent. A second color (`#3b82f6`, "gym" event blue) has no matching token — left as-is with a `TODO(Jake)` comment rather than inventing one or silently collapsing it into `--accent`.
+- Fixed 2 real mobile bugs: the PT stat strip had no mobile override at all (would cramp into 3 columns at 480px); the solo stat strip was `display:none` below 640px (vanished entirely instead of stacking). Both now pair up on mobile (`repeat(2,1fr)`).
+- 2 new Playwright smoke tests (`.dashboard-card` has a real background; `.solo-stats` stays visible at 400px) — 29/29 pre-push suite green, CI green.
+- 3-agent review (security/scoping, solo-mode, duplicates+render-safety) + verifier came back clean — zero blocking findings. Two informational notes surfaced and banked as roadmap follow-ups rather than fixed in this pass: a 5th unstyled bare-`.btn` Cancel button at `app-programs.js:672` (same bug, outside dashboard scope), and `.pt-stats`/`.solo-stats` duplicating the purpose of the pre-existing (dead) `.stats-row` class.
+- Visually verified at 1280/900/640/480/400px via a throwaway Playwright screenshot script (the `preview_*` tools this environment's skills assume don't exist here — see lessons below) — confirmed cards now show real backgrounds/shadows and both stat strips reflow correctly on mobile.
+
+**Also found (not fixed, banked as follow-ups):** `var(--bg-accent)`/`var(--text-accent)`/`var(--surface-2)` are referenced 52× across 7 files but never defined anywhere in `main.css` — same bug class as the dashboard-card fix, but app-wide. `.modal-box` (used in `app-progress.js`/`app-runner.js`) has no CSS definition either. Both deliberately kept out of this pass's scope (Jake's call) — need their own audit of intended styling per site before fixing.
+
+**Done — runner autosave, scoped and designed (not built):**
+- Explored the runner's `_runner` lifecycle in depth: confirmed zero persistence exists today (no localStorage, no `beforeunload`/`visibilitychange`, no resume concept anywhere), confirmed the exact final-save schema (`workout_logs`→`workout_log_exercises`→`workout_log_sets` via `saveRunnerSession`), and confirmed a second parallel in-progress representation (`tableRows` for the Hevy-style strength table) that any draft must also capture alongside `loggedSets`.
+- Jake chose the hybrid approach: a localStorage-only draft now (checkpointed on every `renderRunner()` call plus a 10s safety-net tick, keyed `_runnerDraft_<clientId>`, same-day staleness cutoff, resume/discard confirm modal wired into `startWorkoutRunner()`, cleared inside the existing `discardRunner()`); a DB-backed draft for cross-device recovery is deliberately deferred.
+- A full function-level implementation plan was produced via a Plan agent (exact functions, hook points, serialization shape, failure-mode handling, Playwright test cases) — see `roadmap.md`/`STATUS.md`/`coachapp-runner-architecture` (wiki) for the design. Session was interrupted before any code was written for this half — ready to build directly next session.
+
+**Not done (flagged, banked to roadmap/STATUS):**
+- The app-wide undefined-CSS-var bug, `.modal-box`, and the `app-programs.js:672` `.btn` bug (all above).
+- Runner autosave itself — designed but not built.
+- `hello-claude`/`run-coachapp` reference `preview_start`/`preview_resize`/`preview_screenshot`/`preview_snapshot`/`preview_click`/`preview_fill` tools that do not exist in this Claude Code CLI environment (confirmed via ToolSearch). Worked around by starting the static server directly (the exact command already in `.claude/launch.json`) and driving verification via Playwright directly instead — banked as `lessons.jsonl` les-022 and a STATUS to-do; the skills themselves should be updated to check-then-fallback rather than assume the tools exist.
+
+**Predictions graded this session:** 5 predictions with a 2026-07-05 `verify_by` were due — all graded `correct` from existing documented evidence (client dashboard was in fact built and iterated on since, pth-028; session-history two-query fix has held up, pth-038; the predicted PBs-tab RLS gap was real and got fixed 2026-06-29, pth-035; the last-session-strip placement was never revisited, pth-036; client calendar has shipped clean with no further fixes, pth-062). One new prediction banked (pth-088: the runner autosave plan will be built next session directly from the banked design, no re-scoping needed).
+
+**Why:** Jake's dashboard ask surfaced real bugs (not just aesthetic gaps) that were worth fixing regardless of any future redesign — shipped those now since they were low-risk and immediately useful, while explicitly declining bigger scope (component rebuild, IA rework) he didn't ask for. The runner autosave got a full design pass so the next session can build directly against a decided, reviewed plan instead of re-opening the scoping conversation — closing the actual value of the session (a shipped fix + a ready-to-build plan) rather than leaving a half-built feature mid-flight when Jake redirected.
+
+---
+
 ## 2026-07-04 (session 15) — Runner exercise-picker freeze fix + silent beep fix + client-query scoping quick win (workouts v10→11, runner v9→10, clients v1→2) — PUSHED (84f9267, f997474)
 
 **Context:** Jake reported a real production incident from his own personal-account gym session (19:42–19:45): tapping Swap exercise after Add exercise froze the runner solid, and a forced page reload wiped the entire in-progress session. He also asked for a check that saves/session-history are accurate, and flagged that the 10-second voice rest cue works but the 5-second countdown beeps don't.

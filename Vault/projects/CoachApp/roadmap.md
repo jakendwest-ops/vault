@@ -1,6 +1,6 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-02 (session 9)_
+_Last updated: 2026-07-05 (session 16)_
 
 ---
 
@@ -92,7 +92,8 @@ Features inside a section are in priority order. Update status tags during each 
 | **Runner redesign → Hevy-style table logger** (supersedes "set input pre-fill") | ✅ Done (v1) | 2026-07-02, pushed 6e6402a: all-sets-visible table (`SET · PREVIOUS · KG · REPS · ✓`), previous values pre-filled → 1-tap repeat, tap-✓ to complete, non-blocking rest timer. **v1 = plain strength only**; cardio/timed/unilateral/%1RM stay on the wizard — phase 2 for those is still 🗓 Planned. No paid gating. See STATUS "What's working" + "In progress" for the two known v1 gaps (superset auto-switch, bodyweight live-verify) |
 | **Runner redesign phase 2** — extend table (or equivalent) to cardio/timed/unilateral/%1RM exercises | 🗓 Planned | Scope not yet defined; v1 deliberately excluded these to ship the strength-only case first |
 | **Plate calculator (what to load on the bar)** | 🗓 Planned | Repeatedly requested by lifters on Reddit; small, self-contained; sits next to the weight field (2026-07-02 research) |
-| **Improve workout-tracking visuals + underlying data model** | 🗓 Planned | Jake, 2026-07-04: wants a better look at how a workout is tracked in the runner, and to reconsider where/how that data is stored. Not scoped yet — needs a sounding-board session before build (what specifically feels wrong about the current table/wizard visuals; is "where it's stored" about the DB schema, an autosave/draft gap, or both). Possibly connected to the same session's runner-crash finding that in-progress sessions aren't persisted until the final save. |
+| **Improve workout-tracking visuals + underlying data model** | 🗓 Planned | Jake, 2026-07-04: wants a better look at how a workout is tracked in the runner, and to reconsider where/how that data is stored. Not scoped yet — needs a sounding-board session before build (what specifically feels wrong about the current table/wizard visuals). The "where it's stored" half is now split out into its own scoped item below (runner autosave). |
+| **Runner session autosave (localStorage draft)** | 🔧 Scoped, not built | 2026-07-05: the "where it's stored" half of the item above, split out and scoped on its own. Decided approach — hybrid: localStorage-only draft now (checkpoint on every `renderRunner()` call + a 10s safety-net tick; key `_runnerDraft_<clientId>`; captures both `loggedSets` and the strength-table's parallel `tableRows`; same-day staleness cutoff; resume/discard confirm modal wired into `startWorkoutRunner()`; cleared inside the existing `discardRunner()`). A DB-backed draft (for cross-device/reinstall recovery) is deliberately deferred to a later pass. Full implementation plan exists (exact functions, hook points, Playwright test cases) — build was interrupted before any code was written, so next session picks up the plan directly rather than re-scoping. Fixes the 2026-07-04 live incident (runner freeze + forced reload wiped an entire in-progress gym session). |
 
 ### Weight tracking
 | Feature | Status | Notes |
@@ -147,6 +148,8 @@ Features inside a section are in priority order. Update status tags during each 
 | Branding — logo upload, display on dashboards | ✅ Done | v151 — private logos bucket, signed URLs, sidebar + PT/client dashboards |
 | UI consistency pass | ✅ Done | SESSION N/M labels + exercise lists unified across all surfaces (v143) |
 | Progress tabs — pill grid (no scroll) | ✅ Done | v171 — flex-wrap pills, all 5 visible at once on mobile |
+| **Dashboard consistency pass (PT/client/solo)** | ✅ Done | 2026-07-05 (main.css v4, app-dashboard v2): `.dashboard-card`/`.card-header`/`.card-title` were used ~37× across all 3 dashboards with zero CSS definitions (rendered with no background/border/shadow) — added real rules. Consolidated 3 duplicated grid `<style>` blocks into one `.dashboard-split-grid`. Fixed 4 bare `class="btn"` Cancel buttons (no matching CSS) to `.btn-secondary`. Replaced hardcoded hex colors with design tokens. Fixed PT stat strip (no mobile override, cramped at 480px) and solo stat strip (`display:none` below 640px, vanished entirely) to pair up on mobile instead. |
+| **App-wide undefined CSS vars/classes — found 2026-07-05, not fixed** | 🗓 Planned | `var(--bg-accent)`/`var(--text-accent)`/`var(--surface-2)` referenced 52× across 7 files, never defined — same bug class as the dashboard-card fix above but app-wide. `.modal-box` (app-progress.js/app-runner.js) same pattern. `app-programs.js:672` has the same bare-`.btn` Cancel bug fixed elsewhere. Deliberately kept out of the dashboard-only pass — needs its own audit of intended styling per site before fixing. |
 | Metric / imperial toggle | 🗓 Planned | Medium priority |
 
 ### Leaderboards
