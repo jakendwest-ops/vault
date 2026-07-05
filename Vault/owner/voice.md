@@ -334,3 +334,13 @@ _No data yet — not observed this session._
 
 **No new voice-shape or punctuation deltas beyond what's already banked.**
 **No draft->ship diff available this session** (code build + planning, no external-facing prose drafted).
+
+**Additional signals — 2026-07-05 session 17 (16-item live-test backlog + Areas 1/2/4 build)**
+
+- **Offers his own real account as a testing resource.** "you can test on my personal account if you need to run something" — after seeing two new tests skip because the automated E2E accounts lacked real assigned-program data, he volunteered his own account unprompted. New pattern: when automation hits a real limitation (test data gaps), he fills the gap with his own resources rather than treating it as a blocker to accept.
+- **Corrects context precisely, without being asked.** "My personal account should have hyrox conjugate assigned, as hyrox hero has been deleted" — proactively supplied the exact current fact needed to interpret what he was about to check, unprompted and unhedged.
+- **Screenshots two things side-by-side and asks for root cause, not a fix.** Sent two runner screenshots (Trap Bar Jump vs Back Squat) with "Ui on this screrem/exercise is different to the one in the second screenshot. Investigate root cause." — visual-first bug reporting (already banked), but notably asked for the *cause* explicitly rather than assuming I'd jump straight to a patch. Distinguishes investigate-first asks from fix-it asks.
+- **Terse practical questions in sequence once building is underway:** "what is intended workflow for weight goals?", "how can i view and test", "whats next" — each a complete, standalone, lowercase, unpunctuated question. Consistent with established minimal-word pattern, now observed across a long multi-area build session without any drift toward more verbose phrasing as trust in the process holds.
+
+**No new voice-shape or punctuation deltas beyond what's already banked.**
+**No draft->ship diff available this session** (code build across 3 areas, no external-facing prose drafted).

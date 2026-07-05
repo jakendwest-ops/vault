@@ -1,13 +1,55 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-05 (session 16)_
+_Last updated: 2026-07-05 (session 17)_
 
 ---
 
 ## How to read this
 
-Each feature has a **status tag**: `✅ Done` / `🔧 In progress` / `🗓 Planned` / `💡 Future consideration`
+Each feature has a **status tag**: `✅ Done` / `🔧 In progress` / `🗓 Planned` / `💡 Future consideration` / `🐛 Bug`
 Features inside a section are in priority order. Update status tags during each `/save`.
+
+---
+
+## 🐛 Session backlog — 2026-07-05 (Jake's live-test pass)
+
+_Jake live-tested a real gym session plus the wider app end-to-end and reported 16 items in one pass. Grouped by area so we can work through one at a time — priority is within each area, not across all 16. File:line refs were confirmed via a read-only code pass: "Confirmed" = root cause verified in the code; "Needs live repro" = static reading couldn't confirm it, next session should reproduce it live first._
+
+### Area 1 — Runner (highest priority: live-blocking + silent-wrong-data bugs)
+| # | Item | Priority | Status | Notes |
+|---|---|---|---|---|
+| 1 | "Save workout" produced an error at the end of a gym session | High | Needs live repro | Two candidate causes in `saveRunnerSession` (app-runner.js:1376-1457): (a) the client-lookup at line 1389 can fire a false-positive "Save failed" toast via `dbq` even though a fallback lets the save continue; (b) the Save button can get stuck on "Saving…" if a later insert fails, since only the first insert's failure path re-enables it (~1397). Reproduce live to confirm which. |
+| 2 | Swap/Add exercise + new rest time doesn't overwrite the original | High | Confirmed | app-runner.js:1155-1202 — swap mode never reassigns `ex.restSecs`; add mode hardcodes `restSecs: 90`, ignoring the entered value. |
+| 3 | Trap Bar Jump UI inconsistent with sibling exercises in the same workout | Medium | Confirmed mechanism | `_isPlainStrengthExercise` regex (app-runner.js:119-123) requires literal "broad jump" — "Trap Bar Jump" doesn't match, so it's routed differently than exercises that do. Same root debt as the "1RM exercise-name matching" decision below — fragile name/regex matching, not a one-off typo. Fix needs Jake's real exercise names to avoid breaking other routing. |
+| 4 | Runner delete-set button too close to the complete-set (✓) button | Medium | Confirmed | app-runner.js:261-330 — both buttons share one `gap:6px` flex row. |
+| 5 | Runner RPE field — header already says RPE/RIR, field itself redundantly repeats "RPE" | Low | Confirmed, mobile only | app-runner.js:1650 (header), 1691 (placeholder). Desktop already correct (1668-1672). |
+| 6 | Add Superset — replace the AMRAP button in the add-exercise modal with "Add Superset"; runner should treat the pair as one on-screen unit, tracking which set/exercise within the pair | Future | Scoping needed | Confirmed superset today is an exercise-level text field (app-workouts.js:906, ~1035), not a per-set pairing — a data-model change, not a label swap. Jake explicitly wants to scope this together. |
+
+### Area 2 — Progress & Stats
+| # | Item | Priority | Status | Notes |
+|---|---|---|---|---|
+| 7 | Workout-preview slider shows blank fields for cardio exercises | High | Confirmed | `openSessionDetail`'s set-line builder (app-workouts.js:52-78) only branches timed vs. strength; never reads cardio fields (pace/HR zone/stroke rate/duration/distance). |
+| 8 | Entering a new 1RM with the same kg value as an existing entry silently changes the new value (e.g. entering 200kg when another exercise is already 200kg saves as 199.5kg) | High | Needs live repro | No rounding/dedup/nudge logic found anywhere in `save1RM`/`saveBig5OneRMs`/Epley paths (app-progress.js:229-290, 79-92). Likely DB-side (trigger/constraint) or a data-entry artifact. |
+| 9 | Progress > 1RM "Update" — fields populate outside the modal, not inside it | Medium | Needs live repro | `showEdit1RMModal` (app-progress.js:229-261) looks structurally correct (proper `modal-overlay`, body-appended) — couldn't confirm the bug from static reading. |
+| 10 | Personal Bests and Performance tabs are redundant — move 1RMs into Personal Bests; repurpose Performance to track saved-workout-session progress over time (date completed + progress) | Medium/Future | Design decision | Jake: flesh out in a future session. Confirmed real overlap today between `renderProgressPBs` and `renderClientPerformance` (both surface `performance_logs`, app-progress.js:1109, 300). |
+| 11 | Bodyweight graph Y-axis too fractional — should step in 0.5kg increments; lowest tick = goal weight, highest tick = 1kg above starting weight | Low (quick win) | ✅ Built 2026-07-05 | 0.5kg stepSize added to Chart.js config. Goal/starting weight now come from 2 new nullable `clients` columns (`starting_weight_kg`, `goal_weight_kg`, set via a small form on the Weight page) rather than the free-text Goals system, which had no structured weight field to key off. |
+
+### Area 3 — Personal / Solo account
+| # | Item | Priority | Status | Notes |
+|---|---|---|---|---|
+| 12 | Personal account calendar — text overflows outside the calendar cells | Medium | Confirmed | app-calendar-goals.js:119-153 — zero calendar CSS classes exist anywhere (all inline styles); grid cells lack `min-width:0`, text is `white-space:nowrap` — classic CSS Grid overflow. |
+| 13 | Personal > Workouts page shows 1RMs — redundant with Progress section | Low | Confirmed location | app-workouts.js:277-296. Ties to item 10's PBs/Performance restructure — remove once that lands. |
+| 14 | Personal > Calendar should also show the workout-preview slider (parity with elsewhere) | Medium | Confirmed gap | `showClientDayDetail` (app-calendar-goals.js:215-263) never calls `openSessionDetail` — only renders exercise name + set count. |
+| 15 | Personal account should structurally mirror the Client view exactly — the only difference should be no client/PT linkage | Future | Design decision | Jake's own architecture statement. Confirmed real diffs exist today: `renderSoloDashboard` (app-dashboard.js:583-819) lacks the sudo/branding banners `renderClientDashboard` (219-580) has, and has a unique 4-tile solo-stats row the client dash doesn't. Needs a dedicated session — affects items 13/14 too. |
+
+### Area 4 — Dashboard
+| # | Item | Priority | Status | Notes |
+|---|---|---|---|---|
+| 16 | Dashboard should show a program-name header (mirroring "Up next") with a "View program" button next to it | Medium | Confirmed, straightforward | No such element exists today above either hero card (app-dashboard.js:361-370 client, 664-669 solo). |
+
+**Suggested order:** Area 1 (Runner) first — includes a live save-blocking error and a silent wrong-data bug — then Area 2 (Progress, its own data-integrity concern), then Area 3 (Personal/Solo), then Area 4 (Dashboard, quick win, slots in anytime).
+
+**Two items need Jake in the room before building, not just code:** #6 (Add Superset — data model design) and #15 (Personal-mirrors-Client — architecture decision, ripples into #13/#14).
 
 ---
 
@@ -33,6 +75,7 @@ Features inside a section are in priority order. Update status tags during each 
 | Resend invite | ✅ Done | |
 | Client compliance tracking | ✅ Done | Sessions per client this week — colour-coded card on PT dashboard |
 | In-app PT→client messaging / notes thread | 💡 Future | Supabase Realtime; simple thread per client profile |
+| **Client cannot self-detach from their PT except via a proper cancellation workflow** | 🗓 Planned, not scoped | 2026-07-05: surfaced while adding a client-role UPDATE policy on `clients` (for self-service weight goals). RLS in this app is row-level, not column-level, so any client-writable-row policy technically permits a client to update `coach_id` on their own record directly via the API, detaching themselves from their PT with no workflow, no notice, no PT-side visibility. Accepted as consistent with the existing trust model for now (same class of risk already present on `weight_logs`/`client_1rms`), but Jake flagged it as a real gap needing an actual designed cancellation/detach flow — not scoped yet. |
 
 ### PT dashboard
 | Feature | Status | Notes |
@@ -94,6 +137,8 @@ Features inside a section are in priority order. Update status tags during each 
 | **Plate calculator (what to load on the bar)** | 🗓 Planned | Repeatedly requested by lifters on Reddit; small, self-contained; sits next to the weight field (2026-07-02 research) |
 | **Improve workout-tracking visuals + underlying data model** | 🗓 Planned | Jake, 2026-07-04: wants a better look at how a workout is tracked in the runner, and to reconsider where/how that data is stored. Not scoped yet — needs a sounding-board session before build (what specifically feels wrong about the current table/wizard visuals). The "where it's stored" half is now split out into its own scoped item below (runner autosave). |
 | **Runner session autosave (localStorage draft)** | 🔧 Scoped, not built | 2026-07-05: the "where it's stored" half of the item above, split out and scoped on its own. Decided approach — hybrid: localStorage-only draft now (checkpoint on every `renderRunner()` call + a 10s safety-net tick; key `_runnerDraft_<clientId>`; captures both `loggedSets` and the strength-table's parallel `tableRows`; same-day staleness cutoff; resume/discard confirm modal wired into `startWorkoutRunner()`; cleared inside the existing `discardRunner()`). A DB-backed draft (for cross-device/reinstall recovery) is deliberately deferred to a later pass. Full implementation plan exists (exact functions, hook points, Playwright test cases) — build was interrupted before any code was written, so next session picks up the plan directly rather than re-scoping. Fixes the 2026-07-04 live incident (runner freeze + forced reload wiped an entire in-progress gym session). |
+| **Rest time not overwritten on swap/add** | 🐛 Bug (confirmed 2026-07-05) | Swap mode never reassigns `ex.restSecs`; add mode hardcodes 90s, ignoring the entered value. See session backlog Area 1 #2. |
+| **Add Superset (redefine current AMRAP button)** | 🗓 Planned, needs scoping | 2026-07-05: Jake wants the add-exercise modal's AMRAP button replaced with "Add Superset" — pairs two exercises so the runner shows both on one screen and tracks sets/exercise within the pair. Confirmed today's superset field is exercise-level text, not a per-set pairing — data-model change, not a label swap. Supersedes/extends the "Superset auto-advance" gap already tracked in [[coachapp-runner-architecture]]. See session backlog Area 1 #6. |
 
 ### Weight tracking
 | Feature | Status | Notes |
@@ -112,6 +157,7 @@ Features inside a section are in priority order. Update status tags during each 
 | Expandable history per exercise | ✅ Done | |
 | Chart.js progression chart per exercise | ✅ Done | |
 | Delete log entry | ✅ Done | |
+| **Personal Bests / Performance merge** | 🗓 Planned, needs scoping | 2026-07-05: Jake — the two tabs are redundant. Move 1RMs into Personal Bests; repurpose Performance to track saved-workout-session progress over time (date completed + trend). Flesh out in a future session. See roadmap session backlog Area 2 #10. |
 
 ### Goals
 | Feature | Status | Notes |
@@ -191,6 +237,7 @@ _Jake's master account gets a third "Personal" pill. Solo user's own client reco
 | Delete old Jake West PT-account client record | 🗓 Planned | Clean up PT dashboard — only real/test clients should remain |
 | Upgrade path: solo → PT-coached | 💡 Future | Solo accepts PT invite, coach_id stamped, retains history |
 | Upgrade path: solo → becomes a PT | 💡 Future | Role change; gains coach dashboard + client management |
+| **Personal account mirrors Client view exactly** | 🗓 Planned, needs scoping | 2026-07-05: Jake's own architecture statement — the only difference between Personal and Client should be no client/PT linkage. Confirmed real diffs exist today (`renderSoloDashboard` lacks the sudo/branding banners `renderClientDashboard` has; solo has a unique 4-tile stats row). Needs a dedicated session — ripples into the redundant-1RMs-on-Workouts-page and calendar-preview-parity items. See roadmap session backlog Area 3 #15. |
 
 ---
 
