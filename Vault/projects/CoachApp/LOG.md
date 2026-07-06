@@ -4,6 +4,57 @@ Newest first.
 
 ---
 
+## 2026-07-06 (session 18, cont.) — Found + fixed the real flaky-test root cause; pushed (31698fe)
+
+**Correction to the entry below:** its "not a real bug" verdict on the test flakiness was wrong. Jake asked to investigate properly rather than keep retrying blindly.
+
+**Root cause:** `tests/helpers.js`'s `loginAsClient` logged the test account in and returned immediately. `loginAsPT` already had a comment explaining why that's unsafe (`#app-shell` is visible before `loadUserInfo`/`renderClientDashboard` finishes) and waits for its own dashboard heading before returning — `loginAsClient` had no equivalent wait. `renderClientDashboard` (app-dashboard.js:219) shows a `Loading…` placeholder synchronously, then replaces it with the real page only after several parallel Supabase fetches resolve. Every client-role test's `beforeEach` fires its first click (e.g. `[data-page="workouts"]` in `runner.spec.js`) straight after `loginAsClient` returns — if that click landed before the dashboard/nav had finished rendering, it got silently overwritten once the async render caught up. This explains the observed symptoms exactly: intermittent AND sometimes-100%-reproducible failures scattered across client/solo tests, unrelated to that session's actual diff, including a case where the page was directly observed stuck on the client dashboard ("No program assigned") instead of Workouts.
+
+**Fix:** added `await page.waitForSelector('h1:has-text("Hi,")', { timeout: 15000 })` to `loginAsClient`, mirroring `loginAsPT`'s existing pattern.
+
+**Verified:** `runner.spec.js` alone — 27/27 green. `runner.spec.js` + `solo-account.spec.js` together (the exact 38-test pre-push smoke set) — green on 2 consecutive full runs, then green a 3rd time inside the actual pre-push hook.
+
+**Pushed:** 31698fe. CI (`Check & Deploy`) green.
+
+**Also corrected:** the "Flaky test" and "Race condition" entries in the LLM wiki glossary (`guide-glossary.md`) now use this as the real worked example, replacing the incorrect "confirmed system exhaustion" framing — and the Flaky-test entry now explicitly calls out "jumping to fatigue because it requires no further work" as the trap, since that's exactly what happened here.
+
+**Why:** a plausible-sounding explanation (hours of continuous test runs → tired machine) was accepted before ruling out a code cause, even though the failure recurred immediately on the very next run and hit early tests too — both signs a load-based explanation didn't actually fit. Investigating properly took under 15 minutes once actually pursued.
+
+---
+
+## 2026-07-06 (session 18) — Session 17 backlog pushed + 2 bugs found in it fixed (app-dashboard v3, app-workouts v12, app-runner v13, app-progress v4); Exercise identity linking + new Exercise Picker built (app-programs v10, app-progress v5, app-runner v14, app-workouts v13) — PUSHED (9b1fb9c, 1526704)
+
+**Note on this entry:** backfilled after the fact — `/save` was not run at the end of this session, so STATUS.md/LOG.md were never updated in the moment. Reconstructed from the two commit messages and roadmap.md's session-18 notes. The only hard timing evidence available is the gap between the two commits: **9b1fb9c at 12:33:56 and 1526704 at 18:04:49 — 5h31m apart.** No record of when the session actually started, so real total time may be longer than that.
+
+**Done — pushed session 17's backlog (9b1fb9c):**
+- Session 17's Areas 1/2/4 work (false-positive "Save failed" toast fix, rest-time-on-swap/add fix, %1RM→strength-table routing, cardio fields in the workout-preview slider, dashboard "Current program" header, delete-set button spacing, mobile RPE/RIR label fix, `.modal-box`→`.modal` CSS fix across 5 sites) went through multi-agent review before push and found two real bugs in that session's own work, fixed before pushing:
+  - Weight goals form (starting/goal weight, drives the Body Weight chart Y-axis) was wired into the PT-facing `renderClientWeight` only — clients and solo users had no way to reach it from their own My Progress page (`renderProgressWeight`, a separate function). Ported the form + Y-axis logic there too; fixed `saveWeightGoals` to refresh whichever view is actually showing it.
+  - `saveRunnerSession`'s exercise-insert failure path re-enabled the Save button but never cleaned up the already-inserted `workout_logs` row — a retry could create a duplicate session and orphan the first attempt. Added rollback (sets → exercises → log) before allowing retry.
+  - Also fixed: Y-axis inverted for a weight-gain goal (calc assumed goal < starting); ported the 0.5kg stepSize fix to the client/solo chart too.
+- 69/69 Playwright passing, 3-agent review + self-verification clean.
+
+**Done — Exercise identity linking + new Exercise Picker (1526704):**
+- **Root cause:** previous-session/1RM data went missing when the same exercise was typed slightly differently across templates (e.g. "Bicep Curls" vs "Bicep Curl") — the runner's lookup already searched globally per client but matched on exact name string.
+- **Schema:** added a real `exercise_id` FK to `workout_log_exercises` and `client_1rms` (`workout_template_exercises` already had one), with a name-match fallback for older/unlinked rows. Wired through `saveRunnerSession`, `saveWorkoutSession`, `save1RM`, `saveBig5OneRMs`, `_getProgramOneRMStatus`, `fetchRunnerLastSession`, `_lookupClientOneRM`.
+- **Historical data migration:** one-time SQL seeded the (previously empty) exercise library from real usage and linked 4,777 template exercises, 27 logged exercises, 18/19 1RMs. Jake reviewed his actual exercise list and specified which spelling variants to merge (Close Grip Pulldown, RowErg, Trap Bar Jump, etc.).
+- **New shared Exercise Picker** (search-as-you-type, explicit "Create new exercise", collapsible archived section) replaces the old dropdown+free-text entry everywhere: workout builder (add + edit), runner swap/add, 1RM entry. Archive/unarchive added to the Exercise Library management page. The old "1RM lifts quick-pick + auto-scroll" dropdown shortcut was dropped (Jake confirmed fine with this); the underlying %1RM calculation itself was untouched.
+- Diffstat: `index.html` +8/-0 · `js/app-programs.js` +27 · `js/app-progress.js` ±106 · `js/app-runner.js` ±64 · `js/app-workouts.js` +486/-… (largest single-file change of the session) · plus test files.
+
+**Bugs found + fixed (mostly via multi-agent review):**
+- Race condition — typing into the picker's search box while the library was still loading got silently wiped once the fetch resolved.
+- Two missing RLS policies — clients had no INSERT or SELECT access to the `exercises` table at all, so the picker silently failed for every client (worked fine for PT/coach, which already had its own policy).
+- `escapeHtml()` was applied before the JS-string-escape on names rendered into `onclick` attributes, so any exercise name with an apostrophe (e.g. "Farmer's Carry") broke the picker.
+- Two double-tap race conditions that could create duplicate library entries (picker's "Create new exercise", and the Big 5 quick-start form).
+- 3-agent review (security/scoping, solo-mode, duplicates/render-safety) confirmed all RLS/solo-mode paths clean after the fixes above.
+
+**Known friction this session:** first push attempt for the exercise-identity commit was blocked by the pre-push hook's own Playwright smoke-test pass hitting severe environmental flakiness after 3+ hours of continuous test runs (not a real bug) — required a full environment reset before the retry succeeded. This is the likely largest single contributor to the session running long, on top of the schema migration + data backfill + a new shared component threaded through 4 integration points + a 5-bug review-and-fix round.
+
+**Not done:** `/save` itself — this is the gap this entry exists to close. Also flagged to Jake directly: STATUS.md still shows "session 17" at the top and lists the session-17 work as uncommitted, which is now stale (both commits are pushed and CI is green).
+
+**Why:** Jake asked directly why the session took ~7 hours for what looked like "one feature." The honest answer, reconstructed from commit evidence since no live log exists: it wasn't one feature — it was finishing and pushing a backlogged session's work (with 2 bugs caught and fixed in review), then a schema migration + historical data backfill + a new shared UI component wired into 4 places + a 5-bug fix round, then a stuck test environment on the first push attempt. Banking this now so the same question doesn't require after-the-fact reconstruction next time.
+
+---
+
 ## 2026-07-05 (session 17) — Live-test backlog organized into 4 areas; Areas 1/2/4 built + tested; %1RM runner routing fixed (app-dashboard v2→3, app-workouts v11→12, app-runner v10→13, app-progress v3→4) — NOT YET PUSHED
 
 **Context:** Jake live-tested a real gym session plus the wider app end-to-end and reported 16 bugs/feature requests in one message. Organized them into 4 areas (Runner, Progress/Stats, Personal/Solo, Dashboard) with file:line-grounded root-cause notes via a read-only Explore pass, written to `roadmap.md`'s new "Session backlog" section. Then built and tested Areas 1, 2, and 4 in sequence (Jake picked the order live, one area at a time), plus a live bug Jake found mid-testing (Trap Bar Jump UI inconsistency) that turned into a scoped "Runner Phase 2 — %1RM only" build.
