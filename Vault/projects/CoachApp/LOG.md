@@ -4,6 +4,37 @@ Newest first.
 
 ---
 
+## 2026-07-07 (session 20) — Fixed slow workout save + slow Workouts-page load, cleaned up orphaned template/exercise backlog, fixed exercise-picker modal shrinking on mobile — PUSHED (444d0f3, 682f86f)
+
+**Done:**
+- Batched `saveRunnerSession`/`saveWorkoutSession`'s per-exercise save loop into 2 batched inserts each (exercises, then sets), correlated by `order_index` not response array order. Measured live: 14 requests/4.7s → 4 requests/1.1s on a 6-exercise save.
+- Added rollback-on-failure to `saveWorkoutSession` (never had one before), matching `saveRunnerSession`'s existing rollback chain.
+- Parallelized `saveWorkoutSession`'s per-exercise `_resolveExerciseIdForSave` lookup (de-duped by name first to avoid a create-race on repeated exercise names).
+- Added `.limit(100)` to `renderWorkoutTemplates` and `renderClientWorkoutsPage`'s `workout_templates` queries — were silently riding the global 200-row server cap.
+- New Playwright smoke test proving the new `saveWorkoutSession` rollback actually cleans up on failure.
+- Fixed the exercise picker modal shrinking/drifting toward the bottom of the screen as search results narrow — `max-height:85vh` with no fixed `height`, combined with mobile's bottom-anchored overlay, meant the box shrank and slid down as fewer results matched, crowding the on-screen keyboard. Fixed with `height:70vh`.
+- Cleaned up the historical orphaned-`workout_templates` backlog: diagnostic confirmed 103 orphaned rows (not ~993 as previously estimated — that figure was never actually measured), 0 in use anywhere; Jake ran the cleanup SQL, confirmed 0 remaining.
+- Handed Jake a broader exercises-library cleanup SQL (delete every exercise not used by his personal/solo account) at his explicit request, after confirming via AskUserQuestion that he understood it would also detach the `exercise_id` link on real clients' templates/logs that reference a removed exercise (their logged history stays intact, just reverts to name-matching for that link).
+
+**Bugs found + fixed:**
+- Mid-session, a stray character (a literal `"0"`) was found prepended to the very first line of `app-runner.js`, corrupting the whole script and silently breaking ~25 unrelated tests (client-runner tests, some PT tests). Root cause traced via a direct browser console capture (a `pageerror` + `ReferenceError`), not guessed — confirmed via `git diff` that the file matched HEAD exactly at session start, so this was introduced by one of this session's own edits. Fixed, full suite reverified green. The exact mechanism of how the stray character got inserted was never reproduced, but the fix and its verification are solid.
+- The new rollback test itself initially failed — traced to `flushLogState()` (called at the top of `saveWorkoutSession`) reading set values back out of DOM inputs by id; since the test injected `_logBlocks` data directly without calling `renderLogExercises()` first, those inputs didn't exist and `flushLogState()` silently overwrote the injected data with empty strings. Fixed by calling `renderLogExercises()` before invoking the save.
+- 3-agent review (security/scoping, solo-mode, duplicates/regressions) found one real gap: the new rollback test's cleanup depended on the rollback-under-test actually succeeding, so a future regression in that exact rollback would both fail the test AND leave permanent debris in Jake's real account. Fixed with unconditional try/finally cleanup.
+
+**UNVERIFIED (banked):**
+- Workout-save speed fix (444d0f3) — verified via automated network-request-count measurement + full Playwright suite, not yet felt/confirmed by Jake in a real gym session.
+- Exercise-picker modal fix (682f86f) — verified via automated bounding-box measurement at a simulated 390×844 viewport, not yet confirmed by Jake on his own phone.
+- Exercises-library cleanup SQL (delete all except personal-account-linked) — handed to Jake, outcome/count not confirmed back.
+
+**Decided:**
+- On the sets-batch-insert failure path (both save functions), a failure now rolls back the whole session (log + exercises + sets) rather than the old per-exercise loop's "some sets saved, some didn't, session still marked saved" partial-success toast — since sets are now inserted in one atomic batch, "some failed" is no longer a real state (it's all-or-nothing), so a clean rollback + clear retry is better UX than a misleading partial-success message.
+- Jake explicitly confirmed (via an AskUserQuestion after being shown the tradeoff) that he wants the exercises-library cleanup to remove entries even where that breaks a real client's template/log link, not just genuinely-unused entries — a deliberately more aggressive cleanup than the template one.
+
+**Why:**
+- Jake reported the slowness directly on the kanban board the previous session; this session's shortlist proposal surfaced it as the top item, and two Explore agents traced concrete, file:line root causes for both halves of the report before any code was touched — not vague slowness, two specific fixable patterns. The exercise-picker bug was reported live by Jake mid-session as a real UX complaint from actual use, investigated and fixed same-session rather than banked for later.
+
+---
+
 ## 2026-07-06 (session 19) — Process/tooling session: kanban reorg, beta date → 31 July, wiki gap-analysis fixes, plugin install, skill sharpening + first live-validated skill-testing methodology — NO APP CODE CHANGED
 
 **Context:** Jake opened by asking why session 18 took ~7 hours for what looked like "one feature" — answered from commit-timestamp evidence since session 18 was never `/save`d (see the backfilled session 18 entry below). Rest of the session was Jake directing process/tooling work: kanban board maintenance, a beta-date decision, a full wiki gap-analysis pass, installing the standalone Claude Code CLI + two plugins, and — at Jake's push — actually proving a skill-wording change works rather than asserting it.

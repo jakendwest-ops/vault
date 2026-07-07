@@ -344,3 +344,12 @@ _No data yet — not observed this session._
 
 **No new voice-shape or punctuation deltas beyond what's already banked.**
 **No draft->ship diff available this session** (code build across 3 areas, no external-facing prose drafted).
+
+**Additional signals — 2026-07-07 session 20 (workout-save + Workouts-page speed fix, exercise-picker modal fix)**
+
+- **Checks whether his own past action landed in the system, not just whether mine did.** "didnt i also add a note to the kanban board about the exercise selector modal reducing in size and disappearing behind keyboard?" — distinct from the already-banked "audits tooling for gaps" pattern (which is about whether a *system/skill* is complete): here he's specifically verifying whether *his own* prior note survived into the record. Consistent with the broader "monitors whether things are actually being tracked" trait, applied to his own inputs, not just mine.
+- **Restates a bug report cold, in full, once told the earlier note wasn't found** — didn't get frustrated or ask why it was missing, just re-described the bug fully ("when typing an exercise name into the exercise modal, as fewer results are shown the exercise list gets smaller...") and moved straight to the fix ask. Consistent with the banked "reports what he tried, expects Vision to route around it" pattern.
+- **"thats way too many steps. Please make it more simple"** — direct, terse correction on SQL script complexity specifically (not app UI/features, a new domain for the already-banked "ship small"/minimum-viable instinct). Confirms the trait generalizes beyond product features to any deliverable, including scripts he has to run himself.
+
+**No new sentence-shape or punctuation deltas beyond what's already banked.**
+**No draft->ship diff available this session** (code build + SQL scripts, no external-facing prose drafted).
