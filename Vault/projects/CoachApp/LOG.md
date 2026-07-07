@@ -4,6 +4,44 @@ Newest first.
 
 ---
 
+## 2026-07-06 (session 19) — Process/tooling session: kanban reorg, beta date → 31 July, wiki gap-analysis fixes, plugin install, skill sharpening + first live-validated skill-testing methodology — NO APP CODE CHANGED
+
+**Context:** Jake opened by asking why session 18 took ~7 hours for what looked like "one feature" — answered from commit-timestamp evidence since session 18 was never `/save`d (see the backfilled session 18 entry below). Rest of the session was Jake directing process/tooling work: kanban board maintenance, a beta-date decision, a full wiki gap-analysis pass, installing the standalone Claude Code CLI + two plugins, and — at Jake's push — actually proving a skill-wording change works rather than asserting it.
+
+**Done — kanban board (`wiki/board-coachapp.md`):**
+- Reviewed and updated to reflect actual pushed state (was showing session 17/18 work as not-yet-pushed).
+- Reclassified 4 items from "Needs Jake" → "Up Next": the 1RM 0.5kg-shift bug and the `showRunnerOneRMSheet` z-index fix (both reproducible with test/preview data, don't need Jake's live account), the `client_1rms` INSERT RLS gap (diagnosable via a Playwright client-role test; only the actual fix SQL would still need Jake), and the ICO breach-notification procedure (draftable by Claude for Jake's review rather than requiring him to author it from scratch).
+- Added a new **"Proposed for Next Session"** column — a curated 3-5 item shortlist, distinct from the full "Up Next" backlog. Wired into the ritual going forward: `save` (Step 6) rewrites it every session-end based on that session's actual work; `hello-claude` (Step 6) reads it first as the anchor for "propose this session's plan" instead of generating one from scratch. **Discovered mid-session:** the Obsidian Kanban plugin strips freeform prose (non-checklist lines) from a column when it re-saves the file after Jake opens/edits the board — so this column's content has to live as checklist items themselves, not descriptive text around them. Adjusted expectations accordingly.
+- Attempted a CSS snippet to lighten the kanban board's colour scheme (the vault's "Obsidianite" theme was rendering it dark) — Jake asked for it rolled back same session; reverted cleanly (deleted `kanban-light.css`, removed it from `appearance.json`'s `enabledCssSnippets`). Noted in memory as a soft signal: cosmetic/personal-tool styling changes are more reversible/tentative than app changes.
+
+**Done — beta date pushed to 31 July 2026** (Jake's decision): updated `roadmap.md` (was "Week 5 — Jul 22–31" + staggered invites Jul 25/28/31 → single date 31 July), `board-coachapp.md`, and `guide-coachapp-roadmap.md` (mermaid node + numbered list) to match.
+
+**Done — wiki gap analysis** (delegated to an Explore agent to read all 26 wiki pages without blowing up session context; then fixed everything it found):
+- `coachapp-programs-architecture.md` (worst offender, stale since 2026-07-03): resolved a direct contradiction with `coachapp-runner-architecture.md` over whether exercise-id linking had shipped (it had, `1526704`); added Duplicate Week/fork-on-edit coverage; corrected a stale function name (`renderEditableWeek1Grid` → `renderPhaseWeekGrid`); added the 2026-07-04 `deleteProgram()` follow-up.
+- `coachapp-workflows.md` (frozen since 2026-07-03): added the Exercise Picker, exercise identity linking, weight goals, Duplicate Week/fork-on-edit; corrected "Runner phase 2" to drop %1RM (shipped) from the still-open list.
+- `coachapp-spec.md` / `coachapp-runner-architecture.md`: header "Last updated" dates were stale relative to their own content (both had been edited without bumping the date) — corrected.
+- `index.md`: `log.md` existed on disk, actively maintained, but was never linked from the index — added under Maintenance.
+
+**Done — installed the standalone Claude Code CLI + 2 plugins:**
+- Jake tried `/plugin` commands directly in this chat session (the VSCode extension) — confirmed this environment doesn't support them at all, and no standalone CLI was installed on the machine to fall back to. Installed the official CLI (`irm https://claude.ai/install.ps1 | iex`, v2.1.201), fixed a PATH propagation issue (registry updated but already-running VSCode doesn't see it until restarted — worked around via the full exe path in the interim).
+- Installed **context-mode** (mksglu/context-mode — MCP-based context-window sandboxing) and **superpowers** (obra/superpowers via claude-plugins-official — a 13-skill TDD/debugging/collaboration library), both eventually at **User** scope (available in every folder, not just this one) after an initial Project-scope install.
+- **Confirmed these plugins are inert in this chat environment** — searched this session's own available tools for any trace of them, found nothing. They only work inside the separate standalone `claude` CLI process, even though both read/write the same `~/.claude` folder on disk.
+- Added 4 new glossary entries (`guide-glossary.md`): Claude Code CLI vs this chat, Plugin, Marketplace, Scope (Project vs User).
+
+**Decided — don't migrate primary workflow to the standalone CLI.** Evaluated the tradeoff directly: this chat environment has things the CLI likely doesn't (subagent orchestration, artifacts, scheduling, the whole hello-claude/memory ritual); the CLI has working `/plugin` support this chat doesn't. Neither is a strict upgrade. Recommended against switching unless a specific plugin need arises.
+
+**Done — evaluated superpowers/context-mode for extraction value** (read the actual skill files, not just the plugin descriptions): recommended adopting **`writing-skills`**'s RED-GREEN-REFACTOR testing methodology (pressure-test a skill/rule with a subagent before vs. after adding it — none of CoachApp's ~15 skills have ever been empirically tested this way) and **`systematic-debugging`**'s sharper "3+ failed fixes = stop, this is an architecture problem, not another patch" rule. Rejected `verification-before-completion` (redundant with existing `feedback-verify`/feature-audit), `finishing-a-development-branch` (branch/PR/worktree workflow that doesn't match CoachApp's single-branch-on-master reality), and strict TDD (doesn't match how Jake actually ships — tests added same-commit to prove a fix, not written first).
+
+**Done — folded both into `hello-claude/SKILL.md`:** sharpened the "If work goes in circles" section with the Iron Law, the 3-strikes-architecture rule, a red-flags list, and Jake's own verbal tells ("is that not happening?", "stop guessing", all-caps restatement) as explicit signals to stop.
+
+**Done — actually proved the wording change works, instead of asserting it** (first real use of the newly-adopted testing methodology): ran 5 paired subagent reps (10 total) — one arm given the exact pressure scenario with no guidance, one arm given the same scenario plus the new rule text. Result: **5/5 baseline reps correctly diagnosed the technical root cause on their own** (the model's debugging instinct wasn't the gap) but **0/5 paused before acting — all planned or executed a fix solo.** **5/5 primed reps explicitly stopped and committed to surfacing the finding before writing more code.** Zero variance on both sides — a clean signal per the methodology's own "variance is a metric" guidance. Confirms the rule's actual value is enforcing a human checkpoint before further autonomous action, not making the debugging sharper (that was never broken) — which is specifically the failure this rule was written to prevent (Claude gave Jake wrong info twice in a row earlier this session before actually verifying against his real environment).
+
+**Not done / explicitly out of scope this session:** no CoachApp app code, no Playwright run (nothing to test), no cache-bust concerns (no module files touched).
+
+**Why:** Jake's original question ("why did session 18 take 7 hours") surfaced a real process gap — no live log existed to answer it from. Closing that gap, then using the same session to actually validate a process change empirically rather than just writing it down, is the throughline: less "build a feature," more "make the next 100 features more reliably built."
+
+---
+
 ## 2026-07-06 (session 18, cont.) — Found + fixed the real flaky-test root cause; pushed (31698fe)
 
 **Correction to the entry below:** its "not a real bug" verdict on the test flakiness was wrong. Jake asked to investigate properly rather than keep retrying blindly.

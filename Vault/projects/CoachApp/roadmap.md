@@ -138,6 +138,7 @@ _Jake live-tested a real gym session plus the wider app end-to-end and reported 
 | **Improve workout-tracking visuals + underlying data model** | 🗓 Planned | Jake, 2026-07-04: wants a better look at how a workout is tracked in the runner, and to reconsider where/how that data is stored. Not scoped yet — needs a sounding-board session before build (what specifically feels wrong about the current table/wizard visuals). The "where it's stored" half is now split out into its own scoped item below (runner autosave). |
 | **Runner session autosave (localStorage draft)** | 🔧 Scoped, not built | 2026-07-05: the "where it's stored" half of the item above, split out and scoped on its own. Decided approach — hybrid: localStorage-only draft now (checkpoint on every `renderRunner()` call + a 10s safety-net tick; key `_runnerDraft_<clientId>`; captures both `loggedSets` and the strength-table's parallel `tableRows`; same-day staleness cutoff; resume/discard confirm modal wired into `startWorkoutRunner()`; cleared inside the existing `discardRunner()`). A DB-backed draft (for cross-device/reinstall recovery) is deliberately deferred to a later pass. Full implementation plan exists (exact functions, hook points, Playwright test cases) — build was interrupted before any code was written, so next session picks up the plan directly rather than re-scoping. Fixes the 2026-07-04 live incident (runner freeze + forced reload wiped an entire in-progress gym session). |
 | **Rest time not overwritten on swap/add** | 🐛 Bug (confirmed 2026-07-05) | Swap mode never reassigns `ex.restSecs`; add mode hardcodes 90s, ignoring the entered value. See session backlog Area 1 #2. |
+| **App feels slow saving an updated workout, and navigating dashboard → Workouts page** | 🐛 Bug, not yet investigated | Jake reported 2026-07-06 directly on the kanban board (not yet root-caused — no code read this session). Needs profiling next session: check for N+1-style queries on save, unnecessary re-renders on navigation, or a missing `.limit()`/index on a large table. See STATUS.md open to-dos. |
 | **Add Superset (redefine current AMRAP button)** | 🗓 Planned, needs scoping | 2026-07-05: Jake wants the add-exercise modal's AMRAP button replaced with "Add Superset" — pairs two exercises so the runner shows both on one screen and tracks sets/exercise within the pair. Confirmed today's superset field is exercise-level text, not a per-set pairing — data-model change, not a label swap. Supersedes/extends the "Superset auto-advance" gap already tracked in [[coachapp-runner-architecture]]. See session backlog Area 1 #6. |
 
 ### Weight tracking
@@ -273,14 +274,14 @@ _Jake's master account gets a third "Personal" pill. Solo user's own client reco
 
 ---
 
-## Beta prep (Week 5 — Jul 22–31)
+## Beta prep — target date: **31 July 2026**
 
-_Sessions 9–12 (Jul 2–3) went entirely into the runner redesign — a deliberate, research-backed pivot (approved after the Jul 2 competitor research), not drift. But with ~3 weeks to Jul 22, the pre-beta gates below have not moved in that window and are the real risk of being squeezed. Surfaced by the 2026-07-03 infra audit._
+_Date pushed from the original Jul 22–31 window to a single date, 31 July, per Jake's 2026-07-06 decision. Sessions 9–12 (Jul 2–3) went entirely into the runner redesign — a deliberate, research-backed pivot (approved after the Jul 2 competitor research), not drift. The pre-beta gates below still haven't moved and remain the real risk to hitting even the new date._
 
-- **⚠️ Pre-beta gates untouched for 4 sessions — action before Jul 22:**
+- **⚠️ Pre-beta gates — action before 31 July:**
   - **ICO breach-notification procedure** — still undocumented (CRITICAL.md marks it ❌)
   - **Delete old Jake West client record** from the PT account (see "Solo user" section)
   - **Supabase Pro upgrade** — unlocks leaked-password (HaveIBeenPwned) protection
-- Full walkthrough, Playwright suite (56 tests), Supabase redirect URL audit
-- Beta invites staggered: Jul 25, Jul 28, Jul 31
+- Full walkthrough, Playwright suite, Supabase redirect URL audit, `/deploy-check`
+- **Beta invites: single date, 31 July** (previously staggered Jul 25/28/31 — simplified to one date)
 - ✅ **1RM system built + tested** (done 2026-07-01) — drives %1RM in programs

@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-07-06 (session 18)_
+_Last updated: 2026-07-06 (session 19 — process/tooling session, no app code changed)_
 
 ---
 
@@ -177,8 +177,8 @@ _2026-07-05 (session 17): Jake live-tested a real gym session + the app and repo
 | **Orphaned/duplicate workout_templates backlog (~993 templates on the main coach account)** — `deleteProgram()` was fixed 2026-07-03 (66bf1fd) so this stops growing going forward, but the existing historical backlog still needs its own cleanup pass, same class as the 65 already cleaned 2026-07-02. A read-only diagnostic SQL was handed to Jake in an earlier session (per-template reference-count breakdown, scoped to his coach_id) — awaiting him to run it and paste results back before any DELETE is drafted. | Medium |
 | **Programs picker "Filter workouts below" search needs a design decision** — mechanism confirmed correct (live-tested twice); the real gap is a plain `<select>` gives no visible feedback until manually opened, so it reads as broken, and the list will keep growing unmanageably as-is. Recommended: replace with a tap-row list that live-filters. Awaiting Jake's call. | Medium |
 | **`client_1rms` may lack an INSERT policy for the `client` role** — a real insert attempt (client's own client_id) failed with an RLS violation during manual testing 2026-07-03. Pre-existing gap, not caused by this session's diff (`saveRunnerOneRM` already writes to this table in production) — needs a `pg_policies` check, not yet investigated. | Medium |
-| Verify iOS Safari slide-in fix on real device — `inset:0` replaced with explicit `top/right/bottom/left` in v180, pushed. Test on iPhone and close if working. | **High** |
 | Run Rowing/Running/SkiErg DELETE SQL in Supabase (safety check first — see below) | High |
+| **NEW 2026-07-06 (session 19) — Jake reported directly on the kanban board:** "App runs slow when saving an updated workout, or moving from dashboard to 'workouts' page." Not yet investigated — no code read, no repro attempted this session (added outside the chat conversation, caught during `/save`'s file sweep). Needs profiling next session: check for N+1-style queries on save, unnecessary re-renders on navigation, or a missing `.limit()`/index on a large table. | **High** |
 | Update invite-client Edge Function to include PT logo in invite email HTML | Medium |
 | Test My Progress Strength tab on live with real data | Medium |
 | ICO breach notification procedure — document before beta | Medium |
