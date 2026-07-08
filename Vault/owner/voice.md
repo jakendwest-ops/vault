@@ -353,3 +353,13 @@ _No data yet — not observed this session._
 
 **No new sentence-shape or punctuation deltas beyond what's already banked.**
 **No draft->ship diff available this session** (code build + SQL scripts, no external-facing prose drafted).
+
+**Additional signals — 2026-07-08 session 21 (solo-runner fix + picker keyboard fix, tight budget)**
+
+- **"please keep that warning message present so I can keep an eye on you"** — extends the already-banked "attentive to agent's own operating cost" trait (2026-07-04) from a retrospective question into a live, standing, per-message monitoring request. He wants to watch the resource in real time, not be told about it after the fact.
+- **Numbered list answered as bare "run in order"** — two words, delegates the entire multi-item sequence at once rather than confirming each item individually. Consistent with the already-banked "do your thing"/broad-pipeline-autonomy pattern (2026-07-03), now applied to a 5-item backlog list rather than a single build.
+- **"1. exercise picker has improved but still shrinks... Please give me the SQL... 4"** — bundles a bug-status update, an unrelated request, and a bare trailing number in one message. Consistent with the already-banked "decision + orthogonal question in one message" pattern (2026-07-02) — multiple live threads in one breath, expects all handled.
+- **"Is reading the kanban board in your hello claude ritual? If not, please commit to memory that..."** — a genuine feasibility/fact check phrased as a conditional instruction. Same shape as the already-banked "are you able to..." pattern, now explicitly structured as "if X isn't true, do Y" rather than a plain question.
+- **"within your test agents, please make a note for them to test edge cases... Use logic to not always follow the golden path"** — proactive process-improvement request mid-task, unprompted by any failure this session. Consistent with "turn good practice into a permanent system" trait, now applied to testing methodology specifically rather than a bug-driven lesson.
+
+**No draft->ship diff available this session** (code fixes + SQL, no external-facing prose drafted).

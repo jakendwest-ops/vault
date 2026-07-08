@@ -4,6 +4,33 @@ Newest first.
 
 ---
 
+## 2026-07-08 (session 21) — Fixed solo-runner broken-screen bug + exercise-picker keyboard shrink; confirmed exercises-library cleanup — PUSHED (298d88d, b1aa50c)
+
+**Context:** Session opened as `/hello-claude`, but the user had Plan Mode active mid-ritual, which meant the preview server never actually started at Step 1 — this caused a false 40-test Playwright failure scare later in the session (root-caused correctly: checked server status before assuming a regression, per the systematic-debugging discipline, rather than repeating the les-025 "flaky/fatigue" mistake). Session ran under a tight remaining usage budget (started at 9% weekly, flagged to Jake throughout); several process decisions (skip full multi-agent review on the second fix, stop before the bigger backlog items) were made explicitly with Jake given that constraint.
+
+**Done:**
+- Hello-claude's targeted code review (Step 4) found a real, previously-unbanked bug: `_afterRunnerSave` (app-runner.js) only special-cased role `'client'`; solo fell through to a PT-only `openClient()` call scoped by `coach_id = currentUser.id` — but a solo client record has `coach_id = NULL`, so it always errored. Fixed by adding `'solo'` to the working branch. New Playwright regression test added. Full 3-agent multi-agent-review (security/scoping, solo-mode, duplicates/regressions) ran clean. Pushed 298d88d, app-runner v16.
+- Jake reported the 682f86f exercise-picker fix from last session helped but the modal still shrank/drifted once the on-screen keyboard actually opened. Diagnosed (confirmed via an AskUserQuestion check — shrink only happens once the keyboard is up, not before) as a `vh`-unit-vs-mobile-keyboard interaction: `vh` is sized against the layout viewport, which most mobile browsers don't shrink when the keyboard opens, so a plain `vh` box can end up partly hidden behind it. Fixed by syncing the modal's height/max-height to `window.visualViewport` on open and on resize (keyboard show/hide), falling back to the original `vh` values on unsupported browsers. Self-reviewed only this time (explicit call with Jake, given budget); `runner.spec.js` 26/28 passed cleanly (2 flaky, pre-existing login-timeout race, unrelated). Pushed b1aa50c, app-workouts v16.
+- Rebuilt the exercises-library cleanup SQL from scratch this session (the original wasn't saved anywhere retrievable) as one self-contained script — a temp table computed once for the "keep" list, referenced plainly in every following statement, instead of the repeated-CTE pattern Jake flagged as "too many steps" last time (les-028). Jake ran it — confirmed 51 `remaining_exercises`.
+- Confirmed OS self-check and golden-path sweep clean (first session of the day); CI green on all recent pushes; roadmap.md already in sync with LOG, nothing to flag.
+
+**Bugs found + fixed:**
+- Solo `_afterRunnerSave` broken-screen bug (see above) — found via proactive code review, not a live report.
+- Exercise-picker mobile-keyboard shrink (see above) — found via Jake's live report, root-caused via a targeted question rather than a second blind CSS guess.
+
+**UNVERIFIED (banked):**
+- Exercise-picker VisualViewport fix (b1aa50c) — needs Jake's own phone; Playwright cannot simulate a real on-screen keyboard.
+- Solo-runner fix (298d88d) — verified via Playwright + code reasoning (deterministic, not a maybe), not yet felt live by Jake.
+- Workout-save speed fix (444d0f3, from 2026-07-07) — still not confirmed live by Jake.
+
+**Decided:**
+- Given the session's tight usage budget, Jake explicitly chose to run the full multi-agent review for the solo-runner fix (higher-risk, role/security-adjacent) but skip it for the picker-height fix (small, isolated, self-reviewed instead) — a deliberate risk-based tradeoff, not a silent shortcut.
+- Jake asked to stop after these two fixes rather than start the runner-autosave build, given the remaining budget.
+
+**Why:** Both bugs were real and worth fixing same-session — the solo one because it's a live-breaking dead end for a real usage mode with zero workaround, the picker one because Jake hit it again in actual use right after asking for the cleanup SQL. The budget constraint shaped process (review depth, stopping point) but not whether to fix real bugs found along the way.
+
+---
+
 ## 2026-07-07 (session 20) — Fixed slow workout save + slow Workouts-page load, cleaned up orphaned template/exercise backlog, fixed exercise-picker modal shrinking on mobile — PUSHED (444d0f3, 682f86f)
 
 **Done:**
