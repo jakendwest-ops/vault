@@ -29,6 +29,8 @@ Newest first.
 
 **Why:** Both bugs were real and worth fixing same-session — the solo one because it's a live-breaking dead end for a real usage mode with zero workaround, the picker one because Jake hit it again in actual use right after asking for the cleanup SQL. The budget constraint shaped process (review depth, stopping point) but not whether to fix real bugs found along the way.
 
+**Follow-up (same day, after first /save):** committed the benign `.claude/settings.json` plugin-enable change that had been sitting uncommitted all session (context-mode + superpowers, from session 19's evaluation — no app behavior change). Also fixed one more small quick-win: `app-programs.js:679` had the same bare-`class="btn"` Cancel-button bug already fixed on the dashboards 2026-07-05 (undefined CSS class) — swapped to `.btn-secondary`, cosmetic only. app-programs v10→v11, pushed 6620720, CI green, 39/39 Playwright (1 skipped).
+
 ---
 
 ## 2026-07-07 (session 20) — Fixed slow workout save + slow Workouts-page load, cleaned up orphaned template/exercise backlog, fixed exercise-picker modal shrinking on mobile — PUSHED (444d0f3, 682f86f)
