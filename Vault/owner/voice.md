@@ -363,3 +363,12 @@ _No data yet — not observed this session._
 - **"within your test agents, please make a note for them to test edge cases... Use logic to not always follow the golden path"** — proactive process-improvement request mid-task, unprompted by any failure this session. Consistent with "turn good practice into a permanent system" trait, now applied to testing methodology specifically rather than a bug-driven lesson.
 
 **No draft->ship diff available this session** (code fixes + SQL, no external-facing prose drafted).
+
+**Additional signals — 2026-07-10 session 24 (RLS audit, autosave + 3 features, live picker bug, review, push)**
+
+- Confirms an existing pattern under load: **"confirmed, but the exercise library for PT account contains all exercises..."** and **"Does this mean we need to create a new section..."** and **"run 1 and also delete week and plate calculator"** all match already-banked patterns (decision+orthogonal-report, "are you able to..." genuine feasibility check, batch-delegate multiple items in one message) holding steady across an unusually large single-session build/fix/push cycle — no drift toward more verbose phrasing even deep into a long session.
+- **"and the rounding down to 2.5?"** — four words, checking whether a specific piece of earlier-agreed work actually landed after a summary didn't explicitly re-mention it. Same shape as the already-banked 2026-07-07 "checks whether his own past action landed in the system, not just whether mine did" — now confirmed to apply symmetrically to checking *my* completed work, not just his own inputs.
+- **"please push and confirm what has been cleared from our backlog and propose what is next"** and **"updated backlog and /save"** — both compress a multi-step instruction (push + verify + report + propose // update docs + close session) into one short imperative sentence, trusting the standing process to fill in the how. Consistent with the established "batches multi-part instructions, expects the sequence followed" pattern, now at the scale of closing out a 9-commit session rather than a single build.
+- No new sentence-shape or punctuation deltas beyond what's already banked.
+
+**No draft->ship diff available this session** (code fixes + docs, no external-facing prose drafted).
