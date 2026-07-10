@@ -4,6 +4,29 @@ Newest first.
 
 ---
 
+## 2026-07-10 (session 23, final) — Live empty-phase crash hotfixed; client_programs RLS gap (+3 related tables) fully resolved and confirmed end-to-end — PUSHED (b79c152, b126d5b)
+
+**Context:** Continuation of the same day's session 23. Right after the earlier round's `/save`, Jake tried the live Personal/solo Workouts page and hit a real crash. Separately, applying the `client_programs` RLS fix from earlier in the day led to discovering it was incomplete — the first verification pass only checked one table, not the full query shape the app actually uses.
+
+**Done:**
+- Hotfixed a live crash: a phase with zero `program_phase_workouts` (a normal state — a phase not yet fully built out) crashed `renderDays` on `undefined.forEach`. Pre-existing code, not part of the earlier diff. Fixed with an explicit "No sessions added to this phase yet" message; new Playwright regression test. **app-workouts v21**, pushed b79c152.
+- Confirmed the `client_programs` RLS fix (applied earlier this session) plus 3 more policies (`programs`, `program_phases`, `program_phase_workouts` — all in the same nested embed the app's real queries use) all work end-to-end via a fresh Playwright fixture test, not just a table-level check. Un-fixme'd the 2 tests that had been blocked on this. Added a new dedicated embed-chain regression test. Fixed an unrelated ambiguous test locator along the way (`text=Deload` collided with the hero card's own meta text; scoped to `button:has-text(...)`). Pushed b126d5b.
+- New standing skill created: `missed-check-to-test` (`~/.claude/skills/missed-check-to-test/`) — whenever a bug's root cause is "I checked A but not the closely-related B," converts that miss into a Playwright test in the same commit. Registered in hello-claude's standing behaviours.
+- Two new memory entries: `feedback_rls_embed_chains.md` (check every table in an RLS embed chain, not just the outer one) and an addendum to `feedback_edge_case_testing.md` (the zero-count-state lesson, from earlier in the day).
+
+**Bugs found + fixed:**
+- Empty-phase crash (above) — root cause confirmed by reading the code against Jake's own pasted console stack trace, not guessed.
+- **Incomplete RLS fix, self-caught, not by Jake.** After Jake applied the `client_programs` policy, a fixture-based Playwright test revealed the dashboard/Workouts page still crashed — traced to `programs`/`program_phases`/`program_phase_workouts` also lacking client-read policies. PostgREST doesn't error on an unreadable embed level, it silently returns `null`, which is what made the first fix look complete when it wasn't (a direct `client_programs`-only check couldn't have caught this — needed to trace the whole embed chain the app's real query uses).
+
+**Decided:**
+- When verifying an RLS fix for a query with nested embeds, trace and test every table in the chain independently, not just the entry table — banked as a memory + reflected in the new skill.
+- Cleaned up 2 rounds of my own test debris from this investigation (orphaned throwaway programs/templates, exact IDs known from my own runs) directly, without asking — distinct from the earlier-blocked bulk pattern-match delete, since this was narrowly scoped to rows I created and could directly attribute this session.
+
+**Why:**
+- Jake asked directly "remember this and add to test" after seeing the incomplete-fix correction — the skill and memory entries are the direct response, aimed at this exact class of miss recurring in future sessions.
+
+---
+
 ## 2026-07-10 (session 23) — Finished Workouts-polish build; fixed deleteProgram data-loss bug + Workouts-page perf issue; found critical client_programs RLS gap — PUSHED (8e9c26c)
 
 **Context:** Continued session 22's Workouts-polish build (hero card + "Recent sessions" rename), which had been interrupted mid-implementation by a process restart. The in-progress edit already referenced two not-yet-defined functions, breaking the Workouts page for exactly the "Personal > workouts page not loading" symptom Jake reported mid-session — fixed by finishing the edit, not a separate bug. Also handled 6 new backlog items Jake reported live (data leak, Log weight button, starting weight, %1RM rounding, plate calculator) by triaging/documenting priority, then building the highest-priority ones.
