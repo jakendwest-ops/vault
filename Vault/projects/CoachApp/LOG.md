@@ -4,6 +4,54 @@ Newest first.
 
 ---
 
+## 2026-07-10 (session 23) — Finished Workouts-polish build; fixed deleteProgram data-loss bug + Workouts-page perf issue; found critical client_programs RLS gap — PUSHED (8e9c26c)
+
+**Context:** Continued session 22's Workouts-polish build (hero card + "Recent sessions" rename), which had been interrupted mid-implementation by a process restart. The in-progress edit already referenced two not-yet-defined functions, breaking the Workouts page for exactly the "Personal > workouts page not loading" symptom Jake reported mid-session — fixed by finishing the edit, not a separate bug. Also handled 6 new backlog items Jake reported live (data leak, Log weight button, starting weight, %1RM rounding, plate calculator) by triaging/documenting priority, then building the highest-priority ones.
+
+**Done:**
+- Finished the Workouts-page hero card (`_buildWorkoutsHero`/`_renderWorkoutsHeroHtml`) — shows program name, current phase/week, and a Start button resolving the actual next scheduled session's real template. Gated to only render when a program is assigned (deliberately, to avoid the freeform Start button opening a template-picker modal).
+- Renamed "Session history" → "Recent sessions" at both render sites (client/solo Workouts page + PT client-profile Workouts tab), capped to last 5, date-only rows.
+- Fixed the dead "Log weight" button on the Progress page's Body Weight tab (same shape as the earlier Log PB fix — the form only existed on Dashboard pages) + fixed `saveClientWeight`'s refresh target.
+- **app-workouts v20 / app-programs v12** (also app-clients v4 / app-progress v8, bumped in the pre-compaction part of this same session's continuation of session 22's work).
+
+**Bugs found + fixed:**
+- **CRITICAL data leak (root-caused, not guessed):** `renderWorkoutTemplates` and `renderClientWorkoutsPage`'s flat-list fallback were both missing `.is('generated_from_phase_id', null)` — periodization-generated week clones (e.g. "Bench Press — W2") have `client_id`/`program_id` both null too, so they leaked into flat template lists everywhere, including cross-account via solo's shared `coach_id`. Fixed both, matching the pattern already used correctly elsewhere (`app-programs.js:589`).
+- **`deleteProgram()` was silently destroying shared templates.** Found via Playwright test-flakiness investigation — a periodization test's throwaway program linked the shared seed template ("Push Day A") into a slot via `templateOptions[0]`, then deleted the program; `deleteProgram()` deleted ANY template referenced by the program's phases with no ownership check, destroying the shared template. This is a real, pre-existing product bug: any coach reusing a standalone template across programs would silently lose it the moment they deleted one of those programs. Fixed to only delete templates actually owned by the program (`program_id` match, or its own periodization-generated week clones via `generated_from_phase_id`). **The first version of this fix had a real regression** — it missed the week-clone case (which always has `program_id: null` too) — caught by the pinned 3-agent review (both Agent B and Agent C independently flagged it) before push, and fixed the same round. Verified live: a periodization-generate-then-delete cycle now leaves zero orphaned templates.
+- **Workouts-page perf issue.** `renderClientWorkoutsPage` always fetched the flat templates list (up to 100 rows, nested exercise join) via `Promise.all`, even when a program was assigned and the result was thrown away — worst-case on the personal/solo account, since it shares the PT account's large historical orphan-template backlog. Restructured to only fetch when `!hasProgram`. This is very likely the same root cause as the still-open 2026-07-06 "app runs slow moving to workouts page" report that was never investigated until now.
+- **`_buildWorkoutsHero` null `start_date` guard** — `activeAssignment.start_date` can be null (the assign form doesn't require it); `new Date(null + ...)` produced `NaN`, silently falling through to the LAST phase/week instead of the real current one. Found by the 3-agent review (Agent B), fixed same round.
+
+**Found, NOT fixed (needs Jake):**
+- **`client_programs` has no client-read RLS SELECT policy at all.** Discovered while building a Playwright fixture for the hero-card test — a genuine (non-solo) client account reads back zero rows from `client_programs`, even completely unfiltered, while the same account correctly reads `workout_logs`/`weight_logs`. Verified this isn't a fluke: compared against two working tables side by side. This means any real client with an assigned program currently can't see it on their Dashboard or Workouts page — invisible until now because solo accounts share the coach's own `auth.uid()` and never hit this RLS check. Needs a Supabase SQL policy (`CREATE POLICY ... FOR SELECT USING (client_id IN (SELECT id FROM clients WHERE user_id = auth.uid()))`), which needs Jake's dashboard access, not something fixable from code. One new Playwright test (`client-workout.spec.js`) is `test.fixme()`'d pending this fix, with clear inline documentation; the underlying hero-card logic is still covered independently by two passing unit-style tests.
+
+**Decided:**
+- When a Playwright test's `beforeEach` fails to find expected UI state that a fix should have produced, root-cause against live DB state directly (via a throwaway debug script) rather than re-guessing at the app code — this found the deleteProgram bug, not a guess.
+- A discovered bulk-cleanup opportunity for accumulated test debris was correctly blocked by the harness's own safety classifier (pattern-matched delete against shared data not created-and-tracked this session) — did not attempt to work around it; left as an optional to-do for Jake to approve instead.
+- Test isolation gap (a test picking "whatever's first" from shared account data instead of creating owned fixtures) is a recurring root cause worth naming explicitly — this is the second time this session class of bug caused real flakiness (see also the `programs.spec.js` `test.skip`-after-arrange cleanup-unreachable pattern noted but not fixed this session, since it doesn't currently cause harm).
+
+**Why:**
+- Jake asked directly this session whether better test agents could have caught these issues earlier — yes: a test-isolation review (flagging shared-account-data assumptions in test setup) and a periodic ownership-model audit on delete/cascade logic (checking cascades against the coach_id/client_id/program_id/generated_from_phase_id ownership convention already established elsewhere in the codebase) would both have surfaced this before today.
+
+---
+
+## 2026-07-08 (session 22) — Performance/Personal Bests restructure + 3 confirmed bug fixes — PUSHED (6d8c6a8, e600010)
+
+**Context:** Backfilled at the start of session 23 — this session's `/save` was never run at the time (LOG.md and STATUS.md both stopped at session 21 until now).
+
+**Done:**
+- Performance/Personal Bests restructure (client/solo self-view, e600010): folded Cardio + 1RMs into Personal Bests; Performance split into "Per session" (most-recent-vs-previous comparison, expand to graph) and "Per exercise" (alphabetical, live-search); moved the Workouts-page 1RM grid into Personal Bests.
+- Fixed bare `class="btn"` Cancel button in the phase-form (undefined CSS, same bug class already fixed on the dashboards) — app-programs v11 (6620720).
+
+**Bugs found + fixed (6d8c6a8):**
+- Dead "Log PB" button — form only existed on Dashboard pages, not the Progress page it's clicked from.
+- A real solo-mode bug where saving a PB redrew the wrong dashboard.
+- Body Weight "Starting" tile reading the wrong field + a Y-axis clamp requiring both starting AND goal weight to be set.
+- Hardened `saveEditTemplate`/`deleteTemplate`'s coach_id filter to be role-aware instead of hardcoded (defensive fix, original repro not fully confirmed).
+
+**Decided:**
+- 3-agent review caught and fixed a stale-cache race between Client/Personal view switches and a Chart.js instance leak on every search keystroke, before the Performance restructure was pushed.
+
+---
+
 ## 2026-07-08 (session 21) — Fixed solo-runner broken-screen bug + exercise-picker keyboard shrink; confirmed exercises-library cleanup — PUSHED (298d88d, b1aa50c)
 
 **Context:** Session opened as `/hello-claude`, but the user had Plan Mode active mid-ritual, which meant the preview server never actually started at Step 1 — this caused a false 40-test Playwright failure scare later in the session (root-caused correctly: checked server status before assuming a regression, per the systematic-debugging discipline, rather than repeating the les-025 "flaky/fatigue" mistake). Session ran under a tight remaining usage budget (started at 9% weekly, flagged to Jake throughout); several process decisions (skip full multi-agent review on the second fix, stop before the bigger backlog items) were made explicitly with Jake given that constraint.
