@@ -4,6 +4,30 @@ _Last updated: 2026-07-11 (session 25)_
 
 ---
 
+## 🚨 Beta blocker surfaced 2026-07-11 — a new coach signs up to a COMPLETELY EMPTY app
+
+**Status: 🗓 Needs scoping. Highest beta risk identified so far.**
+
+Verified in code: `signUp` (app-core.js:332) creates the auth user, and the `handle_new_user` trigger creates **only** the `profiles` row (deliberately — the les-006 fix). There is **no starter data of any kind**. A brand-new PT lands on:
+
+- **0 exercises** ← the hard blocker: you cannot build a workout without them, and the only route is typing each one in by hand
+- 0 templates · 0 programs · 0 clients
+
+**Jake has never experienced this.** His account has 200+ exercises accumulated over months of building. The app is excellent *once populated* and close to unusable *before* — and every beta PT starts at zero. A beta user's first session is data entry, not coaching.
+
+**Scope (needs a decision):** ship a default exercise library on coach signup — how many, which ones, editable/deletable, and whether a sample template/programme comes with it (the "copy-paste simplicity + sensible default" product principle already in [[project-coachapp]] argues yes). Consider whether the existing `scripts/seed-test-data.js` exercise list is the starting point.
+
+### Raised 2026-07-11, logged but NOT prioritised (Jake's explicit call — recorded so they aren't lost)
+
+| Item | Why it may bite | Status |
+|---|---|---|
+| **Error monitoring / crash reporting** | `log.error` only reaches the *user's own* browser console. A beta PT hits a crash and Jake never finds out. The 2026-07-10 empty-phase crash was caught only because Jake personally hit it. Without this, the beta teaches you little about what's actually breaking. | Raised, deprioritised |
+| **Backup / restore posture** | The 2026-07-11 data-loss bug destroyed real workouts. If that had hit a beta user, could they be restored? Supabase free-tier PITR is limited. Worth knowing the answer *before* strangers have data in there. | Raised, deprioritised |
+| **Beta ops — feedback channel + invite email deliverability** | No in-app route for a beta PT to report a problem. And the invite Edge Function has only ever mailed Jake's own addresses — spam-folder risk untested, and a client who never receives their invite is a dead beta account. | Raised, deprioritised |
+| **`max_rows = 200` cap** | Set during DB security hardening. A coach with >200 clients/templates/exercises silently truncates — this already bit once (Workouts page needed an explicit `.limit(100)`). | Known, unscoped |
+
+---
+
 ## 🐛 Session backlog — 2026-07-11 (session 25 part 2 — the Library bridge + a CRITICAL data-loss bug)
 
 _Jake's three asks turned out to be one problem: he'd built his personal program entirely with "+ Create new workout (this day only)", and there was no bridge from "built it in a program" to "reuse it". Building that bridge, the multi-agent review found a data-loss bug that was already live. Full repro steps in LOG._
