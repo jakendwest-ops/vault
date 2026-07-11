@@ -1,6 +1,20 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-10 (session 24)_
+_Last updated: 2026-07-11 (session 25)_
+
+---
+
+## 🐛 Session backlog — 2026-07-11 (session 25 — Personal Library page + a real cross-client RLS leak)
+
+_Jake asked a question rather than reporting a bug ("personal account does not have workouts > templates & exercise library page... correct?") — he was right. Building it required an `is_personal` split on `workout_templates`, and auditing that split surfaced a genuine cross-client RLS leak nobody knew about. Full detail in LOG._
+
+| # | Item | Priority | Status | Notes |
+|---|---|---|---|---|
+| 1 | **SECURITY — any client could read any OTHER client's workout template clones** | **🔴 Critical** | **✅ Fixed + confirmed red/green** | `Client reads workout templates` RLS policy scoped by `coach_id` alone, no `client_id` restriction. Clones carry `coach_id = coach, client_id = client`, so every client of the same coach matched. Reproduced live as a real client before fixing. Policy now requires `client_id is null`; own clones still resolve via `client_read_own_templates`. Also fixed a scalar `=` subquery that errors for any user with >1 clients row (the master account has two). |
+| 2 | **Personal/solo had no route to the template builder at all** | **🔴 High** | **✅ Shipped** | `renderWorkouts` diverted solo into the read-only session view, so reusable workouts could only be made inline from a phase slot (locked to one day). New solo-only `library` nav entry → `renderWorkoutLibrary` (extracted, coach's page untouched). app-core v3 / app-workouts v24. |
+| 3 | `workout_templates.is_personal` split | High | **✅ Shipped** | Required before the Library could open to solo — PT and solo share one `coach_id`, so a personal template would otherwise bleed into the real client-facing library. Mirrors `exercises.is_personal` (2026-07-10). 1537 existing rows → `false` (fix forward). **Deliberately NOT enforced at RLS** — see STATUS continuity block; enforcing it would break the client dashboard/calendar master-template embed. |
+| 4 | **BUG — program day-slot picker showed the PT's whole template pool to solo** | High | **✅ Fixed same session** | Pre-existing, independent of the Library feature. `openProgram`'s query had no role split. |
+| 5 | Review findings: `is_personal` clone carry-over was a silent no-op; 2 new tests could orphan `[E2E]` rows | Medium | **✅ Both fixed pre-push** | Clone sources were fetched via embedded selects omitting `is_personal` → `undefined` → dropped from insert → DB default. Not a live leak but a landmine. |
 
 ---
 

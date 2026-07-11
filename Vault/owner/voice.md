@@ -372,3 +372,11 @@ _No data yet — not observed this session._
 - No new sentence-shape or punctuation deltas beyond what's already banked.
 
 **No draft->ship diff available this session** (code fixes + docs, no external-facing prose drafted).
+
+**Additional signals — 2026-07-11 session 25 (Personal Library page + cross-client RLS leak)**
+
+- **Overrode his own just-selected option the moment the stakes were named.** Given an AskUserQuestion on how to handle the RLS gaps, he picked the *recommended* "push code now, fix RLS next session" — then, in his very next message, said **"lets fix now"**. Not a contradiction: the recommendation was framed around session-time cost, and once the gap was characterised as a real cross-client leak, cost stopped mattering. **New pattern: he will not defer a genuine security gap, even when handed a sanctioned, reasoned excuse to.** Distinct from the already-banked "ships small / defers polish" instinct — security is the category where that instinct inverts. When a security finding is on the table, do not pre-optimise the recommendation for his time; present the risk plainly and expect him to take the longer path.
+- **Opens a bug report as a question against his own mental model, not an assertion.** *"personal account does not have workouts > templates & exercise library page. This is where I need to create workouts that can be put into programs, correct?"* — states the observation, then asks for confirmation of *his understanding of the architecture*, not just the fix. Same shape as the already-banked "are you able to..." genuine-feasibility-check pattern, now applied to verifying his own model of how the app works. Answer the model question explicitly ("yes, you're right on both counts") before proposing the fix — he is checking his understanding, not just requesting work.
+- **"see screenshot"** (two words, attaching Supabase SQL output) and pasting raw JSON policy output with zero commentary — both consistent with the long-banked pattern of handing over verbatim tool/DB output and trusting it to be parsed. No new delta.
+
+**No draft->ship diff available this session** (code + SQL + docs, no external-facing prose drafted).
