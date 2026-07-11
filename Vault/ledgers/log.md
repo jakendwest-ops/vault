@@ -68,3 +68,11 @@ Also: repaired `seed-test-data.js`, which had NEVER worked (omitted required col
 4 commits (0a3ef1d, c4b1e67, 5134dd6, 6e6afb2 pushed; 8b9bb97 runner-table polish committed but deliberately NOT pushed). Full suite 124 passed / 2 skips / 0 failed.
 
 Session ended in planning: beta is 31 July and the #1 risk is RLS — three consecutive sessions found real gaps, all BY ACCIDENT, and /deploy-check's RLS check would have passed all three. Next session: build a behavioural RLS audit harness incl. cross-COACH isolation, which has never been tested.
+
+## 2026-07-11 — CoachApp session 25 (part 3)
+
+Jake used the runner in a real gym session and came back with 4 corrections — the most interesting being **remove the plate calculator**, a feature shipped only 8 days earlier because it was 'repeatedly requested' in the 2026-07-02 competitor research. It did not survive one real session. Same message reversed the pre-fill/'1-tap repeat' behaviour, another Hevy import: a pre-filled value is indistinguishable from one you actually entered, so a set could be ticked off without the weight ever being confirmed. **Lesson banked (les-039): the research said build it, the gym said remove it.** Committed as 8b9bb97 but deliberately NOT pushed, at his request.
+
+Session then pivoted to planning. The most valuable finding was something nobody had ever asked: **a brand-new coach signs up to a completely empty app.** handle_new_user creates only the profiles row — 0 exercises, 0 templates, 0 programs. You cannot build a workout without exercises, and the only route is typing each one in by hand. Jake has never seen this; his account has 200+ exercises accumulated over months. The app is excellent once populated and close to unusable before. Highest beta risk found so far, with beta 20 days out.
+
+Next session decided: **Security & beta gates** — a behavioural RLS audit harness including cross-COACH isolation, which has never been tested. Three consecutive sessions found real RLS gaps and all three were found by accident; /deploy-check's RLS check would have caught none of them.

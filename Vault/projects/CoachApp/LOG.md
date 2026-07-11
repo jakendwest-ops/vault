@@ -4,6 +4,38 @@ Newest first.
 
 ---
 
+## 2026-07-11 (session 25, part 3) — Runner table polish from real gym use; planning session; found a beta blocker nobody had asked about — COMMITTED NOT PUSHED (8b9bb97)
+
+**Context:** Jake used the runner in a real gym session and came back with 4 corrections, then pivoted the session to planning ("This whole session will be a planned one — review the kanban board/backlog and find anything that needs scoping"). He explicitly chose **commit but do not push** for the runner work.
+
+**Done — runner table polish (app-runner v20→v21, committed `8b9bb97`, NOT pushed):**
+- **RPE/RIR value no longer repeats its own column label.** The target bar rendered "RPE 8–9" *under* a column headed RPE. Value now carries the number only.
+- **Plate calculator REMOVED outright.** Shipped 8 days earlier (2026-07-10, v19) after "repeated requests" surfaced in the 2026-07-02 competitor research. Jake used it in a real session and asked for it gone — noise, not help. Deleted, not flagged off: `_PLATE_SIZES`, `_BAR_WEIGHT_KG`, `_calcPlateBreakdown`, `_updatePlateBreakdown`, the PLATES/SIDE target-bar column, the wizard hint, and its 5 tests.
+- **PREVIOUS column dropped; last session is now GHOST TEXT in KG/REPS.** The old 54px cell squashed both numbers into one string ("140kg × 6"). Each previous value now sits directly under the column it represents, and KG/REPS get the freed width. Falls back to the %1RM-derived target when a set has no history.
+- **Rows no longer auto-fill.** This reverses the v1 "1-tap repeat" pre-fill — a pre-filled value is indistinguishable from one you actually entered, so a set could be ticked off having never confirmed the weight was right. Rows start empty; you type what you did.
+- Runner suite 41 passed / 0 failed. Verified visually at 480px.
+
+**Bugs found + fixed (knock-ons of the no-auto-fill change, both caught by thinking the change through rather than by a test):**
+- `toggleTableSet`'s existing "require reps" guard was previously **never** hit (rows were always pre-filled). With empty rows it is hit *routinely*, and a silent no-op would read as a broken button to someone mid-set. It now warns ("Enter reps first").
+- **A back door that would have silently re-introduced auto-fill:** `renderRunnerLastSession` *wrote* last session's values into `tableRows` when the async fetch resolved after first paint. Left alone, the feature would have quietly come back the moment the fetch was slow. It now only repaints (so the ghost text appears), guarded by `_prevTablePaintKey` against a render loop.
+
+**Not a bug (recorded so it isn't re-investigated):** Jake reported Barbell Back Squat rendering the wizard instead of the table. He'd accidentally set the exercise **unilateral**, and `_isPlainStrengthExercise` correctly excludes any unilateral set. He self-corrected: *"may be a false flag from me."* No code change.
+
+**Also fixed:** the wiki roadmap's mermaid diagram, which I broke in the previous save — the `P7n` node label contained an unquoted apostrophe ("client's"). Every other node with special characters is quoted.
+
+**🚨 FOUND — beta blocker nobody had asked about:**
+**A brand-new coach signs up to a completely empty app.** Verified in code: `signUp` (app-core.js:332) creates the auth user, and `handle_new_user` creates **only** the `profiles` row (deliberately — the les-006 fix). A fresh PT gets **0 exercises**, 0 templates, 0 programs. You cannot build a workout without exercises, and the only route is typing each one in by hand. **Jake has never experienced this** — his account has 200+ exercises accumulated over months of building. The app is excellent *once populated* and close to unusable *before*, and every beta PT starts at zero. Needs scoping (default exercise library on signup). Beta is 31 July.
+Also raised and **deliberately deprioritised by Jake** (logged so they aren't lost): error monitoring (a beta PT's crash never reaches him — `log.error` only goes to their own console), backup/restore posture, beta ops (no feedback channel; invite emails have only ever been sent to Jake, so spam-folder risk is untested).
+
+**Decided:**
+- **Next session = Security & beta gates** (Jake's pick from a 3-way choice). Build a *behavioural* RLS audit harness — every table × every operation × every role, **plus a second coach and a second client** so cross-tenant isolation is finally tested. Rationale: three consecutive sessions found real RLS gaps and **all three were found by accident**; `/deploy-check`'s RLS check would have caught **none** of them (it only greps `qual = 'true'`, and every real leak had a normal-looking policy that simply checked the wrong column); and **cross-coach isolation has never been tested at all**.
+- Runner work **committed but not pushed**, at Jake's explicit request — it rides with the next push after review.
+- The plate calculator's whole arc is worth remembering: **the research said build it, the gym said remove it.** Eight days from ship to delete. "Repeatedly requested in competitor research" did not survive contact with real use.
+
+**Why:** Jake asked for a full planning pass with beta 20 days out. The most valuable output wasn't the 4 runner fixes — it was noticing that nobody had ever asked what a *new* user actually sees.
+
+---
+
 ## 2026-07-11 (session 25, part 2) — The Library bridge (copy program workouts → Library, tap-row picker, duplicate-week auto-extend); review found a CRITICAL live data-loss bug — PUSHED (5134dd6, 6e6afb2)
 
 **Context:** Jake asked three things that turned out to be one problem. He'd built his "Hybrid Weapon Experiment" personal program entirely with "+ Create new workout (this day only)" — which stamps `program_id`, and session 24 deliberately excluded program-owned templates from the reuse pool (the fix for the indistinguishable-duplicates bug). Correct fix, but it left **no bridge** from "built it in a program" to "reuse it": 6 workouts he'd otherwise retype by hand. His follow-up was the sharp one — *"if a user creates 3 'upper body' workouts in their library, how will they know which is which when adding them into the program?"* — which is not a naming problem at all, but the native `<select>` (an `<option>` can only hold plain text). And "Duplicate week" had vanished from his 1-week phase.
