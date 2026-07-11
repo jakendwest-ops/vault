@@ -4,6 +4,72 @@ Newest first.
 
 ---
 
+## 2026-07-11 (session 25, part 2) — The Library bridge (copy program workouts → Library, tap-row picker, duplicate-week auto-extend); review found a CRITICAL live data-loss bug — PUSHED (5134dd6, 6e6afb2)
+
+**Context:** Jake asked three things that turned out to be one problem. He'd built his "Hybrid Weapon Experiment" personal program entirely with "+ Create new workout (this day only)" — which stamps `program_id`, and session 24 deliberately excluded program-owned templates from the reuse pool (the fix for the indistinguishable-duplicates bug). Correct fix, but it left **no bridge** from "built it in a program" to "reuse it": 6 workouts he'd otherwise retype by hand. His follow-up was the sharp one — *"if a user creates 3 'upper body' workouts in their library, how will they know which is which when adding them into the program?"* — which is not a naming problem at all, but the native `<select>` (an `<option>` can only hold plain text). And "Duplicate week" had vanished from his 1-week phase.
+
+---
+
+### 🔴 CRITICAL DATA-LOSS BUG — full reproduction steps (Jake asked these be recorded)
+
+**Symptom:** a workout in Week 1 of a program is silently and permanently destroyed.
+
+**Reproduction:**
+1. Open a program → add a phase.
+2. Populate **Week 1** with at least one workout.
+3. Click **"Duplicate week"** on Week 1. (Week 2's rows now point at the **same `template_id`** as Week 1 — this is deliberate: duplication is "cheap by design", the copy only forks into an independent template when someone edits one of them, via `_resolveEditableTemplateId`.)
+4. Set a periodization type on the phase (Configure → Linear/Undulating).
+5. Click **"Generate weeks"**.
+6. **Week 1's workout is now gone.**
+
+**Root cause:** `generatePhasePeriodization` calls `_cleanupPhaseWeeksBeyond(phaseId, 1)` to clear weeks 2+ before regenerating. That function collected every `template_id` referenced by a stale week and ran a bare `db.from('workout_templates').delete().in('id', staleMasterTemplateIds)` — with **no ownership check and no still-referenced check**. Because the duplicated Week 2 shares Week 1's `template_id`, the cleanup harvested Week 1's own template off the Week 2 row and deleted it while Week 1's surviving row still pointed at it.
+
+Its sibling `deletePhaseWeek` had **both** guards — added by the multi-agent review on 2026-07-10. `_cleanupPhaseWeeksBeyond` never got the same fix. The two silently diverged.
+
+**Second variant of the same bug:** any **standalone library template** assigned into Week 2+ was also deleted outright by that same call — removing it from the Workouts library and from *every other program using it*. This is exactly the `deleteProgram()` bug fixed on 2026-07-10, in a second unfixed location. The new "copy to Library" feature makes library templates far more likely to be sitting in program weeks, so this would have got worse.
+
+**Proved, not reasoned:** reverted the single fixed line, ran the new regression test → `survived: 0` (the Week-1 workout genuinely gone). Restored the fix → `survived: 1`. Red/green.
+
+**Fix:** extracted `_deleteOwnedUnreferencedTemplates(templateIds, programId, phaseId)` — ownership check *and* still-referenced check — and both `deletePhaseWeek` and `_cleanupPhaseWeeksBeyond` now call it, so they cannot diverge again. Regression test added (`programs.spec.js`). Banked in STATUS.md's continuity block.
+
+**How it was found:** the pinned 3-agent review, not by inspection and not by any existing test. It surfaced only because this session's Duplicate-week change made a 1-week phase newly able to reach periodization range — the reviewer traced the consequence one step further than the diff.
+
+---
+
+**Done:**
+- **Copy program workout → Library.** New `_copyTemplateToLibrary` + `saveTemplateToLibrary` (per-workout button in the session-detail drawer, gated on `ctx.programId && !ctx.isClientPlan`) + `copyProgramWorkoutsToLibrary` (bulk button on the program page). Reuses `_cloneSharedMasterTemplate` via a new defaulted `overrides` param rather than duplicating its exercise-copy logic. **Idempotent** — a same-name library workout is skipped, so double-clicking is safe. Excludes periodization week-clones (derivatives, not sources). app-workouts v24→v25.
+- **Tap-row workout picker** replacing the native `<select>` (`_openWorkoutPicker`, modelled on `_openExercisePicker` — same modal shape, live filter, `visualViewport` keyboard sync). Rows show name + description + exercise preview. `_quickAssignPhaseWorkout` refactored to take a slot object instead of a `<select>` element; `_filterPwgOptions` deleted. Closes the two long-open complaints about this control (no feedback until opened; list grows unmanageable). app-programs v15→v16.
+- **Duplicate week auto-extends the phase** — `canDuplicateAny` gate dropped; `duplicatePhaseWeek` now UPDATEs `duration_weeks` instead of bailing. Bump happens **after** a successful insert (see below).
+- Added `description` to `openProgram`'s template select — applying last night's embed-select-allowlist lesson rather than rediscovering it.
+- **Process:** made roadmap.md a first-class mandatory step in `/save` (Jake's standing request); retired the daily-question cron (unused, redundant); corrected a stale roadmap entry (Area 3 #13 was still open despite shipping 2026-07-08).
+
+**Bugs found + fixed (multi-agent review — 7 real findings, all fixed pre-push):**
+- The CRITICAL data-loss bug above.
+- **Bulk copy deduped by NAME, not `template_id`** — three genuinely *different* workouts sharing a name (Jake's exact scenario) would have had only one copied, with the other two reported as neither copied nor skipped. Now deduped by id; copies run **sequentially** so each sees the previous one's writes; same-name collisions reported honestly as "skipped (same name already in Library)" rather than the false "already in your Library".
+- **The idempotency guard failed open.** `.maybeSingle()` *errors* when >1 row matches, and the discarded error yields `null` → the anti-duplicate guard would create *more* duplicates precisely when duplicates already existed. Also `.ilike()` treated the workout name as a **LIKE pattern** (`_` and `%` are wildcards). Both replaced with a plain fetch + JS compare.
+- **`duration_weeks` bumped before the copy was known to succeed** — a failed copy left the phase permanently claiming an empty week, which for an already-assigned client silently lengthens their program and shifts every later phase out. Moved after the insert.
+- **Picker had no re-entrancy guard** — a double-tap appended a second overlay sharing the same element ids, so results rendered into the buried copy. Same race that froze the runner's picker on 2026-07-04.
+- **Picker pool went stale after a copy** — the toast said "you can now reuse it in any program" but it wouldn't appear until reload. Added `_refreshProgramTemplates()`.
+
+**Test-harness bugs found + fixed (all latent, none product regressions):**
+- **`scripts/seed-test-data.js` had NEVER worked.** It omitted the required `exercise_name`/`exercise_type`, double-encoded `sets_json` as a **string** (the column is jsonb), and **never checked the insert's error** — so it failed silently while printing "Template exercises added". This meant the seed template "Push Day A" could not be rebuilt, which I only discovered *after* deleting it. Now fixed, error-checked, and idempotent (repairs an emptied template instead of skipping it).
+- **My own new test was poisoning the runner tests.** Its `finally` deleted the fixture program via raw SQL (bypassing `deleteProgram()`), so the phase cascade set `generated_from_phase_id = NULL` on its periodization clones — orphaning them into the standalone pool, where they sort **above "Push Day A"** (`[` < `P`) and got grabbed by the runner tests' "click the first Start button". 9 had accumulated. Test now sweeps its own clones.
+- **Two over-loose runner locators.** `text=KG` is a case-insensitive **substring** match, so it matched the target bar's "50 kg" and the PREVIOUS column's "80kg" as well as the intended "Kg" column header — a strict-mode violation the moment the exercise has a weight target or logged history. Tightened to `getByText(..., { exact: true })`.
+
+**Process failure worth banking:**
+- I piped `npm test` through `tail -8`. Playwright prints its summary as **failed → flaky → skipped → passed**, so the tail cut off an **"8 failed"** header and showed only "3 skipped / 115 passed" — a **false green**. It was caught *only* because the counts didn't reconcile against the declared total (126). **Always reconcile passed+failed+flaky+skipped against the declared total; never trust a truncated test summary.**
+
+**Found, NOT fixed (needs a decision):**
+- **Deleting a program orphans its periodization week-clones into the reusable template pool.** When the program (and so its phases) are deleted, `generated_from_phase_id` goes `SET NULL` — so a "Bench Press — W2" clone loses the only column marking it as a derivative and becomes indistinguishable from a genuine standalone template. It then escapes the ownership checks *and* clutters the picker. Same mechanism behind the picker clutter Jake reported on 2026-07-10 (that fix removed program-owned templates from the pool, but not these orphans). Options: change the FK to CASCADE, or have `deleteProgram` sweep clones before deleting the phases.
+
+**Decided:**
+- Fixing the picker properly (tap-row, not a richer `<option>`) was the right call because it closes three separate complaints at once — Jake's disambiguation question and the two pre-existing `<select>` complaints — rather than three patches.
+- The `text=KG` locators were genuinely too loose; tightening the *test* was correct, not contorting the seed data to fit a fragile assertion.
+
+**Why:** Jake's three asks were one problem, and the review's job is to look one step past the diff — which is exactly how it caught a data-loss bug that was already live and that no existing test covered.
+
+---
+
 ## 2026-07-11 (session 25) — Personal/solo Library page (Templates + Exercise Library); closed a REAL cross-client RLS leak found while auditing it — PUSHED (0a3ef1d, c4b1e67)
 
 **Context:** Jake opened with a question, not a bug report: *"personal account does not have workouts > templates & exercise library page. This is where I need to create workouts that can be put into programs, correct?"* — he was right on both counts. Solo had no route to the template builder at all: `renderWorkouts` explicitly bundles `solo` in with `client` and diverts both to the read-only session view, so solo's only way to create a workout was the inline "+ Create new workout (this day only)" dropdown in a program phase, which locks the template to that one day slot. No way to build a *reusable* one. Chose a separate nav entry (his call, via AskUserQuestion) over extra tabs on the existing Workouts page, since solo still needs that page's "Up next" hero/accordion.

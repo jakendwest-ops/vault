@@ -56,3 +56,15 @@ Auditing that split surfaced a **real cross-client RLS leak nobody knew about**:
 Key judgment call: **deliberately did NOT enforce is_personal at RLS**, despite the finding being phrased as a security gap. Tracing the embed chains first showed it would have silently nulled the client dashboard/calendar master-template embed (the sessions-23/24 PostgREST failure mode). is_personal answers 'which library is this in', not 'who may read this'.
 
 2 commits (0a3ef1d, c4b1e67), CI green, 119 Playwright passing. app-core v3 / app-programs v15 / app-workouts v24.
+
+## 2026-07-11 — CoachApp session 25 (part 2)
+
+Built the **Library bridge** — Jake's three asks turned out to be one problem. He'd built his personal program entirely with `+ Create new workout (this day only)`, which stamps program_id, and session 24 deliberately excluded those from the reuse pool — leaving NO bridge from 'built it in a program' to 'reuse it'. Shipped: copy program workouts to Library (per-workout + bulk, idempotent), a tap-row workout picker replacing the native `<select>` (an `<option>` can only hold plain text, which is exactly why three 'Upper Body' workouts were indistinguishable), and Duplicate-week auto-extend.
+
+The multi-agent review on that work found a **CRITICAL data-loss bug already live**: Duplicate week → Generate weeks DESTROYED the Week-1 workout. `_cleanupPhaseWeeksBeyond` deleted every template a stale week referenced with no ownership and no still-referenced check — while its sibling `deletePhaseWeek` had both, added the day before. Duplicated weeks share the source's template_id by design, so cleanup harvested Week 1's own template and deleted it. Proved red/green (revert the fix → survived=0). Both now share `_deleteOwnedUnreferencedTemplates`. 6 more review findings fixed.
+
+Also: repaired `seed-test-data.js`, which had NEVER worked (omitted required columns, stringified jsonb, swallowed its own insert error while printing success). And nearly pushed a false green — piped test output through `tail`, which cut off an '8 failed' header; caught only because the counts didn't reconcile against the declared total.
+
+4 commits (0a3ef1d, c4b1e67, 5134dd6, 6e6afb2 pushed; 8b9bb97 runner-table polish committed but deliberately NOT pushed). Full suite 124 passed / 2 skips / 0 failed.
+
+Session ended in planning: beta is 31 July and the #1 risk is RLS — three consecutive sessions found real gaps, all BY ACCIDENT, and /deploy-check's RLS check would have passed all three. Next session: build a behavioural RLS audit harness incl. cross-COACH isolation, which has never been tested.

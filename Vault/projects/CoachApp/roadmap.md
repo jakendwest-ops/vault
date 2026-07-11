@@ -4,6 +4,22 @@ _Last updated: 2026-07-11 (session 25)_
 
 ---
 
+## 🐛 Session backlog — 2026-07-11 (session 25 part 2 — the Library bridge + a CRITICAL data-loss bug)
+
+_Jake's three asks turned out to be one problem: he'd built his personal program entirely with "+ Create new workout (this day only)", and there was no bridge from "built it in a program" to "reuse it". Building that bridge, the multi-agent review found a data-loss bug that was already live. Full repro steps in LOG._
+
+| # | Item | Priority | Status | Notes |
+|---|---|---|---|---|
+| 1 | **🔴 DATA LOSS — Duplicate week → Generate weeks DESTROYED the Week-1 workout** | **🔴 Critical** | **✅ Fixed, proved red/green** | `_cleanupPhaseWeeksBeyond` deleted every template a stale week referenced with **no ownership and no still-referenced check** — while its sibling `deletePhaseWeek` had both (added 2026-07-10). A duplicated week shares the source's `template_id` (cheap-until-forked), so cleanup harvested Week 1's own template and deleted it. Also destroyed any **standalone library template** assigned into Week 2+, removing it from every program using it. Both call sites now share `_deleteOwnedUnreferencedTemplates`. Found by the review, not by any test. **Full reproduction steps in LOG.** |
+| 2 | Copy program workouts → Library (per-workout + bulk, idempotent) | High | **✅ Shipped** | The missing bridge. app-workouts v25. |
+| 3 | Tap-row workout picker replacing the native `<select>` | High | **✅ Shipped** | Answers Jake's "how do I tell three Upper Bodys apart" — an `<option>` can only hold plain text. Rows now show name + description + exercises. **Also closes the two long-open `<select>` complaints** (no feedback until opened; list grows unmanageable — both open since 2026-07-03). app-programs v16. |
+| 4 | Duplicate week auto-extends the phase | Medium | **✅ Shipped** | Was hidden entirely on a 1-week phase with no explanation. `duration_weeks` bumped **after** a successful insert. |
+| 5 | Review findings: name-dedupe dropped distinct workouts; idempotency guard failed open (`.maybeSingle()` errors on >1); `.ilike()` treated the name as a LIKE pattern; no picker re-entrancy guard; stale picker pool | Medium | **✅ All fixed pre-push** | |
+| 6 | **BUG — deleting a program orphans its periodization week-clones into the reusable template pool** | 🟠 Medium | **Found, NOT fixed — needs a decision** | The phase cascade sets `generated_from_phase_id = NULL`, so a "Bench Press — W2" clone loses the only column marking it a derivative and becomes indistinguishable from a genuine standalone template. It escapes the ownership checks AND clutters the picker. **Same mechanism behind the picker clutter Jake reported 2026-07-10** (that fix removed program-owned templates from the pool, but not these orphans). Options: FK → CASCADE, or have `deleteProgram` sweep clones before deleting phases. |
+| 7 | `scripts/seed-test-data.js` had never worked | Low | **✅ Fixed** | Omitted `exercise_name`/`exercise_type`, stringified `sets_json` (column is jsonb), and swallowed its own insert error while printing "Template exercises added". Now error-checked and idempotent. |
+
+---
+
 ## 🐛 Session backlog — 2026-07-11 (session 25 — Personal Library page + a real cross-client RLS leak)
 
 _Jake asked a question rather than reporting a bug ("personal account does not have workouts > templates & exercise library page... correct?") — he was right. Building it required an `is_personal` split on `workout_templates`, and auditing that split surfaced a genuine cross-client RLS leak nobody knew about. Full detail in LOG._
@@ -128,7 +144,7 @@ _Jake live-tested a real gym session plus the wider app end-to-end and reported 
 | # | Item | Priority | Status | Notes |
 |---|---|---|---|---|
 | 12 | Personal account calendar — text overflows outside the calendar cells | Medium | Confirmed | app-calendar-goals.js:119-153 — zero calendar CSS classes exist anywhere (all inline styles); grid cells lack `min-width:0`, text is `white-space:nowrap` — classic CSS Grid overflow. |
-| 13 | Personal > Workouts page shows 1RMs — redundant with Progress section | Low | Confirmed location | app-workouts.js:277-296 (line numbers drifted — now app-workouts.js:293-311). Ties to item 10's PBs/Performance restructure — remove once that lands. See session backlog 2026-07-08 Area 3 #10 for the confirmed destination-UI scope. |
+| 13 | Personal > Workouts page shows 1RMs — redundant with Progress section | Low | **✅ Done 2026-07-08 (e600010)** — _was stale, ticked 2026-07-11_ | Already removed as part of item 10's Performance/Personal Bests restructure, which moved the Workouts-page 1RM grid into Personal Bests "removing its now-dead backing query" (LOG, session 22). Verified 2026-07-11: `client_1rms` has **zero** references in `app-workouts.js`. This row sat marked open for 3 days and was nearly rebuilt from scratch during planning — the reason `/save` now has a mandatory roadmap-reconciliation step (Step 3b). |
 | 14 | Personal > Calendar should also show the workout-preview slider (parity with elsewhere) | Medium | Confirmed gap | `showClientDayDetail` (app-calendar-goals.js:215-263) never calls `openSessionDetail` — only renders exercise name + set count. |
 | 15 | Personal account should structurally mirror the Client view exactly — the only difference should be no client/PT linkage | Future | Design decision | Jake's own architecture statement. Confirmed real diffs exist today: `renderSoloDashboard` (app-dashboard.js:583-819) lacks the sudo/branding banners `renderClientDashboard` (219-580) has, and has a unique 4-tile solo-stats row the client dash doesn't. Needs a dedicated session — affects items 13/14 too. |
 
