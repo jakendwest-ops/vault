@@ -1,6 +1,17 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-11 (session 25)_
+_Last updated: 2026-07-12 (session 26)_
+
+---
+
+## 🐛 Session backlog — 2026-07-12 (session 26 — security & beta gates; a live storage breach caught by /deploy-check)
+
+_Built the behavioural RLS audit and ran /deploy-check end-to-end for the first time. It found a **live cross-tenant storage leak** (any coach could read/delete any client's progress photos — bucket was private, but object policies were scoped by bucket_id alone). Fixed red→green. Also fixed Personal Bests (never displayed for anyone), caught 2 real runner bugs in a pre-push review, removed the progress-photos feature, wrote the ICO breach procedure. Full detail in LOG._
+
+- **✅ Done:** behavioural RLS audit (`rls-audit.spec.js`, 4 probes + self-test); storage security (`storage-privacy.spec.js`); storage leak fix (`fix-storage-rls-2026-07-12.sql`); Personal Bests fix (app-progress v10); runner review fixes (app-runner v22); progress-photos feature removal (app-clients v5); ICO procedure; /deploy-check run + skill hardened (RLS + storage steps → behavioural).
+- **🐛 New bug (open, Medium):** the suite erodes the E2E client's `workout_logs` (13→4 across runs) — a test deletes fixture logs it doesn't own without recreating them. Not breaking anything yet; Probe B's new lower bound will now fail loudly if it hits zero. Likely in runner.spec.js or client-workout.spec.js.
+- **🚨 Confirmed open (CRITICAL):** the empty-new-coach beta blocker (see Beta prep) — still not started, top candidate for next session.
+- **Coverage note:** Probe B is still vacuous on `performance_logs` (0 seeded rows); Probe C covers client_programs/1rms/check-ins but not performance_logs reads. Minor — seed those if extending.
 
 ---
 
@@ -212,7 +223,7 @@ _Jake live-tested a real gym session plus the wider app end-to-end and reported 
 |---|---|---|
 | Client list | ✅ Done | |
 | Add client | ✅ Done | |
-| Client profile (tabs) | ✅ Done | Overview / Goals / Workouts / Weight / Performance / Programs / Photos / 1RMs |
+| Client profile (tabs) | ✅ Done | Overview / Goals / Workouts / Weight / Performance / Programs / 1RMs. **Photos tab removed 2026-07-12** (Jake, "for now"); bucket + data retained, restorable from git history at app-progress v9. Removed alongside fixing a live cross-tenant leak in its storage policies — see CRITICAL.md storage section + `breach-procedure.md` §6. |
 | Edit client details | ✅ Done | |
 | Update client email (modal) | ✅ Done | |
 | Invite client via email | ✅ Done | Edge Function — stamps user_id + invited_at at send time |
@@ -423,10 +434,13 @@ _Jake's master account gets a third "Personal" pill. Solo user's own client reco
 
 _Date pushed from the original Jul 22–31 window to a single date, 31 July, per Jake's 2026-07-06 decision. Sessions 9–12 (Jul 2–3) went entirely into the runner redesign — a deliberate, research-backed pivot (approved after the Jul 2 competitor research), not drift. The pre-beta gates below still haven't moved and remain the real risk to hitting even the new date._
 
+- **🚨 BETA BLOCKER (highest risk, not started):** a brand-new coach signs up to a **completely empty app** — 0 exercises/templates/programs; `handle_new_user` creates only the profiles row. Can't build a workout without exercises. Needs: ship a default exercise library on signup. Top candidate for next session.
 - **⚠️ Pre-beta gates — action before 31 July:**
-  - **ICO breach-notification procedure** — still undocumented (CRITICAL.md marks it ❌)
+  - ✅ **ICO breach-notification procedure** — **Done 2026-07-12** (`breach-procedure.md`; CRITICAL.md now ✅).
+  - ✅ **`/deploy-check` run end-to-end** — **Done 2026-07-12**, first time ever. 8/9 gates green; found + fixed a live cross-tenant storage leak in the process. One manual gate left: a live client smoke test (Jake-only).
+  - ✅ **Supabase redirect URL** — confirmed present (`…github.io/coachapp/**` + Site URL). 2026-07-12.
   - **Delete old Jake West client record** from the PT account (see "Solo user" section)
   - **Supabase Pro upgrade** — unlocks leaked-password (HaveIBeenPwned) protection
-- Full walkthrough, Playwright suite, Supabase redirect URL audit, `/deploy-check`
+- Full walkthrough, Playwright suite (127 passing), `/deploy-check` — ✅ redirect-URL + RLS + storage gates done
 - **Beta invites: single date, 31 July** (previously staggered Jul 25/28/31 — simplified to one date)
 - ✅ **1RM system built + tested** (done 2026-07-01) — drives %1RM in programs

@@ -24,10 +24,17 @@ _Always-relevant facts. Changes append to the timeline block at the bottom — n
 
 | Bucket | Visibility | Expiry | Notes |
 |---|---|---|---|
-| `logos` | Private | 604800s (7 days) | PT logo upload; MIME-restricted to image types; 5 RLS policies |
-| `progress-photos` | Private (fixed 2026-06-28) | 3600s (1hr) | Client body photos; use `createSignedUrls` batch; 2 RLS policies |
+| `logos` | Private | 604800s (7 days) | PT logo upload; MIME-restricted to image types; policies scoped to `auth.uid()` |
+| `progress-photos` | Private | 3600s (1hr) | Client body photos. **Feature UI removed 2026-07-12** ("for now"); bucket + data retained. Now exactly 2 correctly path-scoped policies (client↔own `clients.id` folder, coach↔own clients' folders). |
 
-**Rule: all buckets must be private. No exceptions.**
+**Rule: private is NOT sufficient — object policies must be path-scoped too.**
+On 2026-07-12 `progress-photos` was `public = false` yet had 3 `storage.objects` policies scoped by
+`bucket_id` alone (`"Public read"` SELECT, `"Authenticated delete"` DELETE, `"Authenticated upload"`
+INSERT). Result: any *authenticated* coach could read/delete/write **any** client's photos — a live
+cross-tenant leak, reproduced (a second coach downloaded a real 1.79MB photo and deleted another).
+Dropped all three (`scripts/fix-storage-rls-2026-07-12.sql`); proven closed by
+`tests/storage-privacy.spec.js`. A `select public from buckets` check passed this leak clean — only
+the behavioural probe caught it. See `breach-procedure.md` §6.
 
 ---
 
@@ -40,7 +47,7 @@ _Always-relevant facts. Changes append to the timeline block at the bottom — n
 | Right to erasure | ✅ `delete_current_user()` RPC + Settings UI |
 | Data residency | ✅ eu-west-1 (Ireland) |
 | Privacy policy page | ✅ `/privacy-policy.html` live (v158, 2026-06-29); consent checkbox links to it |
-| ICO breach notification | ❌ Process not documented — needed before beta |
+| ICO breach notification | ✅ Documented — `breach-procedure.md` (72h rule, decision tree, mandatory log, worked example). 2026-07-12 |
 
 ---
 

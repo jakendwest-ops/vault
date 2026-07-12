@@ -4,6 +4,38 @@ Newest first.
 
 ---
 
+## 2026-07-12 — Security & beta gates: a live storage breach caught by the first-ever /deploy-check (v21→v22 runner, v9→v10 progress, v4→v5 clients)
+
+**Done:**
+- **Behavioural RLS audit** (`tests/rls-audit.spec.js`) — the standing security regression gate, replacing /deploy-check's toothless `qual='true'` grep (which caught none of this project's 4 real RLS gaps). Four checks: Probe A (a second coach who owns nothing reads 0 rows from all 22 tables), Probe B (a client sees only their own rows + a positive `CLIENT_MUST_SEE` lower bound so a *denied* query can't pass as clean), Probe C (a client CAN read their assigned program through the full nested embed — the s23/s24 unexpected-DENY class), and a self-test that plants its own victim to prove the detector fires. Created **Coach B** (`coachapp.e2e.pt2@gmail.com`) — the first second-coach account in the project's history; cross-coach isolation had never been testable.
+- **Storage security** (`tests/storage-privacy.spec.js`) — anonymous-fetch test + cross-tenant coach test, both owning their fixtures. Not covered by the `public.*` RLS audit.
+- **`/deploy-check` run end-to-end for the first time.** 8/9 gates green. Strengthened the skill's RLS step (→ run the harness) and storage step (→ run the behavioural probe, not `select public from buckets`).
+- **ICO breach-notification procedure** — `breach-procedure.md` (72h rule, ICO/individual decision tree, mandatory internal breach log, and today's storage leak as a worked example of *non*-notification). CRITICAL.md flipped ❌→✅; its storage section rewritten with the "private is not sufficient — policies must be path-scoped" rule.
+- **Progress-photos feature removed** (Jake, "for now") — Photos tab + `renderClientPhotos`/`upload`/`delete` gone; bucket + data retained, restorable from app-progress v9. Orphan dev photo deleted.
+- Pushed 5 commits (`8b9bb97`→`8652491`); CI green; live serves app-runner v22.
+
+**Bugs found + fixed:**
+- 🔴 **LIVE cross-tenant storage leak (headline).** `progress-photos` was `public=false` yet had 3 `storage.objects` policies scoped by `bucket_id` alone — `"Public read"` (SELECT), `"Authenticated delete"` (DELETE), `"Authenticated upload"` (INSERT). **Any authenticated coach could read AND delete any client's progress photos.** Reproduced live: PT2 (owns nothing) downloaded a real 1.79MB photo in full and deleted another. Root cause: the correctly path-scoped "Client/Coach manages photos" policies existed, but these 3 over-broad ones widened every verb to the whole authenticated user base. Fix: dropped all 3 (`scripts/fix-storage-rls-2026-07-12.sql`), proven red→green. A `select public from buckets` check passed this leak clean — only attempting the download as the wrong tenant caught it.
+- 🔴 **Personal Bests never displayed — for anyone, ever.** `renderProgressPBs` embedded `performance_exercises` (a table that does not exist); PostgREST rejected the whole query; the error was discarded; the page showed "No personal bests logged yet" forever. Every PB anyone logged was saved and never shown. The columns were plain fields on `performance_logs` all along (app-progress v8→v9). Found by the audit enumerating referenced tables.
+- 🔴 **`addTableRow` still auto-filled weight+reps from last session** (caught by the pre-push multi-agent review, found by 2 agents independently). The pre-fill was removed from `_ensureTableRows` and left alive in its sibling — a fix-the-class miss. "+ Add set" produced a row pre-filled in solid black; tick it and you logged a set you never performed. Exactly the bug `8b9bb97` claimed to remove.
+- 🔴 **Wizard still rendered "RPE 8–9" under a column labelled RPE** (same review). The de-dup only landed in the table because the wizard held a *verbatim copy* of `_buildTargetCols`, whose own comment falsely claimed it was shared. Deleted the copy; wizard now calls the shared pair. **My fix for this then broke the runner entirely** (`repsStr is not defined`, 26 tests red) — caught by the full suite, fixed, before push.
+- **`toggleTableSet` now requires a weight**, not just reps — dropping the pre-fill made a weightless ticked set the easy path, silently zeroing volume, hiding it from PB detection, and decaying next session's ghost text.
+- **The RLS self-test was resting on stranded fixtures** — it only fired because 2 `[E2E-RLS] Victim Client` rows had been left in the real DB by an earlier run; on a clean DB it would `skip` (neither pass nor fail). Now plants+cleans its own victim. Swept the strays.
+- **The seed's workout-history block had NEVER run** — skipped whenever sessions exist (always), so 3 wrong column names (`log_id` not `workout_log_id`, `workout_log_exercise_id` not `exercise_id`, missing `exercise_type`) sat unexercised. It also logged only Bench Press while the table tests use Overhead Press, and omitted `set_number` (which `_prevSetsByIndex` keys on: `null-1` === -1). Net: ghost text had **zero** real coverage; `expect(row.weight).toBe('')` passed even against the old pre-filling code. Fixed all of it; ghost-text test has teeth now.
+- PB regression test now verifies its own cleanup (an RLS-denied DELETE removes 0 rows without erroring — it was stranding a row in the real DB each run).
+
+**UNVERIFIED (banked):**
+- **/deploy-check gate #6 — live client smoke test** — needs Jake to log in as a real client on the live site (dashboard stat, Workouts Start buttons, session history). Only unconfirmed gate.
+
+**Decided:**
+- **Storage is a distinct RLS surface** — the `public.*` audit does not cover it; `storage.objects` needs its own behavioural probe. Both /deploy-check and the harness were blind to it until this session.
+- **"Private bucket" ≠ secure** — a `public=false` bucket with `bucket_id`-only object policies is wide open to every authenticated user. Only path-scoped object policies are safe.
+- **Removed feature = remove code, keep data** (when "for now"): retain the bucket + contents, delete UI, flag any orphaned personal data (the loose photo) for a decision, and do not re-enable uploads without also restoring the delete path (GDPR erasure).
+- Progress-photos leak assessed **non-notifiable** to the ICO — no real data subject's data was accessed by a real party (only test accounts + Jake's own dev photo existed). Logged per the new procedure. The same bug post-beta would very likely be notifiable — the distinction is who's actually on the platform.
+
+**Why:**
+- Three "a config-read passed a real leak" lessons this session: the old RLS `qual='true'` grep, and now the storage `public` flag. The through-line is that only *attempting the operation as the wrong tenant* finds these — config reads describe intent, not behaviour. Both checks are now behavioural probes in CI.
+
 ## 2026-07-11 (session 25, part 3) — Runner table polish from real gym use; planning session; found a beta blocker nobody had asked about — COMMITTED NOT PUSHED (8b9bb97)
 
 **Context:** Jake used the runner in a real gym session and came back with 4 corrections, then pivoted the session to planning ("This whole session will be a planned one — review the kanban board/backlog and find anything that needs scoping"). He explicitly chose **commit but do not push** for the runner work.

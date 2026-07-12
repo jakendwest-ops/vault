@@ -400,3 +400,10 @@ _No data yet — not observed this session._
 - **Picks the unglamorous option when the risk case is made.** Offered runner polish (visible, fun) vs a scoping session vs security gates, he chose **security** — then still had the runner work committed so it wasn't lost. Consistent with the banked "will not defer a genuine security gap" pattern (2026-07-11 part 1), now confirmed twice in one day.
 
 **No draft->ship diff available this session** (code + planning, no external-facing prose drafted).
+
+**Additional signals — 2026-07-12 session 26 (security & beta gates; storage leak)**
+
+- **Near-total delegation once a plan is blessed.** This entire long session — a live security fix, a new test-probe class, a feature removal, the breach doc — ran on one-word turns: "continue", "approved", "proceed", "success". He set the scope ("begin Security & beta gates") and then got out of the way. Consistent with the banked "silence + continuing = positive feedback"; the escalation here is that he'll do it across a whole session of consequential security work without asking to see intermediate detail. He trusts the gates to hold and reads the summaries.
+- **"remove the progress photos feature for now"** — same reverse-without-ceremony shape as the plate calculator, but note "for now": he distinguishes *remove the code* from *burn the data*. The right reading (confirmed by not being corrected) was: pull the UI, keep the bucket/data restorable, don't treat it as permanent. When he says "for now", preserve the ability to undo.
+- **Runs SQL I hand him and reports back in one word.** He pasted the pg_policies output in full when asked, ran the three DROP statements, and replied "success". He is a reliable hands-on operator for the DB half I can't reach — give him exact, paste-ready SQL and a one-line "what to look for", and he closes the loop fast. Don't over-explain; he's already done it.
+- **No draft->ship diff** (code + tests + security docs; no external-facing prose in his voice).
