@@ -4,6 +4,37 @@ Newest first.
 
 ---
 
+## 2026-07-12 — 3 program-workflow bugs from real use, then the empty-app beta blocker SOLVED (app-programs v17, app-workouts v26, app-core v4, +starter-content v1)
+
+_Same-day continuation of the "Security & beta gates" session (below). Two workstreams: (A) three program bugs Jake hit in real use, (B) the new-coach starter-content feature built through the full brainstorm→spec→plan→implement→review flow._
+
+**Done (A — program-workflow bugs, `4d8813c`):**
+- **Stale view after assigning a program** — `saveAssignProgram`/`saveAssignProgramToClient` fired `_cloneProgramForClient` **fire-and-forget**, then re-rendered/navigated before the `client_program_workouts` rows every calendar/Workouts/dashboard view reads had been created → "old data until refresh", most visible when the program starts today. Now awaited, behind an "Assigning…" state, with a re-render after.
+- **"Update all same-named sessions" overwrote the whole workout** — `_applyToAllSessions` deleted every exercise in each target and re-inserted the source's full list, wiping any exercise a target had that the source didn't. Replaced with `_propagateExerciseChangeToTemplates`: applies ONLY the changed exercise, matched **by name** (Jake's choice), captured at edit time in `window._lastExerciseChange` (add/update/delete). Update/delete both act on all same-named rows (consistent).
+- **Editing a program workout didn't reach assigned copies** — the calendar reads the client's cloned copy (made at assignment), which a later master edit never touched. Now `_checkClientPlanPropagation` syncs assigned copies of the edited session automatically via `_assignedCopiesForSession`: the user's OWN solo copies silently (Jake's actual pain), real clients' copies only behind an "Update assigned clients?" confirm.
+
+**Done (B — new-coach starter content, `25b978c`→`90c6d9e`):**
+- Solved the **empty-app beta blocker** (highest open beta risk): a brand-new coach's first login seeds ~40 curated exercises + an "Example — Full Body A" workout (6 exercises linked to the library by name) + an "Example — 4-Week Foundation" program (Mon/Thu). `js/starter-content.js` (`STARTER_EXERCISES`/`STARTER_TEMPLATE`/`STARTER_PROGRAM` + `_seedStarterContent`/`_markSeeded`), wired into `loadUserInfo`, gated by a new `profiles.starter_seeded` flag. Migration applied by Jake (existing profiles backfilled `true` — nobody retro-seeded). Not auto-assigned to the coach's calendar; examples labelled "Example —", deletable. Built via the superpowers brainstorm→spec→plan flow (docs/superpowers/specs + plans committed).
+
+**Bugs found + fixed (by the multi-agent reviews before push):**
+- **(A) stale-change replay on delete** — if `deleteTemplateExercise`'s pre-delete name-fetch returned null, `window._lastExerciseChange` kept the PREVIOUS edit's change and silently applied it to the solo copy. Now cleared on failed capture (skip propagation).
+- **(A) real-client consent bypass** — `_applyToAllSessions` wrote to real clients' SIBLING copies with no confirm, while the edited session's client copies were gated. Now the bulk path silently syncs only the user's own solo copies; real clients are never touched without the per-session confirm.
+- **(B) partial-failure stranding** — the seed's idempotency guard keyed only on exercise count, so a mid-sequence DB error left the flag false and, on retry, `count>0 → markSeeded → stop` permanently abandoned the coach with a visibly-broken empty "Example" template or orphan program. Fixed by making the seed **fully resumable**: every artifact created only if missing, flag flips only when all six exist. Resume regression test added.
+
+**Tests added:** surgical-propagation + `_applyToAllSessions` end-to-end + `_assignedCopiesForSession` classification (programs.spec.js); onboarding seed + `loadUserInfo` wiring + partial-seed resume (onboarding.spec.js, via PT2). Full suite 133 passed / 2 skipped / 0 failed, reconciled.
+
+**UNVERIFIED (banked):**
+- **New-coach onboarding needs a real signup to confirm live** — Playwright can't drive a fresh email signup; the seed function + wiring are proven via PT2, but "a genuine new coach lands on a populated dashboard" needs Jake to create a throwaway account. (Added to STATUS open to-dos.)
+
+**Decided:**
+- **Propagation matches by exercise NAME** (Jake's choice over by-position), leaving a target that lacks the exercise untouched.
+- **Editing a program workout auto-syncs assigned copies:** solo silently, real clients behind a confirm ("ask when clients assigned").
+- **Starter content is automatic on first login** (not opt-in), a **curated set** (not cloned from Jake's real library), delivered **app-side + a flag** (not a DB trigger — the list stays editable JS). Sample program **not auto-assigned**.
+- **Tests that borrow the shared PT2 account must self-heal + clean up in `finally`** — a strand from an assertion-order cleanup compounded PT2 to 80 exercises mid-build; fixed by sweeping at test start AND in finally.
+
+**Why:**
+- Both program bugs and the storage leak trace to the same lesson bank: the propagation subsystem is where CoachApp's data-loss bugs live (delete-all/reinsert-all shapes), and the multi-agent review keeps catching real issues in the first cut — it has now paid off on three consecutive pushes.
+
 ## 2026-07-12 — Security & beta gates: a live storage breach caught by the first-ever /deploy-check (v21→v22 runner, v9→v10 progress, v4→v5 clients)
 
 **Done:**

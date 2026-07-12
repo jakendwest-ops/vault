@@ -1,6 +1,16 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-12 (session 26)_
+_Last updated: 2026-07-12 (session 26 cont.)_
+
+---
+
+## 🐛 Session backlog — 2026-07-12 (session 26 cont. — 3 program bugs from real use + the empty-app beta blocker SOLVED)
+
+_Same-day continuation. (A) Fixed 3 program-workflow bugs Jake hit in real use: stale view after assigning a program, "Update all same-named sessions" overwriting the whole workout, and program-workout edits not reaching the assigned calendar (now auto-sync — solo silent, clients confirm). (B) **Solved the empty-app beta blocker** end-to-end (brainstorm→spec→plan→implement→review): new-coach first-login seeds ~40 exercises + a sample workout + a sample program. Both workstreams' multi-agent reviews caught real issues, all fixed. 6 commits, all pushed, CI green, 133/2/0. Full detail in LOG._
+
+- **✅ Done:** program-workflow fixes (app-programs v17, app-workouts v26); new-coach starter content (`js/starter-content.js`, app-core v4, +starter-content v1); `profiles.starter_seeded` migration (`scripts/add-starter-seeded-2026-07-12.sql`); spec + plan under `docs/superpowers/`.
+- **🗓 Live-verify (Jake):** a real new-coach signup lands on a populated dashboard (only thing Playwright can't drive).
+- **Decisions locked:** propagation matches by exercise NAME; program-edit auto-syncs assigned copies (solo silent / clients confirm); starter content is automatic + curated + app-side-with-a-flag; sample program not auto-assigned.
 
 ---
 
@@ -434,7 +444,7 @@ _Jake's master account gets a third "Personal" pill. Solo user's own client reco
 
 _Date pushed from the original Jul 22–31 window to a single date, 31 July, per Jake's 2026-07-06 decision. Sessions 9–12 (Jul 2–3) went entirely into the runner redesign — a deliberate, research-backed pivot (approved after the Jul 2 competitor research), not drift. The pre-beta gates below still haven't moved and remain the real risk to hitting even the new date._
 
-- **🚨 BETA BLOCKER (highest risk, not started):** a brand-new coach signs up to a **completely empty app** — 0 exercises/templates/programs; `handle_new_user` creates only the profiles row. Can't build a workout without exercises. Needs: ship a default exercise library on signup. Top candidate for next session.
+- ✅ **BETA BLOCKER SOLVED 2026-07-12 (`90c6d9e`):** a brand-new coach's first login now seeds ~40 exercises + a sample workout + a sample program (`js/starter-content.js`, gated by `profiles.starter_seeded`, resumable). Not auto-assigned; examples deletable. Live-verify pending: a real new signup landing on a populated dashboard.
 - **⚠️ Pre-beta gates — action before 31 July:**
   - ✅ **ICO breach-notification procedure** — **Done 2026-07-12** (`breach-procedure.md`; CRITICAL.md now ✅).
   - ✅ **`/deploy-check` run end-to-end** — **Done 2026-07-12**, first time ever. 8/9 gates green; found + fixed a live cross-tenant storage leak in the process. One manual gate left: a live client smoke test (Jake-only).
