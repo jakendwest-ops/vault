@@ -4,6 +4,37 @@ Newest first.
 
 ---
 
+## 2026-07-17 — OS rebuild + os-lint + the first-ever full-file review found 18 latent bugs; fixed 20, pre-push review caught 4 of my own regressions (app-core v5, app-clients v6, app-dashboard v4, app-programs v19, app-progress v11, app-runner v23, app-workouts v28) — COMMITTED, awaiting Jake's push
+
+_Long session. Built the approved OS rebuild, then it immediately paid for itself: the staleness lint and the first-ever full-file review each found real problems, and the pre-push review caught four regressions I introduced while fixing the findings._
+
+**Done — the OS rebuild (`~/.claude`, backed to claude-config):**
+- **`os-lint.mjs`** — the staleness lint (Jake's idea, the load-bearing piece). 9 checks: dead tool refs, dead file refs, PII-in-skills, module-count drift, retired-terms, frontmatter, full-file-review marker, stale bug rows (>7d), gate-never-fired. **Silent when clean, RED when not.** Proved each detector RED→GREEN on planted faults before trusting it (the deploy-check standard). Wired into a SessionStart hook in `coachapp/.claude/settings.json` (Jake pasted it; **confirmed firing live this session**).
+- **Caught 2 things the hand audit missed:** a hardcoded UUID in run-coachapp, and **live E2E account passwords in plaintext** in the playwright skill — in a dir /save pushes to GitHub. All PII stripped from skills (sql-safety client name+UUID, owner email/uid, run-coachapp UUID, playwright passwords, deploy-check email).
+- **hello-claude 319→~185 lines, 33 standing behaviours → 13.** Bug-ledger intake rule + closure rule (a Jake-reported item closes ONLY on his confirmation or a red→green test). /save rewritten: intake-first, 9-module cache-bust (starter-content was invisible to the app-*.js glob), skills-PII gate before the claude-config push. Archived post-build-review + security-audit (out of dispatch; hard delete still needs Jake). Corrected the stale "/code-review ultra doesn't exist" claim in 4 skills — it DOES exist in the extension, just billed/user-triggered.
+
+**Done — the first-ever full-file review (multi-agent, whole app-workouts/runner/programs):** found **18 latent bugs** in code no recent diff had touched — exactly the blind spot it exists for. Fixed all, plus 2 more the pre-push review surfaced. Headlines:
+- 🔴 **Stored XSS** — client-authored session name/exercise name/notes rendered unescaped in the COACH's DOM → JWT theft, defeats RLS. Fixed + added `escapeAttr` (JS-then-HTML escape order). Then the pre-push review found the first pass was fix-the-instance: swept the whole codebase (renderClient1RMs, sudo button, renderClients, dashboard feed, program/phase/exercise names) — grep now confirms **zero** raw user-controlled interpolations.
+- 🔴 **Live data-loss chain** — stale `_phaseWorkoutContext` (cleared in one place, leaked on every other modal exit) could stamp a personal template into a coaching program, then Generate-weeks wiped real clients' weeks 2+. Root-fixed: the context is now an argument owned by `showCreateTemplateModal`.
+- 🔴 **Live crash** — a zero-session phase crashed the client Programs tab (the guard existed in the verbatim twin since 07-10, never ported — 5th fix-the-class miss).
+- **Client had the coach's Delete button + could overwrite coach notes** (openWorkoutLog, no role gate). **deleteProgram re-ran the debris factory** (bypassed `_removeAssignmentAndClones`). **deletePhase/removePhaseWorkout orphaned templates** (widened the shared guard to phaseIds[], all 5 delete paths now share it). Silent-failure fixes: `_cloneProgramForClient` now fails loud, `_assignedCopiesForSession` uses flat joins not a nullable embed, showLogSessionModal filters personal/week-clones out of the client dropdown. Runner: finish-screen teardown (was destroyed mid-typing by a live rest timer), runnerGoBack no-op-during-rest, editRunnerSet double-tap-saves-old-values, 25 modal mounts routed through `mountModal` (re-entrancy), the 1RM `block` ReferenceError. Jake's own report: deleting a template ejected solo out of the Library (solo-specific — now routes via `_templateGoBack`).
+
+**Bugs I introduced, caught by the pre-push review before push (the gate earning its place):**
+- A `coach_id` filter that excluded the solo record (solo's coach_id is NULL) — would have killed solo sync. **4th bug of this exact shape.**
+- deleteProgram continuing even if clone-cleanup failed → orphaned data. Now fails closed.
+- deleteTemplate routing `backTo:'client'` (a sentinel) to `navigate('client')` → "Page not found".
+- The 1RM re-render wiping in-progress set inputs (no flush-first). Fixed + RPE/RIR buttons had the same gap.
+
+**Tests:** 9 new regression tests in `tests/regression-2026-07-13.spec.js`, all proven RED-before/GREEN-after (the 1RM one isolated to its exact line, since the bug lived entirely inside this diff). Full suite **151 passed / 2 skipped / 0 failed** (reconciled to 153 declared). 7 modules cache-bust-bumped.
+
+**Jake's 8 new reports** (banked to the ledger the moment he sent them — intake rule's first real use): Hevy plagiarism Q (answered: low risk, stop calling it "Hevy-style" publicly), delete-button-size/swipe-to-delete (deferred, needs scoping), add-exercise-to-program propagation gap, 1RM-target-as-percentage, mobile calendar overspill, delete-template nav (FIXED), Workouts-page delay (RE-OPENED at original 07-06 date — closed on a guess before), create-template slowness.
+
+**Decided:**
+- The solo/NULL-coach_id filter trap is now the **4th** bug of its shape — the single most reliable way to break this app. Banked to lessons.jsonl.
+- Pre-push review is non-negotiable even when it's my own careful work: it caught 4 regressions in minutes. The spend limit killed it once mid-session (raised, re-ran).
+
+**UNVERIFIED (banked):** all fixes are Playwright + review verified, NOT yet confirmed by Jake in a real gym/coaching session. The push itself is Jake's to run.
+
 ## 2026-07-12 — 3 program-workflow bugs from real use, then the empty-app beta blocker SOLVED (app-programs v17, app-workouts v26, app-core v4, +starter-content v1)
 
 _Same-day continuation of the "Security & beta gates" session (below). Two workstreams: (A) three program bugs Jake hit in real use, (B) the new-coach starter-content feature built through the full brainstorm→spec→plan→implement→review flow._
