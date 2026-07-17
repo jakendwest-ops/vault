@@ -4,7 +4,24 @@ Newest first.
 
 ---
 
-## 2026-07-17 — OS rebuild + os-lint + the first-ever full-file review found 18 latent bugs; fixed 20, pre-push review caught 4 of my own regressions (app-core v5, app-clients v6, app-dashboard v4, app-programs v19, app-progress v11, app-runner v23, app-workouts v28) — COMMITTED, awaiting Jake's push
+## 2026-07-17 (2nd save) — claude.ai starter-pack review → repo-root CLAUDE.md + os-lint `claude-md` drift check; fixed the wiki roadmap's broken Mermaid diagram (no app code, no version bumps)
+
+_Same day, after the OS-rebuild save above was pushed. No `js/` changes → no cache-bust._
+
+**Done:**
+- **Reviewed Jake's claude.ai brainstorm** about structuring a Claude-Code project (a greenfield "starter pack": WORKFLOW/SPEC/TASKS/CLAUDE.md, TS/React/Prisma stack). Verdict: it mostly duplicated or was **bettered by** what CoachApp already has, and assumed the wrong stack; its central point ("hooks not instructions") is exactly what os-lint already is. The one real gap: the repo had **no CLAUDE.md/README** — all grounding was Vault-only, loaded only when hello-claude runs, so any session skipping the ritual (bare `claude`, the standalone CLI, a subagent, another machine) started blind. Added a lean, accurate `coachapp/CLAUDE.md` (bed9625) — real stack, 9-module map, load-bearing invariants (solo/NULL-coach_id trap, is_personal≠security, master-direct deploy, never-push-without-review), Vault-as-system-of-record pointer.
+- **Extended `os-lint` with a `claude-md` check** (claude-config 53103e8): scans CLAUDE.md for stack/module drift, dead file/tool refs, and list-completeness. Proved RED→GREEN on 4 planted faults. Widening the shared module-count regex to catch plural "modules" **caught a real stale ref** — `deploy-check` still described the old 8-module world; fixed.
+- **Fixed the wiki `guide-coachapp-roadmap` Mermaid diagram** (Jake reported still broken): node labels `P7g` (`.limit(100)`) and `P7j` (`(e600010)`) had **unquoted parentheses**, which Mermaid parses as node-shape syntax — same class as the 2026-07-11 unquoted-apostrophe break. Quoted both; confirmed no other unquoted `(`/`'` labels; bumped the page's stale "Last updated".
+
+**Decided:**
+- Do NOT adopt the rest of the starter pack (SPEC/WORKFLOW/PLAN_TEMPLATE, its settings with a wrong push-to-main deny, the Obsidian repo-as-vault restructure) — all duplicate or conflict with existing, more-mature systems.
+- **Pinch-to-zoom is disabled** (`index.html:5` `maximum-scale=1.0`) — Jake surfaced this via the VS Code Problems panel (a Microsoft Edge Tools accessibility flag; the other 18 warnings there are inline-style noise, harmless). He chose to look at it, then invoked /save → **deferred to a ledger row** (investigate the iOS-input-zoom trade-off + `font-size:16px` fix first). Not built this session.
+
+**Why:** an independent brainstorm reaching the same "hooks over instructions" conclusion validated the OS-rebuild direction; the one genuinely new idea (a repo grounding file) was cheap and plugged a real hole, and is now itself machine-checked so it can't rot.
+
+---
+
+## 2026-07-17 — OS rebuild + os-lint + the first-ever full-file review found 18 latent bugs; fixed 20, pre-push review caught 4 of my own regressions (app-core v5, app-clients v6, app-dashboard v4, app-programs v19, app-progress v11, app-runner v23, app-workouts v28) — PUSHED 134140f (CI green)
 
 _Long session. Built the approved OS rebuild, then it immediately paid for itself: the staleness lint and the first-ever full-file review each found real problems, and the pre-push review caught four regressions I introduced while fixing the findings._
 

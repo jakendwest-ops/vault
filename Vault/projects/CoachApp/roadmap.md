@@ -15,6 +15,11 @@ _Last updated: 2026-07-17 (OS rebuild + first-ever full-file review)_
 - **Still open (os-lint RED):** 3 stale bug reports 11–12 days old — Workouts-page delay (RE-OPENED at 07-06), 1RM 0.5kg shift, My Progress Strength tab live test.
 - **Jake's 8 reports banked** — see the ledger; delete-template nav FIXED, the rest open/deferred/answered.
 
+**2nd save (same day):**
+- **Repo-root `CLAUDE.md` added** (coachapp `bed9625`) after reviewing a claude.ai starter-pack brainstorm — the repo had no in-repo grounding, so ritual-less sessions started blind. Guarded by a new os-lint `claude-md` drift check (claude-config `53103e8`); widening its regex caught + fixed a stale 8-module ref in `deploy-check`. Rest of the starter pack rejected (wrong stack / duplicates existing systems).
+- **New to-do (deferred, Low):** pinch-to-zoom disabled — `index.html:5` `maximum-scale=1.0` blocks phone zoom (accessibility). Investigate the iOS-input-zoom trade-off + `font-size:16px` fix before changing.
+- **Fixed the wiki `guide-coachapp-roadmap` Mermaid diagram** — two node labels had unquoted parentheses (`.limit(100)`, `(e600010)`); quoted them (same class as the 07-11 apostrophe break).
+
 ## 🐛 Session backlog — 2026-07-12 (session 26 cont. — 3 program bugs from real use + the empty-app beta blocker SOLVED)
 
 _Same-day continuation. (A) Fixed 3 program-workflow bugs Jake hit in real use: stale view after assigning a program, "Update all same-named sessions" overwriting the whole workout, and program-workout edits not reaching the assigned calendar (now auto-sync — solo silent, clients confirm). (B) **Solved the empty-app beta blocker** end-to-end (brainstorm→spec→plan→implement→review): new-coach first-login seeds ~40 exercises + a sample workout + a sample program. Both workstreams' multi-agent reviews caught real issues, all fixed. 6 commits, all pushed, CI green, 133/2/0. Full detail in LOG._
