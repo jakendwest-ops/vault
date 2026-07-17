@@ -1,8 +1,19 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-12 (session 26 cont.)_
+_Last updated: 2026-07-17 (OS rebuild + first-ever full-file review)_
 
 ---
+
+## 🐛 Session backlog — 2026-07-17 (OS rebuild + full-file review found 18 latent bugs; pushed 134140f)
+
+**OS/tooling (shipped to `~/.claude`, not app code):** built the approved OS rebuild — `os-lint.mjs` staleness hook (9 checks, silent-when-clean, each proven RED→GREEN on a planted fault), bug-ledger intake+closure rules, hello-claude 33→13 standing behaviours, `/save` PII gate + 9-module cache-bust, PII stripped from skills, `post-build-review`+`security-audit` deleted. os-lint now backed up to claude-config (hooks/+state/ allowlisted).
+
+**App fixes (pushed, `134140f`, all 7 modules bumped — app-core v5, app-clients v6, app-dashboard v4, app-programs v19, app-progress v11, app-runner v23, app-workouts v28):** the first-ever full-file multi-agent review found **18 latent bugs** in code no diff had touched; fixed those + 4 regressions the pre-push review caught. Stored XSS (client→coach, defeats RLS) fully swept codebase-wide; live data-loss chain (stale `_phaseWorkoutContext`); zero-session-phase crash; client had coach's Delete+notes; `deleteProgram`/`deletePhase`/`removePhaseWorkout` debris/orphan fixes (one shared guard, all 5 delete paths); silent-failure fixes; runner teardown/re-entrancy/1RM fixes; solo delete-template eject. 9 red→green tests; suite 151/2/0.
+
+**New this session:**
+- **`feedback_solo_null_coach_id` (les-042):** a `coach_id` filter silently excludes the solo record — now 4 bugs of this exact shape. Solo tests skip in CI, so only the pre-push review catches this class.
+- **Still open (os-lint RED):** 3 stale bug reports 11–12 days old — Workouts-page delay (RE-OPENED at 07-06), 1RM 0.5kg shift, My Progress Strength tab live test.
+- **Jake's 8 reports banked** — see the ledger; delete-template nav FIXED, the rest open/deferred/answered.
 
 ## 🐛 Session backlog — 2026-07-12 (session 26 cont. — 3 program bugs from real use + the empty-app beta blocker SOLVED)
 
