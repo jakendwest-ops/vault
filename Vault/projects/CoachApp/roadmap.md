@@ -1,6 +1,20 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-17 (OS rebuild + first-ever full-file review)_
+_Last updated: 2026-07-18 (week-tabs redesign)_
+
+---
+
+## 🐛 Session backlog — 2026-07-18 (week-tabs redesign — Programs builder + client Workouts page)
+
+_From Jake's live feedback (screenshots of his Personal account): the Workouts-page workout-detail slider felt redundant and weeks/days looked alike; the Programs builder was unappealing and scrolled sideways on mobile. Brainstormed → approved a unified **week-tabs** model → built both surfaces → multi-agent review → pushed 07febfa. CI green._
+
+- **✅ Done:** unified week-tabs model on both surfaces — weeks = tabs, a day/slot opens its workout inline, the session-detail slider is removed from both, the builder stacks days on mobile (no sideways scroll) / grid on desktop, and builder slots carry Edit / Remove / Save-to-Library inline. app-workouts v29, app-programs v20, main.css v5. New `tests/week-tabs.spec.js` (builder + read-page regressions — the read page had **no** CI coverage before).
+- **✅ Fixed in review:** restored the per-workout Save-to-Library button (silently dropped when the slider was removed); escaped a pre-existing raw DAY-header interpolation (coach→client stored-XSS).
+- **🗓 Live-verify (Jake):** confirm both surfaces on his own account with his real programs.
+- **🆕 Found, deferred (Low):** `navigate('programs')` has no client role re-guard (RLS holds, safe today) — add a role check eventually.
+- **Decisions locked:** one shared week-tabs model across read + build; days stack on mobile, multi-column on desktop (builder only); tap a day/slot opens it inline (no slider); Save-to-Library kept as a per-workout action (Jake's call over bulk-only).
+
+**OS (same session):** os-lint gained a `stale-predictions` check (RED on any CoachApp prediction past `verify_by` still `outcome:null`; PTHub excluded), and hello-claude's manual "Step 8 — Predictions" was removed — the hook owns prediction staleness now. Proven RED→GREEN on fixtures; backed to claude-config.
 
 ---
 

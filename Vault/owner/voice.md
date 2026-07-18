@@ -415,3 +415,12 @@ _No data yet — not observed this session._
 - **"looks good for now"** approving the 40-exercise starter list — approval with the familiar reversible-decision hedge ("for now"). He signs off to keep momentum without over-investing in getting a curated list perfect up front; the content is editable JS he can revise later. Don't treat "looks good for now" as a demand for a second review pass — it's a green light.
 - **Reliable hands-on DB operator.** Asked to run a migration + paste a trigger definition, he did both immediately and pasted clean results. Give him exact, paste-ready SQL and one line on what to look for; he closes the loop fast. (Consistent with the storage-leak session.)
 - **No draft->ship diff** (code + tests + design docs; no external-facing prose in his voice).
+
+**Additional signals — 2026-07-18 session (week-tabs redesign)**
+
+- **Prefers to supply his own context over picking a presented option.** Twice answered an AskUserQuestion via the "Other" path — "let me type it first", "let me give you more feedback" — then typed specifics. When he has a concrete point he wants a free-text lane, not a menu. Offer options for genuine either/or calls; don't box him into a menu when he may want to redirect.
+- **Distinguishes his own apps sharply and holds fidelity to the current one.** "This looks like the PTHUB UI and not coachapp as it currently stands" — rejected a mockup for drifting toward a *different* app's visual language. A redesign must read as the existing app evolving, not a new skin; match the current design system, don't invent one.
+- **Won't approve a change he doesn't understand — asks for a concrete before/after example first.** "i dont undertand, please explain the example sceanrio on how the system works at the moment and then provide what it will look like after your fix", "what does your note mean", "whats is best in plain english". He wants the plain-English mechanism + a worked example before deciding, and keeps asking until it's clear. Lead with the example and the plain-English version; never ask him to approve on jargon alone.
+- **Terse sequenced delegation once satisfied:** "make the recommended change", "push and then /save", "1". Consistent with the long-banked minimal-word green-light pattern.
+
+**No draft->ship diff available this session** (code + a design mockup; no external-facing prose in his voice).

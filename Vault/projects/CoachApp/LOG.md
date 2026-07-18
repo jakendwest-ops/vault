@@ -4,6 +4,35 @@ Newest first.
 
 ---
 
+## 2026-07-18 — Week-tabs redesign (Programs builder + client Workouts page) + os-lint stale-predictions check (app-workouts v29, app-programs v20, main.css v5) — PUSHED 07febfa, CI green
+
+_Two workstreams. (A) OS: moved prediction-staleness from a manual ritual step into os-lint. (B) The main build: a brainstorm→design→build→review redesign of how phase→week→day→workout is shown, driven by Jake's live feedback._
+
+**Done — (A) OS / predictions (`~/.claude`, backed to claude-config):**
+- Jake asked whether the manual "Step 8 — Predictions" in hello-claude was redundant. It was: 16–18 CoachApp predictions were overdue and ungraded (some 12 days) — a grep nobody ran. Added an os-lint **`stale-predictions`** check (RED on any CoachApp prediction past its `verify_by` still `outcome:null`; PTHub excluded as a frozen project; added an `OSLINT_PREDICTIONS` env seam only to prove the detector). Removed hello-claude's Step 8; left a breadcrumb so it isn't re-added. Proven RED→GREEN on fixtures + RED against the real file (18 overdue). Flagged a data bug: duplicate `pth-090` id in predictions.jsonl.
+
+**Done — (B) Week-tabs redesign (`07febfa`):**
+- **One shared model on both surfaces.** Weeks became **tabs** (one week on screen), a day/slot **opens its workout inline**, and the full-screen session-detail slider was removed from both the client Workouts page and the Programs builder. Builder days **stack vertically on mobile (no more sideways scroll)** and go multi-column on desktop; builder slots expand to **Edit / Remove / Save-to-Library** inline. First phase open by default.
+- Code: `renderClientWorkoutsPage` weeks→tabs (`_selectReadWeek`, hidden per-week panels), slider link dropped, single-session name de-duped; `loadAllPhaseWorkouts` renders per-phase week tabs + only the active week (cached in `window._builderWeekData`, persists across mutations, clamps on delete); `renderPhaseWeekGrid` → responsive `.pwk-days` + inline-expand slots (`_toggleBuilderSlot`/`_editPhaseWorkout`, same editor ctx the slider passed); new `.week-tab`/`.pwk-*` CSS.
+- Verified live (Playwright ad-hoc + screenshots): builder desktop + 390px (scrollWidth = 390, no horizontal scroll), week-tab switching, inline expand/Edit; and the read page as a real client (3 tabs, week switch, slider count 0). New `tests/week-tabs.spec.js` self-provisions a 3-week program for both the builder and a real client — **the read page had zero CI coverage before this**.
+
+**Bugs found + fixed (multi-agent review, run after commit — spend limit killed the first attempt, Jake had it relaunched):**
+- **Regression I introduced: per-workout "Save to Library" silently dropped.** It lived in the builder's session-detail slider, which the redesign removed; `canSaveToLibrary` needed `ctx.programId` that only the old slot-click supplied. Restored as an inline action on the builder slot (`saveTemplateToLibrary(id, btnEl)`), removed the dead drawer branch + stale comment. Jake chose to restore (Option 1) over bulk-only. Added an end-to-end test (expand slot → Save to Library → assert a standalone Library copy).
+- **Pre-existing XSS (Agent A):** the DAY-header `sessionSummary` (coach template name) was interpolated **raw** into the client page — `escapeHtml`'d. (The 07-13 sweep had covered client→coach; this was coach→client, a different direction it missed.)
+- Test-only: the empty-phase regression test clicked the phase to open it, but the redesign opens the first phase by default (the click was collapsing it) — attach the pageerror listener before nav, open only if collapsed.
+
+**UNVERIFIED (banked):**
+- The redesign is Playwright- + screenshot-verified but **not yet confirmed by Jake on his own account with his real programs** (added to the ledger).
+
+**Decided:**
+- One week-tabs model shared across read + build; days stack on mobile, multi-column on desktop (builder only); tap a day/slot opens it inline (no slider); Save-to-Library stays a per-workout action.
+- Predictions belong in os-lint (a hook that always looks), not a manual checklist step nobody runs — consistent with the "hooks over instructions" direction.
+
+**Why:**
+- Jake's complaints were from real use of his own account (screenshots), so top priority. The redesign is structural, deliberately rendered in CoachApp's existing flat visual language after he flagged an early mockup "looks like PTHub, not CoachApp." The multi-agent review again earned its place — it caught a feature I'd silently dropped and an XSS I'd walked past.
+
+---
+
 ## 2026-07-17 (2nd save) — claude.ai starter-pack review → repo-root CLAUDE.md + os-lint `claude-md` drift check; fixed the wiki roadmap's broken Mermaid diagram (no app code, no version bumps)
 
 _Same day, after the OS-rebuild save above was pushed. No `js/` changes → no cache-bust._
