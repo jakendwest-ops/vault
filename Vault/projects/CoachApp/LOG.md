@@ -4,6 +4,35 @@ Newest first.
 
 ---
 
+## 2026-07-19 (2nd save) — Progress overhaul DISPLAY + analytics SHIPPED LIVE + SetGraph wiki ingest (app-progress v11→v20, app-runner v26→v28, app-clients v6→v7, app-dashboard v4→v5) — pushed 95e8e8f, CI green
+
+_Continued straight from the capture-layer session below. Built ②d (manual HR), the whole ③ display rebuild, a SetGraph-informed analytics pass, and a live runner block — then merged the entire `progress-overhaul` branch to master and deployed. The Progress page Jake screenshotted as "very sparse" is now the rich per-exercise + per-workout analytics he asked for._
+
+**Done (all LIVE):**
+- **②d Manual HR** — cardio avg/max-HR inputs in the runner (`_renderRunnerVsLast` sits above them); resting HR on the **bodyweight form** (`saveClientWeight` + the form in `renderProgressWeight` and both dashboard weight cards). Homed on the weight form, NOT check-in — the check-in form is client-dashboard-only so solo couldn't reach it (Jake's call via AskUserQuestion). New `resting_hr smallint` on `weight_logs` (migration run live). Save path (`applyHr` at app-runner.js) already persisted `avg_hr`/`max_hr` from ②b, so cardio HR was pure input-UI.
+- **③ Display rebuild + analytics** — `js/app-progress.js` largely rewritten. **B1:** metric_type-aware trend cards for EVERY type via `_metricPointsFor`/`_aggregateSeries`/`_exerciseRecords`/`_TREND_METRICS`, a rebuilt `_renderPerfExerciseList` (range selector 1M–All, weekly/monthly aggregation, a **Personal Records** block, a unilateral **L-vs-R dual-line** chart branch); cardio card (distance/duration/pace/avg-HR); timed/jump cards. **B2:** Intensity (kg/rep) metric. **B3:** rebuilt `renderProgressPerSession`/`_renderPerfSessionDetail` — per-workout summary tiles + per-metric **vs-previous deltas** (`_diaryDelta`) + compact **set-details line** (`_setDetailsLine`/`_diaryExMetrics`), history shape `{date,display,raw}`→`{date,m}`; **Per exercise is now the default** Performance sub-tab, "Per session"→"Recent sessions". **B4:** resting-HR trend chart in `renderProgressWeight`. **B5:** deleted the standalone Cardio-bests section + the now-dead `renderProgressCardio`. **B6:** `_METRIC_COLORS` palette on chips/lines/diary tiles.
+- **C — live runner "vs last session" block** (`_runnerVsLast`/`_renderRunnerVsLast`, app-runner.js) — Volume/Top/Reps/Sets for the current strength exercise vs its own previous session, from data already in `_runner.lastSession`. Initially gated on logging the first set; after Jake tested it live and saw nothing, changed to show **from the moment you reach the exercise** (last session as a "beat it" reference, ▲/▼ deltas fill in as sets are ticked).
+- **SetGraph wiki ingest** — 20 SetGraph iOS + App Store screenshots moved out of the mis-named `hevy-screenshots-2026-07-02/` into `raw/setgraph-screenshots-2026-07-19/` (Hevy folder restored to 27; 2 md5-confirmed dupes to a reversible `_duplicates/`); a SetGraph **analytics teardown** added to `coachapp-client-app-benchmarks` + manifest/index/log updated.
+- **Deployed** — merged the full 31-commit branch to master; pre-push hook green (56 smoke + checks); CI green. Second push `95e8e8f` for the runner-block-immediate tweak. 12 new Playwright tests (all TDD red→green); full suite 168 passed / 1 flaky (known login race) / 2 skipped.
+
+**Bugs found + fixed:**
+- **Multi-agent review C1 — duplicate global `_epley1RM`** (I added a 2nd in app-progress.js colliding with the pre-existing app-runner.js one; both classic scripts share global scope). The pre-push hook provably can't catch it (differing arg names). Renamed the app-progress copy to `_epleyEst1RM`. Review otherwise 0-blocking (security/solo/render all clean).
+- **3 stale `progress.spec.js` tests** asserted the old Performance UI (Cardio-bests, "Per session" sub-tab, `_perfExerciseCache`) — the full-suite run flagged them; updated to assert the NEW behaviour (les-045: triage stale-vs-regression, don't weaken).
+
+**UNVERIFIED (banked):**
+- The full analytics on Jake's REAL data across all exercise types, and on his phone, is still his to confirm (he checked the runner live + approved the immediate-block change, but not the whole Progress surface). Ledger: `fixed — awaiting Jake`.
+- **④ coach parity NOT built** — a coach viewing a client's profile still sees the old view; resting-HR is self-view only.
+- Diary shows `0/0/0` tiles for real sessions with no logged sets (his "Push Day A") — accurate but odd; ledger'd Low.
+
+**Decided:**
+- Analytics mirror SetGraph's DATA depth, never its design — our flat cards / wording ("Intensity", "vs last session") / colours / Chart.js line charts; no SetGraph microcopy/icons/social. Jake raised plagiarism twice; documented the deliberate divergences in the wiki teardown + commit messages.
+- The runner vs-last block shows immediately (reference from the start) rather than gating on logged data — discoverability beat "no noise before you log."
+- Resting HR on the bodyweight form (solo-reachable), avg-rest deferred (needs new capture), per-workout analytics = the enhanced diary now (session-trend chart later).
+
+**Why:** the capture layer built in the session below created rich data that was invisible until the display shipped — ③ is where the whole overhaul becomes real for the user, and Jake wanted it live to feel it in a real session.
+
+---
+
 ## 2026-07-19 — Progress overhaul: the whole CAPTURE layer, on a feature branch (branch `progress-overhaul`, NOT pushed) (app-workouts v29→v30, app-runner v23→v25)
 
 **Context:** Jake screenshotted his sparse Personal Progress page and named it a core coach feature — track bodyweight, exercise progressions (sets/reps/weight/volume), cardio (duration/times/effort/HR/resting HR), unilateral/AMRAP/duration, and jump height/distance over weeks→years. Ran the full flow: **brainstorm → spec → 4 sub-project plans → build**, on a feature branch (Jake's call) so master stays clean until the feature is coherent + reviewed.

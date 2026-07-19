@@ -431,3 +431,9 @@ _No data yet — not observed this session._
 - **Terse sequenced delegation once satisfied:** "make the recommended change", "push and then /save", "1". Consistent with the long-banked minimal-word green-light pattern.
 
 **No draft->ship diff available this session** (code + a design mockup; no external-facing prose in his voice).
+
+**Additional signals — 2026-07-19 session (progress overhaul + analytics, shipped live)**
+
+- **Verifies I actually engaged with source material he provided, doesn't take it on trust.** "did you read the screenshots i put into llm wiki and designed based on those" — after I built the analytics, he checked whether the design genuinely came from his dropped references. Cite concrete details from any source he gives (specific screens, exact values) to show the work; a summary claim won't satisfy him. (Casual/AI register.)
+- **Ships to LIVE to feel it, not just to a preview.** "push now so i can see how it behaves lives" — pushed the whole feature to production specifically to test it in a real session on his phone, then immediately gave real-use feedback ("i cannot see any changes in the runner"). The deploy IS the test rig for him; expect fast live feedback after any push, and treat "make it discoverable in real use" as the bar, not "passes tests".
+- **Terse approvals continue:** "approved", "continue" (×several), "1". The long-banked minimal-word green-light pattern held all session.

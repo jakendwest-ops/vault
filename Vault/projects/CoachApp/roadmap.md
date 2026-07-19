@@ -1,6 +1,6 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-19 (Progress overhaul — capture layer built on branch, unpushed)_
+_Last updated: 2026-07-19 (2nd save — Progress overhaul + analytics SHIPPED LIVE, pushed 95e8e8f; ④ coach parity remains)_
 
 ---
 
@@ -12,11 +12,11 @@ _Jake (screenshot of his Personal Progress page): "very sparse… does not show 
 - **✅ ②b Save-persistence** — runner save stops dropping unilateral/timed/distance/HR; stamps metric_type. app-runner v24.
 - **✅ ②a Builder picker** — 6-option metric_type picker replaces Strength/Cardio; drives set fields; derives legacy fields. app-workouts v30. **Model revised: 6 types, AMRAP stays a per-set flag.**
 - **✅ ②c Adaptive fast table** — runner fast table renders columns per metric_type; wizard retired for strength types (cardio only). app-runner v25. 8 stale runner tests updated.
-- **🗓 ②d** — manual HR inputs: per-cardio-set avg/max HR + resting HR on the check-in flow.
-- **🗓 ③ Display rebuild** — metric_type-aware per-exercise trend cards + range selector (1M/3M/6M/1Y/All) + smart aggregation; est-1RM (Epley) + volume + set-by-set; unilateral dual L/R lines; resting-HR on Body tab; **demote per-session to a recent-log** (per-exercise trends become the default); fix the finish-screen volume under-count for unilateral/timed. app-progress.
-- **🗓 ④ Coach parity** — factor the per-exercise+charts module to `(clientId, role)` and render it in BOTH My Progress and the coach's client-profile.
-- **Then:** multi-agent-review → cache-bust confirm → merge/push. Full suite 156/2/0 on the branch now.
-- **Decisions locked:** first-class metric_type drives capture+storage+charts; typed columns (not JSON); one adaptive fast table (wizard retired for strength); unilateral = two side-rows; AMRAP = per-set flag not a type; manual HR now (wearable sync deferred); one shared display component for coach+client; per-exercise trends are the progression tool, per-session demoted to a diary.
+- **✅ ②d Manual HR (SHIPPED)** — cardio avg/max-HR inputs in the runner + resting HR on the **bodyweight form** (moved off check-in — that form is client-dashboard-only, so solo couldn't reach it; Jake's call). `resting_hr` on `weight_logs` (migration `scripts/add-resting-hr-2026-07-19.sql`, run live). app-runner v26, app-clients v7, app-dashboard v5.
+- **✅ ③ Display rebuild + SetGraph-informed analytics (SHIPPED)** — app-progress v20, app-runner v28. **B1** metric_type trend cards for every type (top weight/est-1RM/volume, cardio distance-pace-HR, unilateral **L-vs-R** dual line, jump, timed) + **Personal Records** block (best set `100 kg × 10`) + range selector + smart weekly/monthly aggregation. **B2** Intensity (kg/rep). **B3** Recent-sessions **diary** — per-workout summary tiles + per-metric **vs-previous deltas** (▲/▼ + %) + set-details line; Per-exercise now the default sub-tab. **B4** resting-HR trend on Body tab. **B5** Cardio-bests section removed. **B6** our own metric colour palette. **C** live runner **"vs last session"** block (shows from the moment you reach a strength exercise). SetGraph analytics reference ingested into the wiki. _Deferred: the finish-screen volume under-count for unilateral/timed was NOT tackled — still open._
+- **🗓 ④ Coach parity** — factor the trend view to `(clientId, role)` and render it read-only in the coach's client-profile too. Today `renderClientPerformance`/`renderClientWeight` still show the OLD view; resting-HR input/chart are self-view only. **The queued fast-follow.**
+- **Done:** multi-agent-review (0-blocking, fixed a duplicate `_epley1RM`) → merged to master → **pushed live, CI green** (two deploys: `a02292e` then `95e8e8f`). Full suite 168/1-flaky/2-skip.
+- **Decisions locked:** analytics mirror SetGraph's DATA depth, never its design (our flat cards/wording/colours/Chart.js — anti-plagiarism, Jake flagged it twice); the runner vs-last block shows a "beat it" reference from the start (deltas fill in as you log — his live-use call); resting HR on the bodyweight form (solo-reachable); per-workout analytics = the enhanced diary now (session-trend chart is a later fast-follow); avg-rest deferred (needs new per-set timestamp capture). Prior locked: first-class metric_type drives capture+storage+charts; typed columns; one adaptive fast table; unilateral = two side-rows; AMRAP = per-set flag.
 
 **Also (process, this session):** `feedback_paste_sql_inline` — Jake wants runnable SQL pasted inline every time, never a file path. Two implementer subagents broke down mid-task (garbled return / uncommitted / stale report) → controller verified actual git+file state and took over; banked as a lesson. Concurrent Playwright runs against one dev server contaminated a full-suite result (8 false failures) — banked.
 
