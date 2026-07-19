@@ -14,6 +14,13 @@ _For future Vision: read before drafting anything on Jake's behalf. Register-tag
 - When he wants something added he often frames it as a question first ("can we add", "please can you") — treat as a request, not a negotiation
 - Granularity preference stated explicitly: "I personally like to include quite granular detail" — noted as a trait, not just a one-off
 
+**Additional signals — 2026-07-19 session (long delegated build)**
+
+- Delegates heavily once a direction is agreed: a long run of bare "continue" between checkpoints — he trusts the plan→build→review loop and doesn't want a play-by-play. Keep momentum; surface only genuine decision points.
+- Decisions are one-word/one-line and fast: "1", "A sounds right", "works for me", "continue". He picks quickly from a well-framed AskUserQuestion — invest in framing the options clearly, not in long preambles.
+- Flags friction bluntly and in caps when a workflow annoys him: "STOP TELLING ME TO PASTE THINGS WITHOUT GIVING THEM TO ME". Not anger — a direct correction of a process cost. Fix the behaviour immediately and durably (→ [[feedback-paste-sql-inline]]).
+- Asks for the reasoning when a choice is his to make: "what do you propose", "whats is best in plain english", "i dont understand, please explain the example scenario". He wants the recommendation + the why in plain terms before he decides, not a bare menu.
+
 **Additional signals — 2026-06-14 session 2**
 
 - Raises UX concerns from the PT's perspective, not just his own: "especially if the user has 10 clients" — he's thinking as a product designer, not just a user of his own tool

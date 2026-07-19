@@ -4,6 +4,34 @@ Newest first.
 
 ---
 
+## 2026-07-19 — Progress overhaul: the whole CAPTURE layer, on a feature branch (branch `progress-overhaul`, NOT pushed) (app-workouts v29→v30, app-runner v23→v25)
+
+**Context:** Jake screenshotted his sparse Personal Progress page and named it a core coach feature — track bodyweight, exercise progressions (sets/reps/weight/volume), cardio (duration/times/effort/HR/resting HR), unilateral/AMRAP/duration, and jump height/distance over weeks→years. Ran the full flow: **brainstorm → spec → 4 sub-project plans → build**, on a feature branch (Jake's call) so master stays clean until the feature is coherent + reviewed.
+
+**Done (all on `progress-overhaul`, 18 commits, unpushed; master unchanged at 07febfa):**
+- **① Data model** — `metric_type` (6 values, CHECK) on `exercises`/`workout_template_exercises`/`workout_log_exercises`; typed `avg_hr`/`max_hr`/`height_cm`/`side` on `workout_log_sets`. Migration authored, sql-safety'd, **run live by Jake in Supabase** + verified (schema + backfill correct, no NULLs, no misclassification). SDD subagent flow; Task-1 review caught a Critical (cardio name-backfill regex mislabeling Barbell Row/Cable Crunch as cardio via bare `row`/`run` substrings, made sticky by the fix-forward guard) → dropped the library cardio name-guess entirely (Jake's call).
+- **②b Save-persistence** (app-runner v24) — `saveRunnerSession`'s per-set row-builder rewritten to persist every captured shape (unilateral → two `side` rows; timed → duration; distance → metres; HR) + stamp `metric_type` on the logged exercise. Was silently dropping all of it. Round-trip test drives the real save.
+- **②a Builder picker** (app-workouts v30) — Strength/Cardio `<select>` → 6-option `metric_type` picker; `renderTemplateSets` metric_type-driven (Uni/Timed toggles removed, AMRAP/BW/Assist kept); save derives `exercise_type` + per-set flags (`_deriveFromMetricType`) + remembers metric_type on the library exercise. Supplementary backfill run live (23 timed_hold, 0 unilateral). Task-1 implementer subagent broke down (garbled return, uncommitted, stale report) — controller verified the diff was correct + committed + verified render in-page.
+- **②c Adaptive fast table** (app-runner v25) — the Hevy-style fast table renders columns per metric_type (weight_reps / unilateral L-R rows / timed / jump height+distance); wizard retired for strength types (cardio only, via `_isPlainStrengthExercise`→`_exMetricType`); add/swap carries metricType. Render done inline with screenshot verification of all 5 types at 390px. 8 stale runner tests (drove the old wizard) updated to the fast-table interaction via a new `logTableSet` helper.
+
+**Bugs found + fixed:**
+- **② review Critical** — library cardio name-backfill regex would have mislabeled real strength lifts as cardio, stickily. Dropped it.
+- **②a latent gap → fixed in ②c** — after ②a, `_confirmRunnerExerciseFromModal` (in-runner add/swap) read the new metric_type value into `ex.type` and built flags from removed toggles; ②c derives type/flags + sets `ex.metricType`.
+
+**Decided:**
+- **6 metric_types, AMRAP is a per-set flag not a type** (revised the spec's original 7): metric_type = intrinsic exercise identity; AMRAP is per-set intent tracking reps. Uni/Timed folded into metric_type (per-set toggles removed); BW/Assist stay per-set.
+- Typed columns over JSON; one adaptive fast table (wizard retired for strength); unilateral persists as two `side` rows; manual HR now, wearable sync later; per-exercise trends will be the progression view with per-session demoted to a diary; one shared display component for coach+client.
+- **Feature branch, not master** — 4 sub-projects land on `progress-overhaul`; merge/push only after ③/④ + multi-agent-review.
+
+**UNVERIFIED (banked):**
+- Entire capture layer is **unpushed + not live-exercised by Jake** — nothing user-visible until ③ ships. ① migration + ②a backfill ARE live in the DB.
+- **Week-tab labels show raw `week_number`** (Floor Press / Front Squat 1-week phase shows WEEK 2/3) — reported at session start, root-caused, fix plan was overwritten by the Progress spec; now a ledger row, NOT fixed.
+
+**Why:**
+- Capture must precede display — you can't chart data you don't save; the runner was silently discarding everything but plain weight/reps. Building capture first (①→②b→②a→②c) means ③ has real data to render.
+
+---
+
 ## 2026-07-18 — Week-tabs redesign (Programs builder + client Workouts page) + os-lint stale-predictions check (app-workouts v29, app-programs v20, main.css v5) — PUSHED 07febfa, CI green
 
 _Two workstreams. (A) OS: moved prediction-staleness from a manual ritual step into os-lint. (B) The main build: a brainstorm→design→build→review redesign of how phase→week→day→workout is shown, driven by Jake's live feedback._

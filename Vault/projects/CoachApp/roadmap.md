@@ -1,6 +1,24 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-18 (week-tabs redesign)_
+_Last updated: 2026-07-19 (Progress overhaul — capture layer built on branch, unpushed)_
+
+---
+
+## 🐛 Session backlog — 2026-07-19 (Progress overhaul — capture layer, branch `progress-overhaul`, NOT pushed)
+
+_Jake (screenshot of his Personal Progress page): "very sparse… does not show as much data as it needs to… a core feature for coaches tracking clients over weeks/months/years" — bodyweight, exercise progressions (sets/reps/weight/volume), cardio (duration/times/effort/HR/resting HR), unilateral/AMRAP/duration, and jump height/distance. Brainstormed end-to-end → spec → 4 sequenced sub-projects. Built the whole **capture layer** this session; the **display** (③) is where it becomes visible._
+
+- **✅ ① Data model** — `metric_type` (6 values) on exercises/template/log rows + typed `avg_hr`/`max_hr`/`height_cm`/`side` on `workout_log_sets`. Migration + supplementary backfill run live by Jake in Supabase. (`scripts/add-metric-type-2026-07-18.sql`, `scripts/backfill-metric-type-flags-2026-07-18.sql`)
+- **✅ ②b Save-persistence** — runner save stops dropping unilateral/timed/distance/HR; stamps metric_type. app-runner v24.
+- **✅ ②a Builder picker** — 6-option metric_type picker replaces Strength/Cardio; drives set fields; derives legacy fields. app-workouts v30. **Model revised: 6 types, AMRAP stays a per-set flag.**
+- **✅ ②c Adaptive fast table** — runner fast table renders columns per metric_type; wizard retired for strength types (cardio only). app-runner v25. 8 stale runner tests updated.
+- **🗓 ②d** — manual HR inputs: per-cardio-set avg/max HR + resting HR on the check-in flow.
+- **🗓 ③ Display rebuild** — metric_type-aware per-exercise trend cards + range selector (1M/3M/6M/1Y/All) + smart aggregation; est-1RM (Epley) + volume + set-by-set; unilateral dual L/R lines; resting-HR on Body tab; **demote per-session to a recent-log** (per-exercise trends become the default); fix the finish-screen volume under-count for unilateral/timed. app-progress.
+- **🗓 ④ Coach parity** — factor the per-exercise+charts module to `(clientId, role)` and render it in BOTH My Progress and the coach's client-profile.
+- **Then:** multi-agent-review → cache-bust confirm → merge/push. Full suite 156/2/0 on the branch now.
+- **Decisions locked:** first-class metric_type drives capture+storage+charts; typed columns (not JSON); one adaptive fast table (wizard retired for strength); unilateral = two side-rows; AMRAP = per-set flag not a type; manual HR now (wearable sync deferred); one shared display component for coach+client; per-exercise trends are the progression tool, per-session demoted to a diary.
+
+**Also (process, this session):** `feedback_paste_sql_inline` — Jake wants runnable SQL pasted inline every time, never a file path. Two implementer subagents broke down mid-task (garbled return / uncommitted / stale report) → controller verified actual git+file state and took over; banked as a lesson. Concurrent Playwright runs against one dev server contaminated a full-suite result (8 false failures) — banked.
 
 ---
 
