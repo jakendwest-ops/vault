@@ -4,6 +4,33 @@ Newest first.
 
 ---
 
+## 2026-07-23 (3rd save) — Weekly FULL-FILE review (9 days overdue) + GDPR export repaired + runner 1RM/delete (app-runner v29->v30, app-progress v21->v22) — pushed 7fe41e0, CI green
+
+_Ran the weekly full-file review for only the SECOND time in the project's life — 3 agents over app-workouts/app-runner/app-progress (6,918 lines). It found 12 issues in code no diff had touched. Fixed the two most serious plus Jake's two 10-day-old runner reports._
+
+**Done (LIVE):**
+- **GDPR export repaired.** It was not a complete disclosure: PT view exported coaching assets and NO health data; Personal view dropped the user's own programmes/templates — so the export's CONTENTS depended on a UI toggle. Both halves now run ungated. Also fixed: `workout_logs` exported `name, date` ONLY (200 sessions = 200 empty headers, zero sets/weights/reps/HR — the largest body of personal data in the schema, absent), `client_check_ins` (Art. 9 sleep/energy/stress/soreness) was in NO branch, and `resting_hr` + free-text notes were missing from stale select allowlists (les-036). The discarded-error `.single()` is gone.
+- **Runner (Jake's re-reports, 10 days open):** 1RM column shows the PERCENTAGE with the derived kg moved to the KG ghost text (which now outranks last session — on a %1RM set the prescription is the meaningful reference); Delete is a 32x32 × against the 44x44 tick, with the >=8px gap KEPT (a separate 2026-07-05 request with its own regression test).
+
+**The review's root cause was WRONG, and the correction is the lesson (les-049):**
+Two agents independently claimed a master account holds TWO `clients` rows so `.single()` threw and the export returned `{exportedAt, profile}`. I "verified" it by reading app-core.js:169-170 (which queries for a coached AND a solo row) and reported it to Jake as CRITICAL. Writing the red test disproved it: **`clients.user_id` is UNIQUE** — Postgres refuses the second insert. That failure mode is impossible. The real bug was the if/else beside it. **Two agents agreeing is one hypothesis with two votes, not two pieces of evidence** — neither could see a schema that isn't committed. A claim about DATA SHAPE can only be settled by the database. A test now pins the constraint.
+
+**Fixed in the pre-push review (all mine):**
+- The kg ghost was computed INSIDE the weight_reps branch, so UNILATERAL sets — which the builder does offer a %1RM field — would have shown a percentage and no load anywhere on screen. I had checked the wizard path and wrongly concluded it was safe; I never checked the sibling branches inside the table.
+- `tests/gdpr-export.spec.js` cleaned up with `.eq('weight_kg', 77.7)` and NO date filter — destroys every 77.7kg row on any date. Now deletes by the row's own id against a 2027 sentinel date. Audited: zero weight rows on the account, nothing lost. (Agent A called it Jake's production account; `PT_EMAIL` is the E2E account — real bug, smaller blast radius than reported.)
+- The UNIQUE-constraint probe gated cleanup on `!error` — the one branch where a row CANNOT be stranded was the only branch that cleaned up.
+
+**Three wrong diagnoses before a one-command bisect (les-050):**
+22 runner tests failed. I blamed my own tweaks, then concurrent-run contamination (which I *had* genuinely also done, making the wrong theory feel confirmed), then my tweaks again. `git stash` + run one test showed it failed at HEAD too — environmental. Cause: **4 `[E2E]` programmes stranded on the test client** when I killed suite runs mid-flight (their cleanup never ran). A zero-session "Empty Phase Program" sorted to the top of the Workouts page, so `.first()` clicked ITS Start button. Sweeping them took 22 failures to 1. **Bisect before theorising — a theory that describes something you really did is the most dangerous kind of wrong.**
+
+**Ledgered, NOT fixed — 10 more review findings**, incl. client-authored text rendered unescaped in the COACH's client-profile tabs (third instance of that shape), a custom/blank workout counted on the finish screen then thrown away on save, legacy unilateral/timed exercises logging as plain weight×reps (the `_exMetricType` fallback is dead code), Discard destroying a session with no confirm, four copies of the Epley formula with different validation, and "Best" PB actually showing "most recent" in two places.
+
+**Tests:** 184 declared = **183 passed / 2 skipped / 0 failed / 0 flaky**. New `tests/gdpr-export.spec.js` (3).
+
+**Why:** the weekly full-file gate is the only mechanism that has ever found this class — the pre-push review is diff-scoped by design and will never look at untouched code. Two runs, ~30 real bugs. It had been RED for 9 days because I surfaced it once at session start and never raised it again.
+
+---
+
 ## 2026-07-23 (2nd save) — Day rows show the real prescription + the picker says WHICH duplicate (app-workouts v31→v32, app-programs v21→v22, main.css v6→v7) — pushed b53dbfc, CI green
 
 _Jake's follow-up UX reports, scoped in plan mode then built. The pre-push review found **5 blocking** issues — 2 of them pre-existing, 3 of them regressions I introduced in my own refactor._
