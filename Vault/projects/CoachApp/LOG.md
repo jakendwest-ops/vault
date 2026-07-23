@@ -4,6 +4,33 @@ Newest first.
 
 ---
 
+## 2026-07-23 (4th save) — Jump runner + XSS + blank-workout fixes; intervals & units scoped (app-runner v30->v31, app-progress v22->v23) — pushed bd2e501, CI green
+
+_Jake reported the jump runner live ("only displays height in CM… no reps fields… missing the wizard entirely"); the other two came from the morning's full-file review. The pre-push review then found SIX blocking issues — two of them regressions the first two fixes introduced._
+
+**Done (LIVE):**
+- **Client->coach stored XSS closed** (third instance of this shape). `performance_logs` name/unit/notes and `weight_logs` notes are client-written and were rendered UNESCAPED in the coach's client-profile tabs. 8 sinks escaped.
+- **Blank/custom workout no longer lost.** Finish screen filtered `loggedSets.length`, save also required `e.name` — a nameless Custom workout was itemised then binned. Both now call one `_loggedExercises()` which backfills "Exercise N".
+- **Jumps: reps field + a target bar.** TWO layers, both regressions from c72eb14: the jump row had no contacts input (jump volume unrecordable/uncharted), and `showTargets` was gated `weight_reps||unilateral` so the `_buildTargetCols` jump branch I added that morning was DEAD CODE — no target/rest/RPE ever rendered. Fixed both; timed_hold was silently in the same state.
+
+**Fixed in the pre-push review (6 blocking; A and C both independently flagged the 1RM one):**
+- NEW attribute sink from the jump fix: ghosting the prescribed target put raw sets_json strings into `placeholder=` for the first time — escaped.
+- NEW from widening showTargets: a stale `intensityMin` survives a metric_type switch, so a depth jump showed "70% · 1RM TARGET" + the amber "Set your 1RM" banner, and tapping it wrote a junk `client_1rms` row for a weightless exercise. `tgt.weight` already had the guard; `intensityMin`/`tempo` now gated on `takesLoad`.
+- Same class: a plank's `'0:00'` default duration (truthy) painted a "0:00 · DURATION" column once showTargets widened — now via `_hasTimeTarget`, matching REST's existing guard.
+- Pre-existing but in edited code: a live coach->client XSS in the trend-metric chip (hand-rolled `.replace(/'/g,…)` leaves `"` live) + raw name/runnerName on the finish screen — escaped.
+
+**Scoped (decisions locked, NOT built):**
+- **Intervals** — cost re-estimated DOWN after reading the code (my first estimate was a guess): rounds ARE sets, so no migration and no new metric_type, and `startIntervalTimer` already auto-logs a round. Decisions: per-round recorded, rest timed-not-recorded, one shared target editable per round. Scope with the roadmap's AMRAP/EMOM/circuit item.
+- **Metric/imperial** — Jake chose ONE formatter boundary (not per-call-site, which would seed the same duplicate-drift class today's review is full of). Storage stays canonical. Open question banked: is there a REAL imperial user, or defer the toggle and do the consolidation half metric-only.
+
+**Lessons banked:** les-051 (a capture->display feature can be green at every layer and invisible — assert the RENDERED output, and when adding a type to a branch, grep every gate that decides whether the branch runs; a stale boolean written before the type existed silently drops it — found by rendering at 390px and LOOKING).
+
+**Tests:** 189 declared = 187 passed / 2 skipped / 0 failed. New `tests/review-fixes-2026-07-23.spec.js` (5).
+
+**Why:** the jump work shipped this morning was invisible in the runner — none of the target bar rendered and contacts couldn't be logged. Jake caught it live the same day; the fix has two independent layers.
+
+---
+
 ## 2026-07-23 (3rd save) — Weekly FULL-FILE review (9 days overdue) + GDPR export repaired + runner 1RM/delete (app-runner v29->v30, app-progress v21->v22) — pushed 7fe41e0, CI green
 
 _Ran the weekly full-file review for only the SECOND time in the project's life — 3 agents over app-workouts/app-runner/app-progress (6,918 lines). It found 12 issues in code no diff had touched. Fixed the two most serious plus Jake's two 10-day-old runner reports._
