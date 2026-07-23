@@ -1,6 +1,33 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-19 (2nd save — Progress overhaul + analytics SHIPPED LIVE, pushed 95e8e8f; ④ coach parity remains)_
+_Last updated: 2026-07-23 (2nd save — exercise-builder overhaul `c72eb14` + day-row prescriptions & picker disambiguation `b53dbfc`, both LIVE; ④ coach parity still remains)_
+
+---
+
+## 🐛 Session backlog — 2026-07-23 (exercise-builder overhaul, then day-row prescriptions + picker)
+
+_Two pushes. Jake opened with a UX critique rather than a bug report ("very very similar to the heavyset exercise builder and I dont want to get pulled up on being a copycat"; cardio wrong; jumps unfinished; too much scrolling), then followed with four more UX issues from live use. Both rounds shipped; the Library page was deliberately left for its own scoping session._
+
+**✅ Shipped `c72eb14` — exercise-builder overhaul (app-workouts v31, app-runner v29, app-progress v21, app-programs v21, main.css v6):**
+- Cardio distance in **metres** (new `distanceM` key + shared `_cardioDistanceM`/`fmtDistanceM`; legacy km read-only, never rewritten — fix forward). **Watts** end-to-end (builder targets → runner input → Progress chip; new `avg_watts smallint`, migration run live by Jake, clamped at the save site). `Pace / km` retired to a legacy-only escape hatch. Optional fields behind a `+ More targets` disclosure — **cardio 3 sets at 390px: ~1320px → 685px**; weight_reps 1138px → 832px.
+- **Jump targets** finally prescribable (height/distance/jumps/rest/RPE) + the missing `_buildTargetCols` jump branch — the runner target bar had rendered **empty** for jumps.
+- **54 undefined CSS vars defined** + builder repainted 15 hardcoded greys → 0 (the copycat half — the builder had no visual identity because its tokens were dead).
+- Heavyset teardown ingested into `coachapp-client-app-benchmarks`.
+
+**✅ Shipped `b53dbfc` — day-row prescriptions + picker disambiguation (app-workouts v32, app-programs v22, main.css v7):**
+- Day rows show the real prescription (`4 × 8–10 reps · 100kg · RPE 8 · 2:00 rest`) on **all four** surfaces that render that block — the fourth (coach's view of a client's plan) was caught by the review.
+- **One shared `_fmtSetDetail`/`_fmtSetsCollapsed`** replaced two silently-drifted copies.
+- Picker rows: `↳ Used in <phase> · Wk N · MON` vs `Not used yet`, + exercise count. Two duplicated pool builders collapsed into `_buildProgramTemplatePool`.
+
+**🐛 Bugs found + fixed that Jake never reported:** duration-based cardio silently discarding its distance (`distanceAchieved` was a key the save path never read); legacy `'0:00'` pace being truthy and rendering phantom chips; the ADD path's `cleanSets` allowlist discarding **every** cardio target except duration/distance since those fields shipped (EDIT kept them); `metric_type` dropped by **both** clone paths so every ASSIGNED plan lost its shape routing.
+
+**🔴 Found, NOT fixed — needs its own task:** every "mobile check" this project has ever run was at **1280px, not 390px**. `playwright.config.js:13` sets a mobile viewport but line 19's `devices['Desktop Chrome']` overrides it. The `mobile-check` skill's central claim is therefore false. Fixing it re-baselines all 181 tests.
+
+**🗓 Still open (needs Jake):** the Programs-page add-exercise report — driven live in both cases (same-named siblings → modal fires; differing names → re-render fires) and **neither symptom reproduced**. Needs his actual program.
+
+**🗓 Deliberately deferred:** Library page redesign — Jake: *"this may need a scoping session on its own."*
+
+**Process lessons:** les-047 (a shared helper's parameters are a contract each call site must satisfy — an out-of-scope identifier is a runtime error invisible to every static gate) and les-048 (merging drifted copies destroys exactly the drift that justified deduping — diff the old copies against EACH OTHER, not just against the new one).
 
 ---
 
@@ -410,7 +437,7 @@ _Jake live-tested a real gym session plus the wider app end-to-end and reported 
 | UI consistency pass | ✅ Done | SESSION N/M labels + exercise lists unified across all surfaces (v143) |
 | Progress tabs — pill grid (no scroll) | ✅ Done | v171 — flex-wrap pills, all 5 visible at once on mobile |
 | **Dashboard consistency pass (PT/client/solo)** | ✅ Done | 2026-07-05 (main.css v4, app-dashboard v2): `.dashboard-card`/`.card-header`/`.card-title` were used ~37× across all 3 dashboards with zero CSS definitions (rendered with no background/border/shadow) — added real rules. Consolidated 3 duplicated grid `<style>` blocks into one `.dashboard-split-grid`. Fixed 4 bare `class="btn"` Cancel buttons (no matching CSS) to `.btn-secondary`. Replaced hardcoded hex colors with design tokens. Fixed PT stat strip (no mobile override, cramped at 480px) and solo stat strip (`display:none` below 640px, vanished entirely) to pair up on mobile instead. |
-| **App-wide undefined CSS vars/classes — found 2026-07-05, partially fixed** | 🔧 In progress | `var(--bg-accent)`/`var(--text-accent)`/`var(--surface-2)` referenced 52× across 7 files, never defined — same bug class as the dashboard-card fix above but app-wide. `.modal-box` (app-progress.js/app-runner.js) same pattern. **2026-07-08:** `app-programs.js:679`'s bare-`.btn` Cancel button fixed (→ `.btn-secondary`), app-programs v11. The 52-site `--bg-accent`/`--text-accent`/`--surface-2` audit and `.modal-box` are still open — needs its own audit of intended styling per site before fixing. |
+| **App-wide undefined CSS vars/classes — found 2026-07-05** | ✅ Done 2026-07-23 (`c72eb14`) | `var(--surface-2)` ×48, `var(--bg-accent)` ×3, `var(--text-accent)` ×3 — 54 references, defined nowhere, so every one silently rendered transparent/inherited. Audited all 48 `--surface-2` sites first (every one a `background`), then defined all three in `:root`. Shipped alongside the builder repaint (15 hardcoded greys → 0). main.css v5→v6. 18 days open. **Awaiting Jake's eyes** — it changes surface styling app-wide, not just the builder. |
 | Metric / imperial toggle | 🗓 Planned | Medium priority |
 
 ### Leaderboards
