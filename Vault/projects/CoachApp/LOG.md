@@ -4,6 +4,48 @@ Newest first.
 
 ---
 
+## 2026-07-22/23 — Exercise-builder overhaul: cardio in METRES + watts, jump targets, half the scrolling, its own visual identity (app-workouts v30→v31, app-runner v28→v29, app-progress v20→v21, app-programs v20→v21, main.css v5→v6) — pushed c72eb14, CI green
+
+_Jake opened with a UX critique, not a bug: the builder is "very very similar to the heavyset exercise builder and I dont want to get pulled up on being a copycat", it scrolls a lot on mobile, cardio is wrong (no watts, km not metres, pace should be optional, "Pace / km" redundant), and "jump height and jump distance are not fleshed out at all". Built all four. The pre-push review then found two pre-existing LIVE bugs, and re-running the suite caught a third that I had introduced while fixing them._
+
+**Done (all LIVE):**
+- **Cardio in metres** — new `distanceM` sets_json key; legacy km `distance` never written again and never rewritten (fix forward), read through one shared `_cardioDistanceM()` + `fmtDistanceM()` (m under 1km, km above). The runner's ×1000-on-save is gone. TDD red→green.
+- **Watts** — `wattsMin/Max` builder targets, runner avg-watts input, target chip, Progress trend chip. New `avg_watts smallint` on `workout_log_sets` (`scripts/add-avg-watts-2026-07-22.sql`, **applied live by Jake**). Clamped at the save site: `max=` on a bare input is not enforced on read, and an out-of-range value fails the whole batch insert and rolls back the session.
+- **Pace/km retired** — it duplicated the computed Pace/1000m row. Still renders marked "(legacy)" for sets that already carry a value: deleting the only control that can clear a field strands it (les-043).
+- **Scrolling halved** — 9 always-visible cardio rows → 4, rest behind a "+ More targets" `<details>` that auto-opens when anything inside is set. 3 sets at 390px: ~1320px → 685px. `weight_reps` got the same treatment: 1138px → 832px.
+- **Jumps fleshed out** — were capture-only with no way to prescribe. Added target height/distance, jumps-per-set, rest, RPE/RIR, plus the missing `_buildTargetCols` jump branch (the runner target bar rendered EMPTY for jumps). REPS is labelled JUMPS there.
+- **Visual identity** — defined `--surface-2`/`--bg-accent`/`--text-accent`, referenced **54×** across 7 files and never defined anywhere (silently falling back to transparent/inherit); audited all 48 `--surface-2` uses first, every one a background. Set builder repainted from 15 hardcoded greys to design tokens (**now 0**). Closes an 18-day-old ledger row.
+- **Heavyset teardown** → `coachapp-client-app-benchmarks`, documenting the deliberate divergences.
+
+**Bugs found while building (none reported):**
+- **Duration-based cardio silently discarded its distance** — both capture sites wrote `setData.distanceAchieved`, a key `saveRunnerSession` never reads. Same silent-drop class the 2026-07-19 save rewrite existed to fix.
+- **Legacy `'0:00'` pace is truthy** → every legacy cardio set rendered a meaningless "0:00 /500m" chip. Now gated by `_hasTimeTarget()`, shared by runner + builder.
+- Workout-log table showed a 500m interval as "0.50 km".
+
+**Bugs found by the pre-push multi-agent review — 2 blocking, 7 non-blocking, all fixed:**
+- 🔴 **Adding a cardio exercise silently discarded EVERY cardio target except duration/distance** (found independently by all 3 agents). `cleanSets` is an explicit allowlist and had NEVER contained `isDistanceBased`, `pace500Min/Max`, `hrZoneMin/Max`, `restHrMax`, `strokeRateMin/Max` — while EDITING one kept them (`saveEditTemplateExercise` writes `sets_json` raw). Two siblings, one job, drifted, silent at every layer. Became load-bearing today because the runner branches on `isDistanceBased`. Both builders now share one `_cleanTemplateSets()`.
+- 🔴 **`metric_type` dropped by BOTH clone paths** — `_cloneTemplateForClient` (every program assignment, incl. solo self-assign) and `_cloneSharedMasterTemplate` (fork-on-edit). Every ASSIGNED copy fell back to `weight_reps`, losing jump/timed/unilateral routing **for the person actually training**, while the coach's master looked correct. Pre-existing since metric_type shipped 2026-07-19. Feeding selects all use `workout_template_exercises(*)`, so only the INSERTs were at fault (les-036 inverted).
+- Plus: `showRunnerFinish` still summed the retired `distance` key (distance tile would have vanished — and a sibling line 17 lines away HAD been migrated); interval auto-log dropped watts+HR; builder used raw truthiness where the runner used `_hasTimeTarget`; duplicate TARGET column on jump sets; stale `repsMax` printing "8–12 JUMPS"; `fmtDistanceM(999.6)` → "1000 m".
+
+**A bug I introduced fixing the review's findings — caught only by re-running the suite (les-047):**
+Deduping the two drifted payload builders into one `_cleanTemplateSets(sets, derived)`, I replaced both call sites with the identical line via a scripted regex. The builder had `const derived` in scope; **the runner never did** — it inlined the same logic as `metricType === 'unilateral'` expressions. ReferenceError on every runner Swap/Add, aborting before `closeModal()` so the modal froze open. 5 runner tests red. An out-of-scope identifier is a *runtime* error, so `node --check` and every static gate stayed green. **Lesson: a shared helper's parameters are a contract each call site must satisfy — verify each site can supply every argument before replacing, and "the tests passed before I refactored" stops being evidence at exactly that moment.**
+
+**Also this session:**
+- **mobile-check** — 44px tap target on the disclosure summary (was ~30px), `inputmode` on the remaining cardio number inputs.
+- **6 new ledger rows** from Jake's live use (below) + 2 GDPR findings.
+
+**Tests:** 177 declared = **175 passed / 2 skipped / 0 failed / 0 flaky** (the long-standing flaky login-race test passed first time). New: `cardio-distance-metres.spec.js` (4, TDD red→green), `clone-metric-type.spec.js` (1), plus a disclosure round-trip guard proving a value typed while COLLAPSED survives and that switching metric_type does not clobber un-rendered fields.
+
+**Jake's new reports, ledgered not built (he asked to scope them in plan mode):**
+1. **Day rows show only exercise name + set count** — no weights, reps, rest. "not good UX or helpful to a user who wants to look at their week ahead to see what the plan has in store for them." Both the Workouts page and the Programs builder. The data is in `sets_json` and the formatting already exists in `openSessionDetail` — a display gap, not a capture gap.
+2. **Add-workout picker can't tell duplicates apart** — "Full Body" twice with byte-identical previews. **Jake's reframe matters: same-named workouts are NORMAL, not debris** — "very likely that a user will have more than 1 of the same workout in a program (especially if they are duplicating weeks)". So Duplicate-week manufactures them by design and the picker must disambiguate as a first-class requirement; deduping the data would not fix it.
+3. **Library page messy** — he explicitly wants a scoping session, not a fix.
+4. **Adding an exercise from the Programs page** doesn't render until refresh AND doesn't offer "update all sessions" (the latter is a **re-report** of a 2026-07-13 row that sat open 9 days). Investigated: `_editPhaseWorkout` sets `programId` correctly and all three verbs end in `_checkClientPlanPropagation`, so ctx is not the cause — **not yet root-caused, deliberately not guessed at.**
+
+**Why:** Jake's copycat concern was the real driver — the builder had no visual identity of its own because 54 token references were dead, so it defaulted to generic light-grey cards. Fixing that and the cardio/jump gaps in one pass made the builder *his* rather than a lookalike.
+
+---
+
 ## 2026-07-19 (2nd save) — Progress overhaul DISPLAY + analytics SHIPPED LIVE + SetGraph wiki ingest (app-progress v11→v20, app-runner v26→v28, app-clients v6→v7, app-dashboard v4→v5) — pushed 95e8e8f, CI green
 
 _Continued straight from the capture-layer session below. Built ②d (manual HR), the whole ③ display rebuild, a SetGraph-informed analytics pass, and a live runner block — then merged the entire `progress-overhaul` branch to master and deployed. The Progress page Jake screenshotted as "very sparse" is now the rich per-exercise + per-workout analytics he asked for._
