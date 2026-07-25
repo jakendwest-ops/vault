@@ -4,6 +4,238 @@ Newest first.
 
 ---
 
+## 2026-07-25 — Units toggle: account-wide weight/jump-height/cardio-distance preference (app-core v6->v7, app-dashboard v5->v6, app-programs v23->v24, app-clients v7->v8, app-workouts v34->v35, app-runner v33->v34, app-progress v25->v26) — pushed 23a2493, CI green
+
+_Confirmed earlier this session (2026-07-24) as Jake's real, current need — himself, running into it in the
+builder: "What if I want to log weights in KG but measure jumping height in inches." That's what ruled out a
+single global metric/imperial switch and made this three independent per-metric-type toggles instead: weight
+(kg/lb), jump height (cm/in), cardio distance (km/mi). Jake chose "everything, fully" when asked how much of the
+~20-25 real display/entry sites to cover in one pass, specifically to avoid a half-converted state._
+
+**Done (LIVE):** Storage stays canonical (kg/cm/metres) everywhere in the database; conversion happens only at
+display/entry boundaries via shared helpers — `weightToPref`/`weightFromPref`/`fmtWeight`,
+`jumpHeightToPref`/`jumpHeightFromPref`/`fmtJumpHeight` in `app-core.js`, `distanceToPref`/`distanceFromPref`
+extending the existing `fmtDistanceM` in `app-workouts.js` — driven by `window._unitPrefs`, populated in
+`loadUserInfo()` from three new `profiles` columns (migration `scripts/add-unit-prefs-2026-07-24.sql`, run live by
+Jake). Rewired every prescription/entry/history display this touches:
+- **Builder** — the set editor's weight/jump-height/cardio-distance fields, including a pre-existing header/unit
+  mismatch on the cardio distance field fixed along the way.
+- **Runner** — the fast table, the wizard's strength input, the manual "log a past session" builder (including its
+  own %1RM quick-entry system), all three parallel 1RM-entry flows (the runner's own sheet, the post-session
+  "new estimate" modal, and the assignment-time checklist in Programs), and session-review detail.
+- **Progress page** — the diary (set-details line, per-exercise metrics), the trend chips/charts (`_TREND_METRICS`,
+  previously untouched by an earlier pass and still hardcoded kg/cm), personal records, the weight tracker (goals
+  form, stat tiles, chart + Y-axis, both the coach-facing `renderClientWeight` and the client/solo
+  `renderProgressWeight` — two independently-drifted copies), and the free-text "Log a PB" form (now defaults its
+  unit dropdown to the account's preference instead of always kg).
+- **Both bodyweight-log forms** (dashboard + client-profile) and a new **Settings "Units" card**
+  (`saveSettingsUnits`) — three selects, no reload needed since every render function reads
+  `window._unitPrefs` fresh.
+
+**Multi-agent review caught 5 real issues before push, all fixed and re-verified green:**
+1. `showPostSessionOneRMModal` (the "new 1RM estimate" popup shown right after finishing a workout) was missed
+   entirely — still hardcoded kg.
+2. Four separate sites — the 1RM cards (`renderClient1RMs`), the weight-tracking CURRENT/CHANGE tiles and table
+   rows (`renderClientWeight`'s `fmt` helper), the CHANGE tile in `renderProgressWeight`, and all three parallel
+   Epley-estimate previews — silently dropped forced one-decimal display for kg-native users. The old code used
+   `.toFixed(1)` (a string op that always shows the decimal); the replacement's `Math.round(v*10)/10` pre-rounding
+   pattern rounds to AT MOST one decimal but doesn't force a trailing zero, so a value like 100 rendered "100"
+   instead of the "100.0" every kg-only user had always seen. Fixed by adding a `decimals` option to `fmtWeight`
+   itself rather than reconstructing the rounding at each call site.
+3. The mile-conversion constant `1609.344` was typed inline three separate times in `app-workouts.js`
+   (`fmtDistanceM`, `distanceToPref`, `distanceFromPref`) instead of a shared name — the exact drift-risk pattern
+   this whole feature exists to eliminate elsewhere. Extracted to `_METRES_PER_MILE`.
+
+**Also found and fixed, mid-session: a real test-fixture-pollution bug** (not a product bug). The new units spec's
+"a client's unit preference is independent of their coach's" test signs out of the PT account and into a client
+account partway through, then in its `finally` block tried to reset the PT's own `weight_unit` — but by then the
+active Supabase session was the CLIENT's, and RLS on `profiles` is self-scoped, so that write was silently
+REJECTED, not merely skipped. The shared PT fixture was left permanently stuck on `weight_unit='lb'` after every
+run of that one test, which cascaded into unrelated failures across `day-row-prescriptions.spec.js`,
+`progress-trend.spec.js`, and two tests in `programs.spec.js` — all showing values off by the exact 2.2046×
+kg-to-lb factor, which is what pointed at the real cause instead of a code regression. Fixed by re-establishing
+the PT session before the reset. Separately swept 6 leaked `[E2E] 1RM Check/Have Program` rows + 36 leaked
+templates off the shared PT/client fixture accounts — pre-existing debris from `programs.spec.js`'s
+"Assignment-time 1RM check" tests never wrapping their cleanup in try/finally, so a failed assertion (the
+weight_unit pollution above, on one specific run) left the fixture behind for good. Both tests hardened.
+
+220 declared = 218 passed / 2 skipped / 0 failed / 0 flaky. New `tests/units-2026-07-24.spec.js` (6 tests:
+formatter/parser round-trips + blank/null contract, a completeness grep-net for leftover hardcoded unit literals
+across the touched files, a real builder round-trip through lb without corrupting canonical kg — including the
+deliberate-clear-vs-field-not-rendered distinction the existence-check pattern protects — `saveSettingsUnits`
+persistence, and cross-role independence).
+
+**UNVERIFIED (banked):** structurally tested end-to-end, but nobody has spot-checked a real number by eye —
+a silently-wrong conversion factor would pass every test here and still be numerically wrong. Needs: switch
+Settings to lb/in/mi on a real account, confirm a known kg weight shows the right lb value and a known cm
+height shows the right inches, live on Jake's own phone.
+
+**Decided:** kg-native display sites that never had a forced decimal keep behaving exactly as before (a bare
+`weightToPref` passthrough, no `.toFixed`) — only sites that historically forced one now pass `fmtWeight`'s new
+`decimals` option explicitly, rather than standardizing every weight display to always show one decimal. Chosen
+to preserve each site's own pre-existing convention exactly, not to introduce a new house style as a side effect
+of the unit work.
+
+---
+
+## 2026-07-24 (3rd save) — Security: public signup closed, solo_only lockdown, a live role-corruption incident (app-core v5->v6, app-progress v24->v25) — pushed 57a188a, CI green
+
+_Jake, live: "I gave my brother the URL and from the login screen he was able to create an account.
+It looks like the system has automatically given him a PT account." Two requests followed: close the
+public signup path, and convert the brother's (Scott's) account to personal-only. Building the second
+one surfaced a real production incident, and reviewing all of it surfaced three more real bugs._
+
+**Done (LIVE):**
+- **Public self-signup removed entirely** — the login screen's "Sign up" form/link, its handlers, and
+  the show-signup/show-login toggle are gone from `index.html`/`js/app-core.js`, not hidden (Jake still
+  needs to flip "Allow new users to sign up" off in the Supabase Auth dashboard separately — the
+  client-side removal doesn't stop `db.auth.signUp()` being called directly with the public anon key).
+- **New `profiles.solo_only` flag.** When set, `loadUserInfo()` skips `window._masterAccount` entirely
+  — the view-switcher never renders, and `switchView()`'s existing `if (!window._masterAccount) return`
+  guard blocks any attempt to reach the coach view. Jake was explicit: "he shouldn't have access to any
+  other account other than solo" — a normal master-account setup (what his own account is) always ALSO
+  exposes the coach side via the switcher, so this needed to be a genuinely separate, more locked-down
+  mode, not just re-using the existing pattern.
+
+**Incident, found and fixed same session:** while adding `solo_only` to `loadUserInfo`'s profiles
+`select()`, that edit landed live BEFORE Jake had actually run the matching migration, and a full
+Playwright suite was already running against the real Supabase DB at the time. Every login in that
+window hit a missing-column error. `loadUserInfo`'s pre-existing role-inference fallback ("if profile
+has no role... check the clients table") doesn't distinguish a genuinely-null role from a FAILED
+fetch — it fires on any falsy role and WRITES `role:'client'` back to the database the moment it finds
+ANY clients row for that user_id (no `coach_id` filter, so a coach's own self-referential solo row
+qualifies). The real PT test account got silently, permanently downgraded from coach to client in
+production. Root-caused via direct diagnostic queries (not guessed), repaired directly, and fixed
+properly: the fallback now requires `!error`. **Lesson banked (les-053): never edit application source
+while a Playwright run is in flight against the live dev server** — even a change that looks
+behaviour-dormant (a new column added to a SELECT, gated behind a flag that defaults false everywhere)
+can still error the query outright and trigger unrelated pre-existing write-back logic.
+
+**Multi-agent review then caught 3 more real bugs in the solo_only work itself, all fixed same push:**
+- The branch force-assigned `role:'solo'` even when its clients-row lookup came back empty or errored
+  — unlike the sibling master-account branch, which only reassigns on a confirmed row. Since switchView
+  is deliberately blocked for solo_only, a bad lookup would trap the account in a broken personal
+  dashboard with no in-app way out (provisioning is two separate manual SQL steps — insert the row,
+  then flip the flag — so a wrong order is a realistic mistake). Now only reassigns when the row is
+  actually found.
+- `window._masterAccount`/`_soloClientId`/`_masterClientId` and the switcher's visibility are SESSION
+  state that `loadUserInfo` only ever SETS, never resets. The primary sidebar sign-out button doesn't
+  reload the page, so on a shared/gym device the NEXT account signing in on the same tab inherited the
+  PREVIOUS account's `_masterAccount=true` — the one thing `switchView`'s guard checks. A solo_only
+  account could have escaped to the full coach dashboard this way, no misconfiguration needed at all.
+  Now reset on sign-out.
+- A failed profiles fetch left `currentProfile` null, and every downstream role check defaults an
+  unrecognised role to coach nav — `showApp` now fails closed (retry screen) instead of silently
+  granting coach access on a transient error.
+- (Also, in the test itself) an earlier version of `solo-only-2026-07-24.spec.js` mutated the shared PT
+  fixture's `solo_only` flag BEFORE its own try/finally safety net started — exactly the same class of
+  damage that had already happened to the PT2 test account earlier this session (its `solo_only` got
+  stuck `true` from a different test's aborted setup). Fixed the test to confirm the precondition first
+  and only mutate inside try.
+
+**Separately diagnosed, not a repeat of the incident:** a LATER full-suite run produced 142 failures
+over 1.5 hours (should be ~14 min). Traced to Supabase Auth rate-limiting from the sheer volume of
+login attempts in the earlier failing run's retry storm — confirmed by a clean, fast re-run of the
+exact same files once the rate limiter's cooldown passed. Not a code bug.
+
+**Known, banked limitation — not fixed this session:** `solo_only` enforcement is client-side only.
+This session's OWN repair work already proved a user's own authenticated session can self-write
+`solo_only`/`role` via the anon client (used repeatedly tonight to fix stuck test-account state) —
+RLS on `profiles` is row-scoped, not column-scoped, and no trigger currently protects those two
+columns. Low practical risk for the one real account this affects right now (Scott, a trusted family
+member being handed the app in good faith, not an adversary) — but flagged clearly to Jake and tied to
+the already-banked "Solo becomes a genuine account type" pre-beta decision, since a proper fix needs
+DB-level enforcement, not another client-side patch.
+
+**Tests:** 214 declared = 212 passed / 2 skipped / 0 failed / 0 flaky. New
+`tests/signup-removed-2026-07-24.spec.js` (3), `tests/solo-only-2026-07-24.spec.js` (5),
+`tests/role-inference-safety-2026-07-24.spec.js` (2) — the latter includes a live monkey-patched
+behavioural proof that a failed fetch never triggers the role-patch upsert, not just a source check.
+
+**Why:** Jake found a real, live gap (open public signup) through his own use, in the least damaging
+way possible (his own brother, not a stranger). Fixing it properly surfaced a second real gap (no
+locked-down account mode existed), and building that surfaced a live data-integrity bug plus three
+more real bugs in the fix itself — density that reflects how much ground this touched (auth, session
+state, role resolution), not how careless the individual pieces were.
+
+---
+
+## 2026-07-24 (2nd save) — Intervals: get-ready countdown + builder repeat-set×N (app-runner v32->v33, app-workouts v33->v34) — pushed 7aeb3ae, CI green
+
+_Jake described the interval flow he wants: Start -> countdown -> work -> beep -> rest -> beep ->
+next round -> repeat. Read app-runner.js closely BEFORE proposing anything (per the plan-mode
+discipline) rather than assuming a build was needed._
+
+**Found by reading first:** almost the entire loop already existed and worked.
+`startIntervalTimer`/`startRestTimer` already auto-chain via `_afterRest`; both already speak the
+last 5 seconds aloud (functioning as a count-in for every round after the first). The genuinely
+missing piece was narrow: tapping Start began the work timer immediately, with no lead-in before the
+FIRST round.
+
+**Done (LIVE):**
+- **Get-ready countdown.** `startRunnerCountIn`/`stopRunnerCountIn`/`renderRunnerCountIn` — 5 seconds,
+  spoken "5,4,3,2,1,Go!" (Jake's choice over a 3-second version), then hands off to the existing,
+  unmodified `startIntervalTimer`. Wired `stopRunnerCountIn()` into every navigation-away path.
+- **"Round N of M" labeling** on the interval + rest timer overlays (was bare "Set N", no total) —
+  `ex.targetSets` was already populated correctly for cardio, just needed reading in two spots.
+- **Builder: `repeatTemplateSet(i)`.** Asked Jake to scope the builder side explicitly; his answer was
+  about minimising clicks ("shouldn't have to click add>copy 10 times"). One click clones a set N-1
+  more times instead of "+Add set" then "Copy set i" repeated by hand. Type-agnostic — the same
+  shortcut helps 5x5 straight sets, not just cardio rounds.
+
+**Caught by multi-agent-review, fixed same push before it shipped:**
+- `logRunnerSet` already blocks itself during rest (`if (_runner._restInterval) return`) but had no
+  equivalent guard for the new count-in state. The cardio duration field is pre-filled with the target
+  duration, so LOG firing mid-countdown would have silently logged a round that was never performed.
+  Fixed: same guard now also checks `_countInInterval`.
+- `showRunnerFinish`'s own header comment documents it as doing "FULL teardown" of every runner timer
+  — written after a PAST bug where a stray timer painted a live overlay over the finish screen. The
+  new count-in timer was missed from that teardown. Fixed: added `stopRunnerCountIn()`.
+- (Non-blocking, fixed anyway) `repeatTemplateSet` had no upper bound — a typo like "500" for "5"
+  would splice hundreds of clones. Capped at 50 with a toast if exceeded.
+
+**Verification note:** live audio/timing verification (does the countdown actually sound right, is the
+start-blip audibly distinct from the interval-end beep) is NOT something I can do myself — no
+audio-output verification available. Screenshots confirm the visual/round-labeling is correct;
+Jake still needs to hear it live in a real gym session before this is fully closed out.
+
+**Tests:** 204 declared = 201 passed / 2 skipped / 1 flaky (unrelated pre-existing runner-launch race,
+passed clean on retry — strength-table test, not cardio/interval code), 0 failed. New
+`tests/intervals-2026-07-24.spec.js` (7 tests, all verified genuinely red pre-fix via `git stash`).
+
+**Why:** first slice of the day's "intervals + units toggle" scoping work — intervals went first since
+it had no open questions left once scoped, vs. the units toggle which needed the imperial-user
+question answered first (see the earlier 2026-07-24 entry below).
+
+---
+
+## 2026-07-24 — 6-bug ledger batch (app-workouts v32->v33, app-runner v31->v32, app-progress v23->v24, app-programs v22->v23) — pushed b637e09, CI green
+
+_Working through the remaining open items from the 2026-07-23 full-file review's bug ledger ("fix what needs fixing"). All six had red->green tests; the full suite ran clean before AND after the multi-agent-review round, since the review caught a real bug the review-fix round introduced._
+
+**Done (LIVE):**
+- **Legacy metric_type fallback revived.** `_resolveMetricType` (shared by runner + builder edit-modal) makes the `sets_json[0].unilateral/.timed` fallback reachable again — `launchRunner` always supplied a truthy `metric_type` first, so the fallback was dead code since the 07-18 migration.
+- **Epley 1RM consolidated + capped.** 4 duplicate copies -> one `_estimate1RM`, 12-rep ceiling (60kg x 30reps no longer saves a junk 120kg "1RM").
+- **"Best" PB picker consolidated.** 3 sites that took `records[0]` (newest, not best) -> one `_bestPerfLog`, category-aware (time units lower-is-better, everything else higher-is-better).
+- **Distance formatting consolidated.** 4 sites bypassing `fmtDistanceM` now route through it — a 400m sprint reads "400 m" everywhere, not "0.4 km" on Progress.
+- **Discard button confirms.** Scoped to exactly the one caller that can destroy real unsaved work.
+- **Cardio LOG toasts** on all 6 missing-required-field guards, matching `toggleTableSet`'s existing pattern.
+
+**Caught by multi-agent-review, fixed same push before it shipped:**
+- `_bestPerfLog` compared raw numbers across incompatible units. `PERF_CATEGORIES` lets the same exercise be logged in either unit of a pair (kg/lbs, min/sec) as a free per-entry dropdown choice — the fix above would have let 220lbs (~99.8kg) beat a real 100kg lift purely because 220>100, and 20min beat a genuinely faster 1180sec (19:40) the same way. Fixed with a small unit->base-unit conversion table before every comparison. les-052.
+- `renderProgressPBs` cached `unit` from the newest record but rendered it beside `best.value` from a *different* record once "best" stopped always being the newest — could show "100 lbs" when neither actual entry was ever that. Fixed by reading `best.unit` directly.
+
+**Also this session — units-toggle scoping resolved with Jake:**
+Asked directly (les-039): is there a real imperial user, or is this pre-emptive? **It's Jake himself** — he hits it in the builder wanting weight in KG but jump height in INCHES *simultaneously*, which overturns the 07-23 assumption of one global metric/imperial switch (a binary toggle can't express mixed units). Revised scope: account-wide setting on `profiles`, independent per-metric-type units — weight (kg/lb), jump height (cm/in), cardio distance (km/mi) in scope now; jump distance deferred until he actually hits that friction. Not yet built. See STATUS.md.
+
+**Lessons banked:** les-052 (a value comparison across a field where the SAME logical measurement can be logged in different units — free per-entry choice, not fixed per record — must normalize to a common base unit before comparing; comparing raw numbers picks the bigger digit-string, not the bigger measurement. Caught by multi-agent-review in the same push that introduced the comparison, not by the red-green tests that shipped alongside it — the tests only covered same-unit cases).
+
+**Tests:** 197 declared = 195 passed / 2 skipped / 0 failed. New `tests/ledger-fixes-2026-07-23.spec.js` (9 tests, including the 2 the review's findings drove).
+
+**Why:** these were the remaining open rows from the 2026-07-23 full-file review's bug ledger — six real bugs Jake hadn't yet hit live, fixed proactively rather than waiting for a bug report.
+
+---
+
 ## 2026-07-23 (4th save) — Jump runner + XSS + blank-workout fixes; intervals & units scoped (app-runner v30->v31, app-progress v22->v23) — pushed bd2e501, CI green
 
 _Jake reported the jump runner live ("only displays height in CM… no reps fields… missing the wizard entirely"); the other two came from the morning's full-file review. The pre-push review then found SIX blocking issues — two of them regressions the first two fixes introduced._
