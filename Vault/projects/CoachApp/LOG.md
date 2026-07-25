@@ -4,6 +4,59 @@ Newest first.
 
 ---
 
+## 2026-07-25 (2nd save) — Playwright viewport bug fixed: every mobile check now genuinely runs at 390px (app-progress v26->v27) — pushed edb8995, CI green
+
+_User asked "what is next proposal" after the previous save's kanban shortlist. Offered the two most concrete
+candidates from that list via AskUserQuestion — the Playwright viewport bug (scoped, ready to build) vs. the
+Solo-account-type decision (flagged as needing a scoping conversation, not a straight build) — and the user
+picked the viewport fix._
+
+**Done (LIVE):**
+- Root-caused via 3 parallel Explore agents in plan mode: confirmed `playwright.config.js`'s `chromium` project
+  spreading `...devices['Desktop Chrome']` was silently overriding the intended `390×844` viewport with Desktop
+  Chrome's own `1280×720` — every test in this project's history ran at desktop width. The 2026-07-23 ledger
+  analysis's mechanism was still exactly right two days later; every cited line number had drifted from commits
+  landed since (confirmed and corrected before building anything on top of stale citations).
+- That config bug had been masking a real, pre-existing product pattern (not a product bug): `renderNav()`
+  (`js/app-core.js`) intentionally writes an identical `data-page="x"` link into both the sidebar nav and the
+  bottom nav for every page — CSS alone decides which is shown, via a 900px breakpoint. At a genuinely-390px
+  viewport, a bare `page.click('[data-page="x"]')` resolves to the sidebar's (now-hidden) copy and times out.
+  Same shape for the Personal view-switcher (`#vs-personal`/`#mvs-personal`) and sign-out — which turned out to
+  have a third wrinkle beyond simple sidebar/bottom-nav duplication: a second, completely non-viewport-gated
+  sign-out button living in the Settings page's own body content, not paired with the sidebar's at all.
+- Added `clickVisible`/`waitForVisible` to `tests/helpers.js` (append Playwright's native `:visible`
+  pseudo-class to one or more candidate selectors, so a click/wait resolves to whichever is actually reachable)
+  and migrated 56 call sites across 19 spec files. Gave the Settings-page sign-out button a stable
+  `id="settings-sign-out-btn"` (purely additive attribute, zero logic change) so `auth.spec.js` could target it
+  unambiguously alongside the sidebar's `#sign-out-btn`.
+- `tests/solo-account.spec.js`'s 7 accompanying `.first()`-based nav-visibility assertions were replaced with an
+  explicit `.bottom-nav-item[data-page="x"]` target — `.first()` was silently coupled to DOM order (always the
+  sidebar copy, since it's written first), not to viewport, and would have started *failing* the moment the
+  config was actually fixed, not stayed passing by coincidence like it had been.
+- Sequenced deliberately: migrated every call site first and confirmed the full suite was STILL green at the
+  still-broken 1280px viewport (proves the selector swap alone changed nothing), then flipped
+  `playwright.config.js` to force the real 390×844, then ran the full suite again.
+
+**Bugs found + fixed:** the config/nav-ambiguity bug itself (see above) — this was pure test-infrastructure, not
+an app bug. **Zero new real mobile-layout bugs surfaced** once the suite actually ran at mobile width: 218/220
+passed, 2 skipped, 0 failures, 1 flake (`progress.spec.js`'s "Log PB button" test) that reproduced clean in
+isolation and is unrelated to viewport (a pre-existing timing flake, confirmed by re-running it alone). This
+answers the open question the 2026-07-23 ledger row explicitly left hanging ("unknown until then: how many of
+the 21 are real mobile failures hiding behind the nav timeouts") — none were. The app was already fine; only
+the tests were coupled to desktop chrome.
+
+**Decided:** kept the fix scoped to test-infrastructure only — did not also refactor `renderNav()`'s dual-nav
+pattern itself, since it's correct, intentional product design (one nav for desktop, one for mobile), not a bug.
+The one product-code touch (the new button `id`) was chosen over a test-only `onclick`-substring selector for
+durability, at the plan's own recommendation.
+
+**Multi-agent review:** 3 angles (security/scoping, solo-mode correctness, duplicates/regressions), all clean —
+each agent independently re-derived the diff's reasoning against the actual code (e.g. Agent C read `renderNav()`
+directly to confirm `.bottom-nav-item[data-page="x"]` really does match exactly one element) rather than trusting
+the diff's own comments. Zero findings.
+
+---
+
 ## 2026-07-25 — Units toggle: account-wide weight/jump-height/cardio-distance preference (app-core v6->v7, app-dashboard v5->v6, app-programs v23->v24, app-clients v7->v8, app-workouts v34->v35, app-runner v33->v34, app-progress v25->v26) — pushed 23a2493, CI green
 
 _Confirmed earlier this session (2026-07-24) as Jake's real, current need — himself, running into it in the

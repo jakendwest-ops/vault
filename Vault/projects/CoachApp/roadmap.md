@@ -21,7 +21,7 @@ _Two pushes. Jake opened with a UX critique rather than a bug report ("very very
 
 **🐛 Bugs found + fixed that Jake never reported:** duration-based cardio silently discarding its distance (`distanceAchieved` was a key the save path never read); legacy `'0:00'` pace being truthy and rendering phantom chips; the ADD path's `cleanSets` allowlist discarding **every** cardio target except duration/distance since those fields shipped (EDIT kept them); `metric_type` dropped by **both** clone paths so every ASSIGNED plan lost its shape routing.
 
-**🔴 Found, NOT fixed — needs its own task:** every "mobile check" this project has ever run was at **1280px, not 390px**. `playwright.config.js:13` sets a mobile viewport but line 19's `devices['Desktop Chrome']` overrides it. The `mobile-check` skill's central claim is therefore false. Fixing it re-baselines all 181 tests.
+**✅ FIXED + LIVE 2026-07-25 (`edb8995`):** every "mobile check" this project has ever run was at **1280px, not 390px** — `playwright.config.js`'s `chromium` project spread `...devices['Desktop Chrome']`, whose own viewport silently overrode the intended `390×844`. Fixed, and re-baselined the full suite at the real viewport: 218/220 passed, 0 real mobile bugs surfaced (the nav-selector-ambiguity the broken config had been masking was the only thing wrong — see STATUS.md/LOG.md 2026-07-25 2nd save for the full writeup). The `mobile-check` skill's central claim is now actually true.
 
 **🗓 Still open (needs Jake):** the Programs-page add-exercise report — driven live in both cases (same-named siblings → modal fires; differing names → re-render fires) and **neither symptom reproduced**. Needs his actual program.
 
