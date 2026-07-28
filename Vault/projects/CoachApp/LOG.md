@@ -4,6 +4,121 @@ Newest first.
 
 ---
 
+## 2026-07-28 — Intervals redesign (new exercise type + phase-walk runner) + a major client->coach XSS sweep, incl. one live CRITICAL unrelated to the feature — pushed 34 commits (edb8995..60238be), CI green
+
+_Straight after this project's second `/save` of the prior session, Jake asked to build Solo as a genuine
+account type. A live bug report ("no imperial/metric toggle, no intervals visible") interrupted almost
+immediately — root-caused to browser caching, but surfaced two real, distinct asks along the way: the units
+toggle turned out to already be built correctly (shipped 2026-07-25, unrelated to this entry), and Jake shared
+Tabata Stopwatch Pro reference screenshots showing what he actually wants interval prescribing/logging to look
+like. Given the 31 July beta target, Jake was asked to choose between resuming Solo or building the intervals
+redesign now; he chose intervals, explicitly accepting Solo would slip past beta. Executed via Subagent-Driven
+Development (a fresh implementer per task, dispatched review + fix-loop after each, a persistent ledger
+surviving context loss) — 9 tasks, then the mandatory whole-branch `multi-agent-review` before push, which
+surfaced a live security incident entirely unrelated to the feature and extended the session considerably
+further than planned._
+
+**Done (LIVE) — the feature:**
+- New interval-block model: one `sets_json` entry per exercise (`countdownSecs`/`warmupSecs`/`workSecs` or
+  `workDistanceM`/`restSecs`/`sets`/`recoverySecs`/`cycles`/`cooldownSecs`) replacing the old per-round
+  duplicated-row model. `_expandIntervalBlock` (pure function, `js/app-workouts.js`) expands a block into a flat
+  phase array (`countdown → warmup → [(work→rest)×sets → recovery]×cycles → cooldown`), zero-valued phases
+  omitted, `sets`/`cycles` clamped to minimum 1. `_intervalTotalSecs` sums it, returning `{total, hasUnknown}` —
+  `hasUnknown` true for a distance-based work round, since its duration is genuinely unknowable without a sensor.
+- Builder: a new `interval` option in the metric-type picker, its own block editor (reusing the existing
+  `row()`/`mini()`/`tog()`/`more()` helpers) replacing the awkward multi-row "Repeat ×N" UI. `_cleanTemplateSets`
+  gained the 9 new keys using `??` not `||` (a deliberate 0, e.g. "no warmup", must survive; `0 || null` would
+  erase it).
+- Runner: a whole new phase-walk state machine (`_isIntervalExercise`/`_initIntervalPhases`/`_startPhaseAt`/
+  `_advancePhase`/`startIntervalPhaseTimer`/`_doneIntervalPhase`/`_finishIntervalExercise`) replacing the old
+  one-shot `_afterRest` callback chain for this exercise type only — steady-state cardio's existing
+  `startIntervalTimer` is untouched and explicitly out of scope. `_advancePhase`/`_startPhaseAt` return
+  continued-vs-finished so callers know whether to re-render. New full-screen overlay shows the current phase
+  name, `Set n of N · Cycle c of C` position, and a remaining-total line (qualified `+` when a distance round
+  lies ahead).
+- Logging: `_logIntervalPhase` records work/warmup/cooldown rounds only (rest/recovery are timed, never
+  recorded — Jake's own 2026-07-23/-25 calls). New `workout_log_sets.phase` column persists which part of the
+  block a logged row came from. Progress-page aggregates (`_countableSets`, `!s.phase || s.phase === 'work'`)
+  exclude warmup/cooldown from set counts and volume — the `!s.phase ||` half matters, every pre-existing row
+  and all non-interval sets are NULL and must keep counting. Intervals also now chart on the Progress page as a
+  cardio-family metric (distance/duration/pace/HR/watts) — previously would have silently fallen through to
+  weight_reps metrics (all zero for an interval) and shown "No sessions in this range" forever.
+- Migration `scripts/add-interval-type-2026-07-25.sql` (metric_type CHECK extended to include `'interval'`
+  across 3 tables; new nullable `workout_log_sets.phase text` with its own CHECK) — additive, idempotent, run
+  live by Jake before any code task started (les-053 gate: never edit source referencing an un-migrated column).
+
+**Bugs found + fixed during the build (8, several caught independently by two reviewers reasoning from
+different angles — strong corroboration each time):**
+- A total runner freeze on every interval workout: the phase-walk's zero-tick called a function
+  (`_logIntervalPhase`) that a plan-ordering mistake had only defined in a later task. 20 tests missed it
+  because none let a real countdown reach zero — every test asserted synchronously right after starting a
+  phase. Root-caused by empirically reproducing the freeze, not just reading the diff.
+- A phantom "set" silently written to the database whenever an athlete tapped Done during the get-ready
+  countdown — the manual Done handler logged unconditionally where the timer's own zero-tick correctly guarded
+  on phase type. Also shifted every subsequent `set_number` in that session (assigned by array position).
+- The runner repainting over its own finish screen on the last phase of the last exercise — an unconditional
+  trailing `renderRunner()` call painted over `showRunnerFinish()`'s work the instant after it ran. Same
+  documented failure class this file has hit before ("finish screen destroyed, notes lost").
+- `runnerJumpTo` fired a queued `_afterRest` callback instead of nulling it first (its siblings `runnerGoBack`/
+  `showRunnerFinish` already did) — could start a new interval timer or force-finish against whichever OTHER
+  exercise the athlete had just jumped to. Pre-existing shape, materially widened by intervals (many short rest
+  phases mean far more windows where a jump can land mid-rest).
+- The warmup/cooldown Progress-aggregate exclusion would have been a silent no-op: the queries feeding it never
+  selected the new `phase` column in the first place (the exact stale-select-allowlist class this codebase has
+  hit repeatedly — les-036/037).
+- Mid-session swap/add of an interval exercise showed "Set 1 of 1" for what might be an 8-round block — the
+  initial session-load path had already been fixed for this, its swap/add sibling hadn't (`cleanSets.length` is
+  always 1 for a block; needs `_initIntervalPhases`'s real work-round count instead).
+- The "Log session" manual/retroactive-entry modal silently discarded an interval block's entire prescription
+  into one blank row (mapped through the plain-cardio branch, which reads `duration`/`distanceM` — neither key
+  exists on a block). No interval editor exists in that modal, so the fix seeds the block's total time as a
+  sane starting point instead of building a third editor surface.
+- Set-count badges across day rows/client-profile/builder-preview read `sets_json.length` (always 1 for a
+  block, was previously correct when each round was its own row) — fixed via `_expandIntervalBlock(...).filter
+  (p => p.phase === 'work').length`, one source of truth that can't drift from the runner's own logic.
+
+**Done (LIVE) — the security sweep, entirely unrelated to intervals:**
+- The whole-branch review's security angle found `client_check_ins.notes` — a client's own free-typed weekly
+  wellness note — rendering completely raw on the coach's client-profile Overview tab, the first thing a coach
+  sees opening a client. Confirmed live, currently exploitable, pre-existing (this codebase's three prior
+  stored-XSS fixes — 2026-07-13/-18/-23 — covered `performance_logs`/`weight_logs`, never this table). Told to
+  Jake in plain English; he said fix everything found, then push — asked and re-confirmed twice more as the
+  sweep kept finding siblings in the same files.
+- Closed in 3 rounds, ~33 sinks total: `client_check_ins.notes` (coach Overview tab + the client's own
+  dashboard self-view); client `email`/`phone`/`notes` across 3 render locations each (list row, profile
+  header + its onclick args, edit-client modal) — the email/phone write-path went from "plausible" to
+  **empirically confirmed** during review (`saveWeightGoals` updates `clients` with no `coach_id` filter,
+  proving the RLS grant is row-scoped by id not column-scoped; a real client session was then shown live
+  successfully writing its own email/phone through that same grant, with no UI form ever exposing those
+  fields); goal/milestone title/description across 3 coach-facing surfaces + 6 more self-XSS-tier sibling sites
+  on the coach/client/solo dashboards; an event title on the coach's own calendar (`saveClientEvent` proves a
+  client can create their own event, stamped `is_pt_assigned:false` specifically to mark it client-authored,
+  and the coach's own unscoped calendar fetch renders it); two exercise-notes fields fixed for consistency.
+- Found and handled along the way: the new `client_check_ins` regression test's own cleanup silently no-ops —
+  that table has no DELETE grant for either role via the client API (Supabase/PostgREST returns success with 0
+  rows affected on an RLS-blocked delete, not an error), so 7 debris rows (inert — nothing renders them
+  unescaped anymore) had already accumulated in the shared Test Client fixture across the session's own test
+  runs. Documented honestly in the test itself rather than left as a silently-broken cleanup claim; Jake has
+  the one-line cleanup SQL. Same accepted class as the already-tracked `workout_logs` fixture-erosion issue.
+- Every fix verified genuinely red-first — reverted the relevant file(s) to their exact pre-fix committed
+  content (nothing was staged, so `git show HEAD:<file>` was the real pre-fix state) and re-ran before
+  restoring, rather than trusting the fix "should" fail without it.
+
+**Process notes:** three separate false-alarm test failures this session were confirmed as this project's known
+concurrent-Playwright-run contamination pattern (two full-suite runs racing the same dev server produce
+different, unrelated failure sets each time) — resolved by confirming no other run was active, then re-running
+alone for a trustworthy signal, every time. Two API spend-limit interruptions mid-task recovered cleanly with
+no lost work (state checkpointed to the SDD ledger before stopping each time). 279 declared (full run) = 273-275
+passed / 2 skipped / 0 failed (run alone) — 4-5 recurring failures are a confirmed pre-existing, unrelated
+`client_programs` test-data gap (the shared Test Client fixture's program assignment is empty — verified
+directly via a live DB query; confirmed no code in any of the 34 commits touches `programs`/`client_programs`/
+RLS). New/extended: `tests/intervals-redesign-2026-07-25.spec.js` (49 tests), `tests/regression-2026-07-13.spec.js`
+(+17 tests across the security sweep), `tests/day-row-prescriptions.spec.js`, `tests/gdpr-export.spec.js`.
+app-core v=7 (untouched), app-dashboard v=6→8, app-clients v=8→9, app-programs v=24→26, app-calendar-goals
+v=2→5, app-workouts v=35→45, app-runner v=34→45, app-progress v=27→30.
+
+---
+
 ## 2026-07-25 (2nd save) — Playwright viewport bug fixed: every mobile check now genuinely runs at 390px (app-progress v26->v27) — pushed edb8995, CI green
 
 _User asked "what is next proposal" after the previous save's kanban shortlist. Offered the two most concrete
