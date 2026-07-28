@@ -1,6 +1,50 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-23 (2nd save — exercise-builder overhaul `c72eb14` + day-row prescriptions & picker disambiguation `b53dbfc`, both LIVE; ④ coach parity still remains)_
+_Last updated: 2026-07-28 (intervals redesign + security sweep, 34 commits, both LIVE). **Honest note:** this
+file had already drifted 3 sessions behind before tonight — the 2026-07-24/-25 sessions (units toggle,
+Playwright viewport fix, solo_only lockdown, the get-ready-countdown intervals work) shipped and are fully
+documented in STATUS.md/LOG.md, but were never mirrored here. Tonight's reconciliation covers what's directly
+relevant to this session's own work (the Runner-features interval row below, and this new backlog section) —
+not a full 3-session backfill, which would be a separate task of its own. ④ coach parity (Progress overhaul)
+still remains from further back._
+
+---
+
+## 🐛 Session backlog — 2026-07-28 (intervals redesign + a major client→coach XSS sweep)
+
+_Full detail in STATUS.md (top of file) and LOG.md 2026-07-28 — this section is a pointer + the roadmap-level
+decisions, not a duplicate of the full writeup._
+
+**✅ Shipped — Intervals became a real exercise type** (34 commits, edb8995..60238be): one block per exercise
+(not a duplicated row per round) expanded into a flat phase list the runner walks by index. Built via
+Subagent-Driven Development (9 tasks), 8 real bugs caught during the build — see LOG for the full list,
+headline one being a total runner freeze on every interval workout that 20 tests missed because none let a
+real timer reach zero. New `workout_log_sets.phase` column; Progress-page aggregates + charting both updated.
+Migration `scripts/add-interval-type-2026-07-25.sql`, run live by Jake.
+
+**✅ Shipped — a live CRITICAL security fix, unrelated to intervals**: `client_check_ins.notes` (a client's
+own wellness note) rendered raw on the coach's client-profile Overview tab — the 4th instance of this
+codebase's recurring client→coach stored-XSS pattern (prior: 2026-07-13/-18/-23). Found by the mandatory
+whole-branch review, not by Jake. ~33 sinks closed across `client_check_ins`/`clients`/`goals`/`events`. Also
+logged in CRITICAL.md's Timeline.
+
+**Decisions locked this session:** interval rounds are identical only (no ladders/pyramids — deferred until
+real need); work is measured by time OR distance; warmup/cooldown are recorded, rest/recovery are timed-only
+(Jake's own 2026-07-23/-25 calls); given the beta timeline, Jake chose to build intervals over resuming Solo
+when the two collided — **Solo explicitly slipped past its 31 July target**, see the "PT-facing features" /
+STATUS.md bug ledger for the full decision row.
+
+**🗓 Deliberately NOT built:** a full interval-block editor for the "Log session" manual/retroactive-entry
+modal — that modal now seeds the block's total time as a sane default instead of a blank row, but genuinely
+reconstructing warmup/work/rest/cooldown by hand in that surface would be a real UI feature, not a bug fix.
+Worth its own scoping session if retroactive interval logging turns out to matter in practice.
+
+**🐛 Found, deliberately deferred (Low, tracked not fixed):** the check-in-notes regression test's own cleanup
+silently no-ops — `client_check_ins` has no DELETE grant for any role via the client API. 7 inert debris rows
+in the shared Test Client fixture; cleanup SQL given to Jake inline. Same accepted class as the already-tracked
+`workout_logs` fixture-erosion issue below. Also found but not chased further: `clients.email`/`.phone` are
+now CONFIRMED client-writable (not just plausible) via the same RLS grant `saveWeightGoals` already exercises
+— worth knowing if a future feature ever assumes those fields are coach-controlled.
 
 ---
 
@@ -359,7 +403,7 @@ _Jake live-tested a real gym session plus the wider app end-to-end and reported 
 | Feature | Status | Notes |
 |---|---|---|
 | Real-time gym logger | ✅ Done | |
-| Cardio mode + interval timer | ✅ Done | |
+| Cardio mode + interval timer | ✅ Done | **Redesigned 2026-07-28** — intervals is now its own first-class exercise type (block model + phase-walk runner), superseding the 2026-07-24 get-ready-countdown-only version. Steady-state cardio's own timer is untouched and stays separate by design. Full detail in STATUS.md/LOG.md 2026-07-28. |
 | AMRAP / EMOM / circuit timer mode | 🗓 Planned | Dedicated timer for AMRAP (count-down), EMOM (minute boundary beep), circuit (rounds × work/rest); competitor standard on TrainHeroic |
 | Rest timer | ✅ Done | |
 | Bodyweight / assisted / superset support | ✅ Done | |
