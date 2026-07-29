@@ -1,12 +1,43 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-28 (intervals redesign + security sweep, 34 commits, both LIVE). **Honest note:** this
-file had already drifted 3 sessions behind before tonight — the 2026-07-24/-25 sessions (units toggle,
-Playwright viewport fix, solo_only lockdown, the get-ready-countdown intervals work) shipped and are fully
-documented in STATUS.md/LOG.md, but were never mirrored here. Tonight's reconciliation covers what's directly
-relevant to this session's own work (the Runner-features interval row below, and this new backlog section) —
-not a full 3-session backfill, which would be a separate task of its own. ④ coach parity (Progress overhaul)
-still remains from further back._
+_Last updated: 2026-07-29 (6 runner/builder bug fixes + 3 review-found fixes, `eb9ec3f`, LIVE). Jake dropped
+beta-timeline pressure this session ("push it back if needed") — the 31 July date is no longer driving
+priority; see STATUS.md's ledger for the still-open Solo-account-type decision this affects. ④ coach parity
+(Progress overhaul) still remains from further back; not touched this session._
+
+---
+
+## 🐛 Session backlog — 2026-07-29 (6 live runner/builder bugs + 3 review-found fixes)
+
+_Jake handed over 8 things found using the app for real (6 in one message, 2 more mid-review), explicitly
+deprioritizing the beta timeline first. Full detail in STATUS.md (top of file) — this section is a pointer +
+the roadmap-level decisions, not a duplicate of the full writeup._
+
+**✅ Shipped (`eb9ec3f`):** 0-weight silently rejected/dropped (4 sites, falsy-zero bug); jump exercises never
+showed last-session data (stale select allowlist); the 3×-reported add-exercise-not-appearing bug finally
+root-caused (fire-and-forget uncaught propagation chain) and fixed with a shared `_afterTemplateExerciseSave`;
+"Bodyweight" removed as a redundant exercise Category; rest timer redesigned to survive navigating to another
+exercise mid-rest (new persistent chip); a silent zero-phase program-assignment failure now fails loud. Plus
+3 more real bugs the mandatory pre-push multi-agent review caught in those fixes themselves (a toast-clobber
+on the solo self-assign path, a `window._templateCtx` race risking a cross-client propagation write, and
+mid-rest Add/Swap exercise bypassing the new rest-timer logic entirely). 14 new tests, all red-first verified.
+
+**Decisions locked this session:**
+- Rest-timer redesign: countdown keeps running in the background (not a separate read-only preview view) —
+  Jake's explicit pick between the two options offered.
+- Per-exercise unit override and supersets-vs-WOD/circuit-training confirmed as **three separate scoping
+  conversations**, not built this session — see the "🗓 Needs scoping" entries below.
+
+**🗓 Needs scoping — per-exercise unit override (NEW):** force a specific exercise to always display in a
+chosen unit regardless of the account-wide toggle (e.g. Trap Bar Jump always in cm). The account-wide toggle
+(shipped 2026-07-25) is wired through many call sites across builder/runner/Progress — a per-exercise override
+changes the formula at every one. Not started.
+
+**🗓 Needs scoping — WOD/circuit training (NEW), separate from the already-banked "Add Superset" item below:**
+N exercises in one timed block (e.g. 20-min AMRAP), fixed rep target per exercise per round, count total
+rounds completed. No existing data model — closest precedent is the 2026-07-25 intervals block model, but
+that's single-exercise; a WOD groups multiple exercises into one block. Realistically an intervals-redesign-
+scale build (new block-group concept + new runner round-counting state machine), not a quick add.
 
 ---
 
@@ -307,7 +338,7 @@ _Jake live-tested a real gym session plus the wider app end-to-end and reported 
 | 3 | Trap Bar Jump UI inconsistent with sibling exercises in the same workout | Medium | ✅ Built 2026-07-05 | Live evidence with Jake overturned the original "broad jump" regex hypothesis — actual cause was `_isPlainStrengthExercise` deliberately excluding any exercise with `intensityMin` (%1RM) set, regardless of name. Fixed by removing that exclusion (the table's target bar already computed %1RM→kg correctly). Timed/unilateral exercises still excluded by design — no change there. |
 | 4 | Runner delete-set button too close to the complete-set (✓) button | Medium | ✅ Built 2026-07-05 | `margin-left:8px` added between the two buttons. |
 | 5 | Runner RPE field — header already says RPE/RIR, field itself redundantly repeats "RPE" | Low | ✅ Built 2026-07-05 | Mobile placeholder now shows a numeric range hint (`1–10`/`0–5`) instead of repeating "RPE". |
-| 6 | Add Superset — replace the AMRAP button in the add-exercise modal with "Add Superset"; runner should treat the pair as one on-screen unit, tracking which set/exercise within the pair | Future | Scoping needed | Confirmed superset today is an exercise-level text field (app-workouts.js:906, ~1035), not a per-set pairing — a data-model change, not a label swap. Jake explicitly wants to scope this together. |
+| 6 | Add Superset — replace the AMRAP button in the add-exercise modal with "Add Superset"; runner should treat the pair as one on-screen unit, tracking which set/exercise within the pair | Future | Scoping needed | Confirmed superset today is an exercise-level text field (app-workouts.js:906, ~1035), not a per-set pairing — a data-model change, not a label swap. Jake explicitly wants to scope this together. **Confirmed 2026-07-29: this is a SEPARATE ask from WOD/circuit training** (N-exercise timed block, round counting) — see the 2026-07-29 session backlog above. Both need scoping, but as two distinct conversations, not one. |
 
 ### Area 2 — Progress & Stats
 | # | Item | Priority | Status | Notes |

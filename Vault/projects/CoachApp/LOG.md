@@ -4,6 +4,91 @@ Newest first.
 
 ---
 
+## 2026-07-29 — 6 live runner/builder bugs fixed + 3 more caught by the pre-push review — pushed eb9ec3f, CI green, pre-push hook 56/57 smoke green
+
+_Jake opened by dropping the beta-timeline pressure entirely ("push it back if needed, don't worry about
+beta") and handed over 8 things found using the app for real — 6 in one message, then 2 more mid-review (a
+redundant exercise Category, a 0-weight rejection). Investigated via 3 parallel Explore agents + direct
+reads, entered Plan Mode (2 clarifying AskUserQuestion rounds, a Plan agent for the 5 concrete fixes,
+approval before any code), built, then the mandatory `multi-agent-review` (3 fixed angles) caught 3 more real
+bugs in the fixes themselves before push — all fixed same session._
+
+**Done (LIVE) — the 6 reported bugs:**
+- **0 weight silently rejected, then silently dropped even past the reject** — `toggleTableSet`'s `!row.weight`
+  guard and 3 sibling sites (`_syncLoggedSetsFromTable`, both `saveRunnerSession` weight_kg writes) all treated
+  JS's falsy `0` as "nothing entered." Fixed all 4 with an explicit not-null/not-empty check (`_hasWeightVal`).
+- **Jump exercises (Depth Jump etc.) never showed last-session data** — `fetchRunnerLastSession`'s `select()`
+  never included `height_cm`/`distance_m` (stale allowlist, les-036 class). Widened the select + the
+  post-fetch filter + the ghost-text fallback in `renderStrengthTable`.
+- **Add-exercise-not-appearing-until-refresh, root-caused after 3 reports** (2026-07-13, -22, -28).
+  `saveExerciseToTemplate`/`saveEditTemplateExercise`/`deleteTemplateExercise` each ended in a bare,
+  un-awaited, uncaught propagation call — any failure inside it silently left the stale pre-edit list on
+  screen. New shared `_afterTemplateExerciseSave` re-renders immediately, unconditionally, then awaits
+  propagation in a try/catch that toasts on failure.
+- **"Bodyweight" removed as an exercise Category option** — redundant with the real per-set BW toggle.
+  Dropped from both dropdowns + `starter-content.js` seed data (8 rows → `category: null`; existing live rows
+  left as-is, fix-forward).
+- **Rest timer redesigned to survive navigating to view another exercise mid-rest.** Jake's own framing:
+  "fix as a bug or redesign" — offered two options via AskUserQuestion, he picked "keep running in the
+  background" over "a separate read-only preview view." New `_runner._restForExIdx`/`_restPendingFire`
+  decouple "a rest is counting down" from "which exercise's `_afterRest` may fire," preserving the exact
+  corruption-guard `runnerJumpTo`/`runnerGoBack` already had. New persistent "Resting — 0:45" chip; tap to
+  return. 4 existing reads that assumed "a rest is running" meant "for the exercise on screen" were given an
+  ownership gate. The pre-existing regression test guarding the corruption class this had to not reopen
+  (`tests/intervals-redesign-2026-07-25.spec.js:411`) was re-run directly and confirmed still green.
+- **Same-day program assignment "not there" — reproduced live, root cause was NOT the date.** Ruled out the
+  previously-fixed race (both assign paths already `await` the clone) and a date-boundary off-by-one (the
+  Workouts page's `hasProgram` check does no date comparison at all). Actual mechanism, confirmed via direct
+  Playwright repro against real data: assigning a program with **zero phases** hits `_cloneProgramForClient`'s
+  early-return, creating a `client_programs` row with zero `client_program_workouts` and no error. Now fails
+  loud (toast) on this and on a genuine phase-fetch/insert error, instead of a bare silent `return`.
+
+**Bugs found + fixed in the fixes themselves, by the mandatory pre-push `multi-agent-review` (3 blocking
+findings, one per angle, all real):**
+- **Agent B (solo-mode)** — the solo self-assign flow's own unconditional "Program added to your plan"
+  success toast was instantly overwriting the new zero-phases warning (`showToast` keeps a single DOM node,
+  no queue) — for solo specifically, the new fail-loud toast this session just added was invisible for
+  exactly as long as it takes the next line to run. Fixed by having `_cloneProgramForClient` return a success
+  flag the caller checks before showing its own toast.
+- **Agent A (security)** — the add-exercise fix's restructure introduced a genuine race: `_afterTemplateExerciseSave`
+  re-read `window._templateCtx` fresh AFTER an `await` (a real network round-trip inside `openTemplate`), so a
+  coach clicking into a DIFFERENT client's plan during that gap could have their edit's propagation silently
+  operate on the wrong client — including, in the worst case, writing onto the wrong client's templates.
+  Fixed by snapshotting `ctx`/`window._lastExerciseChange` before the await and threading them through
+  explicitly to `_checkClientPlanPropagation`/`_checkSiblingPropagation`.
+- **Agent C (duplicates/render-safety)** — "⇄ Swap exercise"/"+ Add exercise" aren't gated off during a rest
+  and bypassed the whole rest-timer redesign entirely: add pushed a new exercise + changed `exIdx` without
+  removing the stale floating overlay (which then froze, its Skip button still wired to fire against whatever
+  exercise is now on screen); swap could mutate the exercise a rest belongs to out from under it, deleting
+  `ex.phases` a queued `_afterRest` depended on. Fixed both paths (add preserves the rest + drops the stale
+  overlay; swap of the resting exercise abandons the rest cleanly, no callback fired) plus added a defensive
+  ownership check to `skipRestTimer()` itself. Agent C also flagged one of my OWN new test edits (a
+  source-text regex in `tests/intervals-2026-07-24.spec.js`, updated to match `runnerGoBack`'s legitimate
+  refactor) as provable-but-not-enforced — rewritten as a real behavioral test.
+
+**Not built — flagged for a scoping conversation, per Jake's own split of the ask:**
+- **Per-exercise unit override (NEW)** — force a specific exercise to a fixed unit regardless of the
+  account-wide toggle. Real scope (touches every call site the 2026-07-25 units rollout touched); not
+  started.
+- **Supersets redesign vs. WOD/circuit training** — confirmed via AskUserQuestion as two separate asks, not
+  one. WOD/circuits (N exercises, one timed block, round counting) has no existing data model at all —
+  realistically an intervals-redesign-scale build, not a same-session add-on.
+
+**Process notes:** ran in Plan Mode start to finish — 3 parallel Explore agents for initial investigation, 2
+rounds of AskUserQuestion (unit-override scope + timer-redesign approach / superset-vs-WOD split), a Plan
+agent for the 5 concrete fixes' implementation design, plan file written and approved before any code. Live
+reproduction (not guessing) used for the same-day assignment bug per this project's Iron Law — created and
+cleaned up throwaway test debris via direct Supabase queries in a throwaway spec, deleted afterward. 14 new
+tests (`tests/ledger-fixes-2026-07-29.spec.js`), every one red-first verified against pre-fix code (`git
+show HEAD:<file>` to get the real pre-fix content, confirm the assertion fails, restore). Full suite: 287
+passed / 4-5 pre-existing unrelated `client_programs`-fixture-gap failures (same tracked class as prior
+sessions, one test flaked-passed-on-retry this run — reproduced clean 3/3 in isolation, confirmed
+environmental not a regression) / 2 skipped. Mobile-check on the new rest-timer chip caught a tap-target
+under the 44px/10px-padding guideline — fixed (min-height:44px). app-runner v45→46, app-workouts v45→46,
+app-programs v26→27, starter-content v2→3.
+
+---
+
 ## 2026-07-28 — Intervals redesign (new exercise type + phase-walk runner) + a major client->coach XSS sweep, incl. one live CRITICAL unrelated to the feature — pushed 34 commits (edb8995..60238be), CI green
 
 _Straight after this project's second `/save` of the prior session, Jake asked to build Solo as a genuine
