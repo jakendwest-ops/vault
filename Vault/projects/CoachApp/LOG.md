@@ -4,6 +4,154 @@ Newest first.
 
 ---
 
+## 2026-07-30 — CRITICAL workout_logs RLS gap closed + 3 "fixed" bugs from 2026-07-29 root-caused + 19-site PII sweep — pushed 74d3024, pre-push hook 56/57 smoke green
+
+_Session opened with `/hello-claude`, then Jake handed over the exact repro steps for the add-exercise bug
+(programs > part time athlete > full body workout > edit workout > add exercise > enter any exercise and
+save) plus two one-line reports: "Cannot add 0 to depth jump" and "full body > runner > depth jump does not
+show any previous exercise history." All three were things the 2026-07-29 session had marked "fixed —
+awaiting Jake." Per this project's Iron Law (no fixes without root-cause investigation), each was
+re-investigated from scratch rather than assumed to be a re-occurrence of the same bug — and in all three
+cases, the 2026-07-29 fix turned out to be real but incomplete, not wrong._
+
+**Done:**
+- `js/app-workouts.js` (v46→v47) — `saveExerciseToTemplate`: moved `#att-notes`/`#att-superset` DOM reads to
+  before `closeModal()` runs (it does a real `.remove()`), fixing a `Cannot read properties of null` crash
+  that aborted the function before it ever reached the 2026-07-29 re-render fix.
+- `js/app-runner.js` (v46→v47) — renamed `_hasWeightVal` → `_hasNumVal` (no longer weight-specific) and
+  applied it at 9 sites: `toggleTableSet`'s jump_height/jump_distance guards, `_syncLoggedSetsFromTable`'s
+  jump branches, `saveRunnerSession`'s height_cm/distance_m + weight writes, `fetchRunnerLastSession`'s set
+  filter, `saveWorkoutSession`'s weight write (a sibling function, different save path), `editRunnerSet`'s
+  weight-edit pre-fill, and both the mobile and desktop weight inputs in `renderLogExercises`.
+- `js/app-progress.js` (v30→v31) — `_setDetailsLine`'s `if (x.height_cm)` → `!= null`, so a real 0cm jump
+  shows in the My Progress diary instead of being silently dropped.
+- `tests/ledger-fixes-2026-07-30.spec.js` (new, 10 tests) — every test red-first verified against the
+  pre-fix code (reverted the 3 touched files to HEAD via `git show`, confirmed each assertion failed,
+  restored).
+
+**Bugs found + fixed:**
+- **Add-exercise still not appearing without a refresh (4th report).** Root cause: `saveExerciseToTemplate`
+  closed the modal, then read the now-deleted `#att-notes`/`#att-superset` a second time to build
+  `window._lastExerciseChange.row` — throwing and aborting before `_afterTemplateExerciseSave` (the
+  2026-07-29 fix) ever ran. The insert had already committed, so the exercise really was added; it just
+  never repainted. Confirmed via a real-DOM Playwright test (not a mock) that reproduced the exact crash.
+- **0 rejected for Depth Jump height/distance.** Same falsy-zero mistake as 2026-07-29's weight fix, at 3
+  sites in `js/app-runner.js`. Jake's report proved the class extends past weight to any field where 0 is
+  a real value.
+- **Depth Jump last-session history — 2nd, deeper root cause.** A controlled experiment (log a real jump
+  set via the actual save path, relaunch, inspect the fetch result) proved the 2026-07-29 fix genuinely
+  works end-to-end for ordinary data. Multi-agent review then found the real gap while auditing the 0-value
+  fix for siblings: `fetchRunnerLastSession`'s set filter (`s.weight_kg || s.reps_achieved || s.height_cm ||
+  s.distance_m`) is a truthy check — a jump set logged with `height_cm: 0` and no reps is entirely excluded,
+  even though it saved correctly. Very likely the actual mechanism behind Jake's report.
+- **9 more sibling instances of the same falsy-zero class, found by multi-agent review, none reported by
+  Jake directly:** `saveWorkoutSession` (the manual Log Session modal — a separate save path from the
+  runner) had its own identical `if (s.weight)` bug; that same modal's `renderLogExercises` re-renders a
+  real "0" back to blank when another set is added, which would have silently defeated the
+  `saveWorkoutSession` fix in normal use (the two were fixed together in the same commit); `editRunnerSet`'s
+  edit-overlay blanked a real 0kg set on open; `openWorkoutLog`'s past-session viewer showed "—" for a real
+  0kg set.
+
+**Deliberately not fixed, flagged for a scoped follow-up:**
+- `fmtDistanceM` (app-workouts.js) has the identical falsy-zero bug, shared across ~15 cardio-distance and
+  jump-distance call sites — too broad to fold into a height-focused session; needs its own scoping pass.
+- `openWorkoutLog`'s past-session viewer has no jump_height/jump_distance column at all (only cardio vs
+  weight/reps) — a display gap, not a data-loss bug, needs new UI not a null-check flip.
+- Pre-existing, found by tonight's security review, unrelated to this diff: a `clients` id-only read with a
+  swallowed-error `coach_id` fallback in both `saveRunnerSession`/`saveWorkoutSession` (needs a behavioural
+  cross-tenant probe before concluding it's exploitable); session names in `log.*` calls; an unanchored
+  `exercises` UPDATE in `_rememberExerciseMetricType`. All added to the STATUS.md ledger as new rows.
+
+**Decided:**
+- Root-cause every re-reported "fixed" bug from scratch rather than assuming continuity with the prior
+  session's diagnosis — in all 3 cases tonight, the earlier fix was real but landed one layer above the
+  actual defect, and assuming otherwise would have produced another guess-fix.
+- Used controlled live Playwright experiments against the real Supabase backend (not the E2E fixture
+  account's canned data) to test whether a fix actually works end-to-end, rather than reasoning about it
+  from code alone — this is what surfaced that the Depth Jump fetch pipeline itself was fine, redirecting
+  the investigation to the filter instead of re-patching working code.
+
+**Why:**
+- The bug ledger's "fixed — awaiting Jake" status is not the same as "closed" for a reason: exactly this
+  happened tonight. Jake reporting the same symptom twice is signal, not noise — it means the first fix
+  addressed a real but different mechanism, not that the investigation was wrong.
+
+---
+
+**Round 2, same session — Jake said "fix the bug findings," meaning everything flagged above as
+deliberately deferred.**
+
+**Done:**
+- `js/app-workouts.js` — `fmtDistanceM(m)` rewritten to `!= null`/`isNaN` checks instead of `if (!n)`, so
+  a real 0m survives. `toggleExerciseArchived`/`saveEditExercise`/`deleteExercise`/
+  `_rememberExerciseMetricType` gained `.eq('coach_id', currentUser.id)`.
+- `js/app-runner.js` — `openWorkoutLog` gained a jump_height/jump_distance display branch (`_resolveMetricType`
+  on the fetched `metric_type`). `saveRunnerSession`/`saveWorkoutSession` now refuse to save (instead of
+  defaulting `coachId` to `currentUser.id`) when the `clients` ownership lookup returns no row. 2 unguarded
+  `fmtDistanceM(_cardioDistanceM(s))` cardio call sites gained an explicit `> 0` guard.
+- `js/app-calendar-goals.js` (v5→v6, missed the cache-bust on the first pass, caught before push) —
+  `deleteEvent`/`deleteGoal` gained `.eq('created_by', currentUser.id)`.
+- 19 sites across `app-runner.js`/`app-workouts.js`/`app-progress.js`/`app-calendar-goals.js` had PII
+  (session/exercise/goal/event/milestone names, check-in values) stripped from `log.*` calls.
+- `scripts/fix-workout-logs-insert-policy-2026-07-30.sql` — new migration, run live by Jake.
+
+**Bugs found + fixed:**
+- **CRITICAL — `workout_logs` had no ownership check between `client_id` and `coach_id`, on both INSERT
+  and UPDATE.** Confirmed exploitable via a live 2-account probe (PT2, an unrelated coach owning zero
+  clients, successfully inserted a `workout_logs` row against PT's real client) — both through the app's
+  own JS and via a raw insert bypassing it entirely, proving the gap was in the RLS policy itself. Once
+  Jake pulled the real `pg_policies` data: `"coaches manage own workout logs"` was a single `cmd=ALL`
+  policy checking only `coach_id = auth.uid()`, covering SELECT/INSERT/UPDATE/DELETE with no client_id
+  check; its UPDATE sibling had the identical gap, meaning a coach could also re-point an existing real log
+  onto a client they don't own. Fixed both the JS side and the SQL side (split the ALL policy into a
+  coach-SELECT policy plus tightened INSERT/UPDATE policies). **A first draft of the SQL had its own bug**
+  — an unqualified `coach_id` inside the policy's subquery resolved against the wrong table (Postgres
+  doesn't raise a cross-query-level ambiguity error) and would have silently rejected every SOLO workout
+  save — caught by 2 independent multi-agent-review passes before it ever reached Jake. Jake ran the
+  corrected SQL, confirmed the real policy output matched, then confirmed a real workout still saves.
+- **The PII sweep missed 6 sites on the first pass** (goal/event/milestone titles in
+  `app-calendar-goals.js`) — caught by the same review round that found the SQL bug. The pre-push hook's
+  own PII regex only matches explicit `{ name: ... }` object syntax, not ES6 shorthand `{ name }` — it
+  would not have caught any of the 19 sites either way; this was a manual sweep both times.
+- **`fmtDistanceM`'s own fix introduced a regression**, found by the same review: `_cardioDistanceM(s)`
+  returns a literal 0 (never null) for "not entered" by design — every OTHER caller sums/compares it as a
+  number — so once `fmtDistanceM(0)` stopped being blank, 2 display call sites started showing "0 m" on
+  every duration-only cardio set (the common case). Fixed with an explicit `> 0` guard at both, matching
+  the pattern every OTHER `fmtDistanceM(_cardioDistanceM(...))` call site already used.
+- **6 more unanchored writes.** `exercises` (4 functions, anchored on `coach_id`) — a live PT2 probe
+  confirmed RLS was already blocking these even before the JS anchor, so this is hardening, not a closed
+  hole (unlike `workout_logs`). `deleteEvent`/`deleteGoal` (anchored on `created_by`) — reasoned from the
+  established FK-anchor convention and confirmed coach-only reachability, not individually probed.
+
+**Deliberately not fixed, still open:**
+- `saveGoalProgress`/`saveEditGoal`/`toggleMilestone`/`toggleClientMilestone` — same unanchored-write shape
+  as `deleteEvent`/`deleteGoal`, not yet touched.
+- `workout_log_exercises`/`workout_log_sets` — reasoned as safe (anchor via the now-fixed
+  `workout_logs.coach_id`) but not independently, behaviourally probed the way `workout_logs` itself was.
+
+**Decided:**
+- Multi-agent review ran twice this session, once per round — round 2's third review agent was cut off by
+  an API spend limit mid-review; judged the 2 completed full reports sufficient given both independently
+  found and converged on the exact same critical SQL bug (a strong signal, not a coincidence).
+- When Jake pasted back the ACTUAL `pg_policies` output (not the guessed policy names in the SQL's first
+  draft), rewrote the fix against the real policy names and real structure rather than adjusting the guess
+  — this is also what surfaced the UPDATE-side gap, which the original guess-based draft never covered at
+  all (it only touched INSERT).
+
+**Why:**
+- "Fix the bug findings" from a review pass is not automatically low-risk just because the individual
+  items sound small — one of them (a `clients` id-only read most people would file as "an edge case")
+  turned out to be a live, working exploit against real client data the moment it was actually tested.
+
+`tests/ledger-fixes-2026-07-30.spec.js` — 20 tests total (10 from round 1 + 10 from round 2), every one
+red-first verified. Full suite: 300 passed / 4 pre-existing unrelated `client_programs`-fixture-gap
+failures / 1 unrelated flake (`solo-account.spec.js`, passed on retry) / 2 skipped. Pushed `74d3024`,
+pre-push hook 56/57 smoke green (2 non-blocking WARNs: `workout_templates`/`programs` query-scope and 2
+hardcoded emails, both pre-existing and unrelated to this diff). Cache-bust: app-workouts v46→47,
+app-runner v46→47, app-progress v30→31, app-calendar-goals v5→6.
+
+---
+
 ## 2026-07-29 — 6 live runner/builder bugs fixed + 3 more caught by the pre-push review — pushed eb9ec3f, CI green, pre-push hook 56/57 smoke green
 
 _Jake opened by dropping the beta-timeline pressure entirely ("push it back if needed, don't worry about

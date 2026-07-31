@@ -1,9 +1,22 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-29 (6 runner/builder bug fixes + 3 review-found fixes, `eb9ec3f`, LIVE). Jake dropped
-beta-timeline pressure this session ("push it back if needed") — the 31 July date is no longer driving
-priority; see STATUS.md's ledger for the still-open Solo-account-type decision this affects. ④ coach parity
-(Progress overhaul) still remains from further back; not touched this session._
+_Last updated: 2026-07-30 (CRITICAL `workout_logs` RLS gap closed + 3 re-reported bugs root-caused + a
+19-site PII sweep + 6 more ownership anchors, `74d3024`, LIVE — confirmed by Jake live). Full writeup in
+STATUS.md (top of file). No roadmap-level scope decisions this session — pure bug-fix + security-hardening,
+same beta-deprioritization from 2026-07-29 still holds. ④ coach parity (Progress overhaul) still remains
+from further back; not touched this session._
+
+---
+
+## 🔴 Security follow-up needed — 2026-07-30
+
+The `workout_logs` RLS fix (STATUS.md ledger, confirmed) only covered `workout_logs` itself. Flagged but not
+independently probed this session: `workout_log_exercises`/`workout_log_sets` (reasoned as safe — they
+anchor via the parent `workout_logs.coach_id`, which is now correctly anchored — but not behaviourally
+tested the way `workout_logs` itself was). Also still open, same "unanchored write" shape, lower priority
+(UPDATE not DELETE): `saveGoalProgress`, `saveEditGoal`, `toggleMilestone`, `toggleClientMilestone`
+(js/app-calendar-goals.js). Worth a dedicated session folding into the existing "PT/Personal boundary audit
+across EVERY remaining table" backlog item (STATUS.md, open since 2026-07-13) rather than another one-off.
 
 ---
 
