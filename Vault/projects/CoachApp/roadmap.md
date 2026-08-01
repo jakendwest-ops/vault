@@ -1,10 +1,50 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-07-30 (CRITICAL `workout_logs` RLS gap closed + 3 re-reported bugs root-caused + a
-19-site PII sweep + 6 more ownership anchors, `74d3024`, LIVE — confirmed by Jake live). Full writeup in
-STATUS.md (top of file). No roadmap-level scope decisions this session — pure bug-fix + security-hardening,
-same beta-deprioritization from 2026-07-29 still holds. ④ coach parity (Progress overhaul) still remains
-from further back; not touched this session._
+_Last updated: 2026-08-01 (2nd save) — **"Solo becomes a genuine role" data-model work shipped, merged to
+master locally (`1ef09c9`), not yet pushed** — closes the "Solo must become a genuine, independent account
+type" decision that slipped past the 31 July beta target. Scope-decomposed during brainstorming: this covers
+the DATA MODEL only (`profiles.role='solo'` now genuinely stored, not computed); public signup for solo
+accounts was explicitly deferred to its own future roadmap conversation, not built. Full writeup in STATUS.md
+(top of file) and the design spec (`docs/superpowers/specs/2026-08-01-solo-genuine-role-design.md`)._
+
+---
+
+## 🗓 Solo/signup — scoped but deliberately NOT built this session
+
+Jake's own decomposition during brainstorming: the data model (done, see below) and public signup/onboarding
+for new solo accounts (a real, larger future need — "some users will sign up... and will not have a link to
+a coach or PT") are two separate subsystems. Signup needs its own brainstorm→spec→plan cycle — today's work
+does not touch `handle_new_user` (still hard-codes `role='coach'` for every signup) or add any UI path to
+create a solo account without Jake running SQL by hand. Add to the next session's shortlist when Jake wants
+to pick it up.
+
+## 🐛 Session backlog — 2026-08-01, 2nd save (Solo becomes a genuine role)
+
+_Full detail in STATUS.md (top of file). Built via `superpowers:brainstorming` → approved spec → `superpowers:
+writing-plans` → 4-task Subagent-Driven Development build (isolated worktree) → final whole-branch review →
+local merge. This section is the roadmap-level pointer, not a duplicate of the full writeup._
+
+**✅ Shipped (local merge `1ef09c9`, not yet pushed):** `profiles.role='solo'` is now a real, permanently-
+stored value for the one real `solo_only` account (migration: `scripts/migrate-solo-role-2026-08-01.sql`,
+not yet run). `loadUserInfo()`'s `solo_only`-flag-checking branch replaced with one keyed on the native role
+(with a permanent transitional OR-clause so code-before-migration deploy ordering can't reopen the coach-view
+lockout or corrupt the starter seed — a real Critical finding the final review caught and a follow-up fix
+closed). The starter-content seeding bug this same overall session's earlier full-file review found (seeder
+gate checked the wrong role value; every seeded artifact hardcoded `is_personal:false`, permanently invisible
+to a solo account) is fixed as part of this same work — this was the actual bug motivating the whole feature.
+3 pre-existing tests (`tests/solo-only-2026-07-24.spec.js`) that hard-coded the retired mechanism's internals
+were updated to test the new mechanism's equivalent safety properties, not just patched to pass.
+
+**Decisions locked this session:**
+- Scope: data model now, signup as its own future conversation (Jake's explicit call, see the box above).
+- `solo_only` column: left in place, unused as the steady-state signal, but kept as a permanent transitional
+  safety net rather than being dropped — cheaper than removing it, and it closes a real deploy-ordering risk.
+- No RLS policy change — `profiles.role` is a display/routing concern in this codebase, verified no policy
+  keys on it (multi-tenancy's real boundary is `coach_id`/`client_id`, untouched).
+
+**Still needs Jake, in order:** run the SQL migration → push to origin → live-verify the real account
+(including confirming seeded exercises actually carry `is_personal:true`, not just that they appear — see
+STATUS.md for why that distinction matters). This ledger row does not close until then.
 
 ---
 
@@ -567,6 +607,7 @@ _Jake's master account gets a third "Personal" pill. Solo user's own client reco
 | Delete old Jake West PT-account client record | 🗓 Planned | Clean up PT dashboard — only real/test clients should remain |
 | Upgrade path: solo → PT-coached | 💡 Future | Solo accepts PT invite, coach_id stamped, retains history |
 | Upgrade path: solo → becomes a PT | 💡 Future | Role change; gains coach dashboard + client management |
+| **Solo becomes a genuine, stored account type (data model)** | **✅ Done 2026-08-01** (local merge, not pushed) | `profiles.role='solo'` now genuinely stored for the locked-down `solo_only` account, not computed in memory every login — see STATUS.md/design spec. **Separate mechanism from this table's other rows**, which are about the MASTER account's own Personal/solo view (Jake's own account, still role-cycling via `switchView()`, unaffected). Public signup for new solo accounts NOT built — own future item, see the box near the top of this file. |
 | **Personal account mirrors Client view exactly** | 🗓 Planned, needs scoping | 2026-07-05: Jake's own architecture statement — the only difference between Personal and Client should be no client/PT linkage. Confirmed real diffs exist today (`renderSoloDashboard` lacks the sudo/branding banners `renderClientDashboard` has; solo has a unique 4-tile stats row). Needs a dedicated session — ripples into the redundant-1RMs-on-Workouts-page and calendar-preview-parity items. See roadmap session backlog Area 3 #15. **2026-07-08 re-confirmed:** Jake restated this more strongly — solo should have zero links to any PT/client page. Re-checked: the solo nav and view-switcher gating already have no leaked links, so that half already holds. The gaps are unchanged (sudo/branding banners, unique stats row) — see session backlog 2026-07-08 Area 4 #11. |
 
 ---

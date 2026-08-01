@@ -4,6 +4,89 @@ Newest first.
 
 ---
 
+## 2026-08-01 (2nd save) — "Solo becomes a genuine role" built and merged to master locally — 1ef09c9, NOT pushed
+
+_Continuing the same overall session as the entry below (crossed from the weekly full-file review straight
+into item 3 of that session's 3-item plan: the Solo account-type decision). Jake said "build now" rather than
+deferring the conversation. Per the mandatory `superpowers:brainstorming` skill, ran a full structured
+brainstorm before any code: explored context, asked clarifying questions one at a time, and — critically —
+Jake's answers revealed the real ask was bigger than "flip a flag": a genuine, permanently-stored `role`
+value for the locked-down `solo_only` account today, AND a much larger future need (public signup for
+personal-only users with no coach link). Flagged this as two subsystems needing decomposition; Jake chose
+"scope #1 (data model) now, signup as its own conversation next" — exactly the call this project's own
+brainstorming discipline exists to force before code gets written on an ambiguous ask._
+
+**Done:**
+- Design spec written, self-reviewed, committed, and approved by Jake (`docs/superpowers/specs/2026-08-01-
+  solo-genuine-role-design.md`) — problem statement, scope boundary (master accounts untouched, no RLS
+  change, signup deferred), and the 4-part change (SQL, `loadUserInfo`, starter-content, verification).
+- Implementation plan written per `superpowers:writing-plans` (`docs/superpowers/plans/2026-08-01-solo-
+  genuine-role.md`) — 5 tasks, bite-sized TDD steps, real code in every step, self-reviewed for placeholders/
+  spec coverage/naming consistency.
+- Jake chose Subagent-Driven Development. Built in an isolated worktree (`.claude/worktrees/solo-genuine-
+  role`, its own dedicated test server on port 3002 to avoid contaminating another concurrent session's port
+  3001) via `superpowers:subagent-driven-development` — a fresh implementer subagent per task, a task-scoped
+  reviewer after each, a final whole-branch review at the end.
+- **Task 1** — `scripts/migrate-solo-role-2026-08-01.sql`: diagnostic → widen `profiles.role`'s CHECK
+  constraint defensively → flip the real `solo_only=true` account to `role='solo'` → verify. Reviewed clean.
+- **Task 2** — `js/app-core.js` `loadUserInfo()`: removed the dead `solo_only`-checking branch, replaced with
+  one keyed on `role==='solo'`. **The plan's own test design turned out to be wrong** — it assumed a coach
+  could self-insert a `coach_id IS NULL` clients row for testing; RLS actually requires `coach_id=auth.uid()`,
+  so that's never been possible for anyone (the one real solo account's row was always hand-provisioned by
+  Jake in the SQL editor). Root-caused live, fixed the plan's test to reuse PT's existing solo clients row
+  instead of planting one. The implementer also self-caught and fixed a real bug in the plan's own code
+  snippet (an opening `if` mis-written as a mid-chain `} else if`) via `node --check` before committing.
+  Reviewed clean after that correction.
+- **Task 3** — `js/starter-content.js` seeding fix: this is the actual bug the whole feature exists to close
+  (found by the earlier full-file review, see the entry below) — the seeder's gate checked the wrong role
+  value and every seeded artifact was hardcoded `is_personal:false`. Fixed both. **Task reviewer found two
+  real issues on the first pass**: the new test left uncleaned residual rows in the shared PT2 fixture
+  (extracted a proper `sweepPT2` helper into `tests/helpers.js`, now shared with `tests/onboarding.spec.js`
+  too), and the new `isSoloAccount` check used the reassignable `currentProfile.role` instead of an invariant
+  proxy — the exact raw-vs-reassigned-role bug class this feature exists to fix, just recurring inside its
+  own fix. Both addressed, re-reviewed clean.
+- **Task 4** — master-account regression coverage + full suite run. The full-suite run crashed once
+  (Chromium access-violation, environmental, not code) — retried clean. **Discovered 3 pre-existing tests
+  (`tests/solo-only-2026-07-24.spec.js`) genuinely broken by Tasks 2-3**, not environmental noise: that file
+  hard-codes the internals of the exact mechanism being retired (setting `solo_only` directly while checking
+  literal old source text via regex). Root-caused, fixed to test the NEW mechanism's equivalent safety
+  properties rather than left broken or deleted. Also found the task reviewer's own suggested fix for a
+  weaker finding (a master-account test's title over-promising) was itself wrong — `clients.user_id` has a
+  genuine UNIQUE constraint (already documented from a 2026-07-23 incident, `tests/gdpr-export.spec.js:84-97`)
+  meaning `_masterClientId`/`_soloClientId` are mutually exclusive by schema, never both populated — caught
+  and corrected before merge. Final: 311 passed / 5 known pre-existing / 1 known flaky / 2 skipped.
+- **Final whole-branch review** (most capable model) found 1 Critical + 3 Important findings a task-scoped
+  review couldn't catch: **deploying the code before Jake runs the SQL migration would silently reopen the
+  solo account's coach-view lockout AND permanently corrupt the starter seed** (this project auto-deploys on
+  push, and the SQL is a separate manual step — a real, plausible ordering hazard). Fixed with a permanent
+  transitional OR-condition so the code is safe regardless of deploy/migration order, not just a documented
+  convention. The first fix-wave attempt only half-closed this (widened the condition but never reassigned
+  `currentProfile.role`, leaving the account stuck rendering as a full — locked-out — coach dashboard with no
+  solo path at all) — caught by an independent re-review, fixed under Jake's explicit approval (the SDD
+  process caps automated fix rounds at one for the final review; this next round was a deliberate, Jake-
+  approved exception, not a silent retry), then independently re-verified via a fresh trace of all 4 account
+  shapes against the live code before trusting it. Also fixed: the migration didn't verify the account's
+  self-referential clients row exists before flipping role; the constraint drop-then-add wasn't transactional;
+  a stray untracked debug spec had inflated the reported test count by 1.
+- Merged to master locally (`1ef09c9`) — one trivial doc-only conflict (the plan file, an expected add/add
+  since the plan predates the worktree's corrections), resolved by taking the branch's fully-corrected
+  version. Verified the merge introduced zero drift by diffing every touched file's content against the
+  already-tested branch tip (byte-identical) rather than re-running the full 20-minute suite a second time
+  against a possibly-shared port. Worktree and branch cleaned up after confirming everything was captured in
+  the merge.
+
+**Decided:**
+- Push to origin, the SQL migration, and live verification are explicitly deferred to the next session, per
+  Jake's own instruction ("save now and we will pick this up tomorrow") — not an oversight.
+
+**Why:**
+- Jake's standing rule (Iron Law: no fixes without root-cause investigation) held throughout even under
+  subagent delegation — every "this looks broken" moment (the RLS assumption, the crash, the 3 pre-existing
+  test failures, the mutual-exclusivity claim) was independently verified against live code/DB behavior
+  before being accepted, not taken on a report's word, including reports from the review agents themselves.
+
+---
+
 ## 2026-08-01 — weekly full-file review closes a stored-XSS cluster in the runner — pushed de54bdb, pre-push hook 56/57 smoke green
 
 _Continuing the same overall session as 2026-07-30 below (crossed midnight). After the CRITICAL
