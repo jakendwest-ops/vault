@@ -1,5 +1,71 @@
 # CoachApp — STATUS
-_Last updated: 2026-07-30 — **3 "FIXED" BUGS FROM 2026-07-29 WERE STILL BROKEN — real root causes found,
+_Last updated: 2026-08-01 — **WEEKLY FULL-FILE REVIEW (overdue 8+ days) found a real, previously-undetected
+stored-XSS cluster in the runner — fixed same session, plus a confirmed (not speculative) solo_only
+seeding bug documented for a dedicated fix.** Continuing the same overall session as 2026-07-30 below —
+Jake approved the proposed 3-item plan ("go ahead") after the CRITICAL `workout_logs` fix: (1) security
+follow-up — done, see 2026-07-30 entry; (2) weekly full-file review — this entry; (3) Solo account type
+decision — still outstanding, needs Jake.
+
+Ran `multi-agent-review` in **full-file mode** (whole files, not a diff) against the 2 highest-churn
+modules (`app-runner.js`, `app-workouts.js` — 44/43 commits in 30 days, well ahead of the rest). Scoped to
+2 modules instead of the usual 2-3 given how much ground the session had already covered. The 3rd review
+angle (duplicates/render-safety) hit an API spend limit mid-review, same as one agent did earlier in the
+session — substituted with a lighter direct check (duplicate function-name grep across all 9 modules:
+clean; `setInterval`/`clearInterval` count ratio in both files: clears outnumber sets 17:7, no leak
+signal). The other 2 angles completed in full and both returned real findings.
+
+**🔴 FIXED — a genuine stored-XSS cluster in the runner's prescription-rendering path, ~15 sinks across
+`_buildTargetCols`/`_renderTargetBarHtml` (the shared target-bar builder — feeds BOTH the table and wizard
+render modes), the cardio target-chip row, several wizard-branch input `placeholder=`/`value=` attributes,
+and the PT-note block.** `sets_json`/`notes` are coach-authored JSONB with no schema enforcement — every
+one of these had an escaped sibling elsewhere in the same file, proving this was drift, not a design
+choice: `_buildTargetCols` escaped `tempo` only (one field out of ~6), leaving reps/%1RM/effort/rest raw;
+the PT-note block's twin in `app-workouts.js` already escaped all 3 of its branches. Confirmed direction:
+coach-authored data renders unescaped to whoever runs that session in the gym — at minimum a compromised
+or malicious coach account attacking their own clients (this app's own GDPR/health-data context makes that
+a real threat model, not a hypothetical). The other direction (a client writing to their own plan clone's
+`workout_template_exercises`, which would be the client→coach shape that's hit this codebase 3+ times
+before) needs a live probe to confirm or rule out — not done this session, flagged below. Fixed by escaping
+every raw field at the point it's built (matching the existing `tempo` precedent) rather than escaping at
+the shared render sink, since some values reaching that sink are already-escaped or safely-numeric-formatted
+and double-escaping would corrupt them. 3 new red→green tests in
+`tests/full-file-review-2026-08-01.spec.js`. Cache-bust: app-runner v47→48, app-workouts v47→48.
+
+**Also verified via live 2-account probes, all confirmed already RLS-safe (no fix needed):** `client_1rms`
+INSERT with an untrusted `client_id` (same shape as the CRITICAL `workout_logs` gap, same file, ~100 lines
+away — reasoned-risky, tested clean); a client attempting to INSERT into `exercises` claiming an unrelated
+coach's `coach_id` (not their own real coach) — also blocked.
+
+**🔴 CONFIRMED (not speculative — traced the exact execution path directly), NOT FIXED this session —
+a `solo_only` account's starter content can never actually be seen, for two independent reasons.** (1) A
+role-check race: `js/app-core.js:303` decides whether to seed based on the RAW db role (correct — its own
+comment says so, "regardless of which branch above reassigned the display role"), but
+`js/starter-content.js:84` re-checks the LIVE `currentProfile.role`, which the branch at
+`app-core.js:255-275` has already reassigned to `'solo'` by the time seeding would run — so seeding
+silently never happens, and `starter_seeded` never flips, so this repeats forever. (2) Deeper than the
+race: even if seeding ran, every artifact is written with `is_personal: false`
+(`js/starter-content.js:93` and siblings), but a `solo_only` account's role is ALWAYS `'solo'` for reads,
+and every read path in scope filters `.eq('is_personal', currentProfile?.role === 'solo')` — meaning
+`is_personal: false` content is structurally invisible to this account regardless of the race. The
+starter-content seeder needs to know it's seeding for a `solo_only` account and flip `is_personal: true`
+for that case specifically — a real, multi-part fix (seeder + role-check), not a quick patch, deferred to
+its own session given how much ground tonight already covered. Affects exactly one real live account today
+(the `solo_only` family-member account) — worth a live check on that account specifically before the next
+fix attempt, not another guess.
+
+**Full-file review, not fixed, flagged for later:** `workout_template_exercises` writes (INSERT/UPDATE/
+DELETE across `saveExerciseToTemplate`/`saveEditTemplateExercise`/`deleteTemplateExercise`/the
+`_propagateExerciseChangeToTemplates` fan-out) carry no app-level ownership anchor, unlike every sibling in
+the template family (`saveEditTemplate`/`deleteTemplate`/`saveEditExercise`/`deleteExercise`/
+`toggleExerciseArchived` all anchor AND verify row count). The fan-out's own `program_phases` lookup
+(`_checkSiblingPropagation`) is unanchored too. Not directly reachable through the UI — reasoned as
+RLS-only-defended, not proven — same "reasoned isn't proven" gap this session's other 3 probes closed for
+their own tables. A handful of `x?.coach_id || currentUser.id` silent-fallback reads still exist
+(`app-workouts.js:1589/1595/1929`, `app-runner.js:2676`) — read-paths only (safe direction: shows your own
+data instead of theirs), except `:1589`/`:1929` feed onward into an `exercises` INSERT, worth re-checking
+together.
+
+Previous, same session: 2026-07-30 — **3 "FIXED" BUGS FROM 2026-07-29 WERE STILL BROKEN — real root causes found,
 review surfaced 9 more sibling instances of the same falsy-zero class, all fixed same session (not yet
 pushed).** Jake opened the session with the exact repro path for the add-exercise bug plus two one-line
 reports ("cannot add 0 to depth jump", "depth jump does not show any previous exercise history"). All three
@@ -290,7 +356,7 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=7 · app-dashboard v=8 · app-clients v=9 · app-programs v=27 · app-calendar-goals v=7 · app-workouts v=47 · app-runner v=47 · app-progress v=31 · starter-content v=3  _(2026-07-30: root-caused 3 bugs Jake re-reported as still-broken, 9 sibling falsy-zero instances, a CRITICAL confirmed-exploitable `workout_logs` RLS gap (SQL run live by Jake, confirmed fixed), 19 PII-in-logs sites, 6 more unanchored writes, then a security follow-up confirming `workout_log_exercises`/`workout_log_sets`/`goals`/`goal_milestones` already RLS-safe — pushed 2c70f3d)_
+**App version:** app-core v=7 · app-dashboard v=8 · app-clients v=9 · app-programs v=27 · app-calendar-goals v=7 · app-workouts v=48 · app-runner v=48 · app-progress v=31 · starter-content v=3  _(2026-08-01: weekly full-file review found + fixed a real stored-XSS cluster in the runner's prescription render path (~15 sinks), confirmed 2 more tables already RLS-safe, and confirmed — not just suspected — a solo_only starter-content seeding bug deferred to its own session)_
 **CSS version:** v=7 (main.css) — `--surface-2`/`--bg-accent`/`--text-accent` now DEFINED (were referenced 54× and defined nowhere)
 **All commits pushed** — `origin/master` = local master = `74d3024`. Latest: **a CRITICAL confirmed-
 exploitable `workout_logs` RLS gap closed (Jake ran the SQL live, confirmed working)**, 3 bugs re-reported
@@ -304,7 +370,10 @@ closed including one live CRITICAL unrelated to the feature itself. Before that,
 fixed live** — pure test-infrastructure, no app behavior changed. Before that, the **units
 toggle shipped live**. Before that, the **progress overhaul shipped live** (①–②d capture + ③ display rebuild + B1–B6 analytics + runner "vs last session" block). 31 commits from 07febfa, deployed atomically (two pushes: `a02292e` the overhaul + review dedup, then `95e8e8f` the runner-block-shows-immediately tweak). Multi-agent review (3 angles + verifier) before the first push — 0 blocking, fixed one duplicate `_epley1RM`. CI green both. **NEW LIVE COLUMNS:** `metric_type` (exercises/template/log-exercise), `avg_hr`/`max_hr`/`height_cm`/`side` (workout_log_sets), `resting_hr` (weight_logs) — all migrations run live by Jake.
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp — deploy source switched 2026-07-03 from legacy branch-deploy to Actions-only (`build_type: workflow`); see CRITICAL.md timeline for why
-**Last push:** 2c70f3d (2026-07-30) — **security follow-up: behaviourally probed `workout_log_exercises`/
+**Last push:** de54bdb (2026-08-01) — **weekly full-file review: closed a stored-XSS cluster in the runner's
+prescription render path (~15 sinks), confirmed 2 more tables already RLS-safe, and confirmed (not just
+suspected) a solo_only starter-content seeding bug deferred to its own session.** Pre-push hook: 56/57
+smoke green. Previous: 2c70f3d (2026-07-30) — **security follow-up: behaviourally probed `workout_log_exercises`/
 `workout_log_sets` + `goals`/`goal_milestones` for the same shape of gap as the CRITICAL `workout_logs`
 fix — all confirmed already RLS-safe. `saveEditGoal` anchored to match, 3 siblings deliberately left
 unanchored (client-reachable or no owner column — RLS already covers them).** Pre-push hook: 56/57 smoke
@@ -698,6 +767,10 @@ starts, not at `/save`. Every row carries a `Reported` date and a `Status`._
 | ✅ **FIXED 2026-07-30 (round 2) — PII sweep, 19 sites across 4 files.** Session names, exercise/template names, check-in values, and (found on a second pass, missed the first time) goal/event/milestone titles stripped from `log.*` calls — ids/dates/counts kept. The pre-push hook's PII regex only matches explicit `{ name: ... }` syntax, not ES6 shorthand `{ name }` — would not have caught any of these. Supersedes the two rows below, which were narrower framings of the same class found earlier the same night. | 2026-07-30 | fixed — awaiting Jake | Low |
 | ✅ **FIXED 2026-07-30 (round 2) — 6 more unanchored writes.** `toggleExerciseArchived`/`saveEditExercise`/`deleteExercise`/`_rememberExerciseMetricType` (`exercises`, now anchored on `coach_id`) and `deleteEvent`/`deleteGoal` (`events`/`goals`, anchored on `created_by`). A live PT2 probe against the `exercises` writes found RLS was **already blocking these** even before the JS anchor — hardening, not closing an active hole, unlike the CRITICAL row above. | 2026-07-30 | fixed — awaiting Jake | Medium |
 | ✅ **FOLLOW-UP CLOSED 2026-07-30 (same session, round 3) — `workout_log_exercises`/`workout_log_sets` behaviourally probed (not just reasoned about) and CONFIRMED already RLS-safe**, same live 2-account pattern as the CRITICAL `workout_logs` finding: PT2 could not insert into either table against a real log owned by PT, both when targeting an existing PT-owned log and when planting an exercise row first. `goals`/`goal_milestones` UPDATE probed the same way — also confirmed already RLS-safe (PT2's update matched 0 rows). **`saveEditGoal` anchored on `created_by`** to match `deleteGoal` (coach-only reachable, confirmed via caller trace) — also purely hardening, not closing a hole. **Deliberately left unanchored, by design, not an oversight**: `saveGoalProgress` is CLIENT-reachable (a client updates progress on a goal their COACH created — anchoring on `created_by` would incorrectly block that legitimate path) and `toggleMilestone`/`toggleClientMilestone` (`goal_milestones` has no direct owner column at all — would need a 2-hop embed check for zero remaining security benefit, since RLS already fully defends it). Permanent regression tests added so a future RLS policy change can't silently reopen any of these without a test noticing. | 2026-07-30 | confirmed | Low |
+| ✅ **FIXED + LIVE 2026-08-01 — stored-XSS cluster in the runner's prescription render path, found by the (overdue) weekly full-file review.** `_buildTargetCols`/`_renderTargetBarHtml` (feeds both table and wizard modes), the cardio target-chip row, several wizard placeholder/value attributes, and the PT-note block all rendered coach-authored `sets_json`/`notes` unescaped — ~15 sinks total, all with an escaped sibling elsewhere proving this was drift. Confirmed direction: coach → whoever runs the session. The client → coach direction (client writing their own plan clone's exercises) needs a live probe, not yet done — see row below. Red→green `tests/full-file-review-2026-08-01.spec.js` (3 tests). | 2026-08-01 | fixed — awaiting Jake | **High** |
+| **Needs a live probe — can a client write to their own plan clone's `workout_template_exercises` and have it render, unescaped, in the coach's runner?** This is the client→coach direction of the XSS cluster fixed above (now fixed regardless of direction, but the WRITE PATH itself — whether a client even has UPDATE access to their plan clone's exercise rows — was never independently confirmed this session). Same shape as the 3+ prior client→coach stored-XSS incidents in this codebase. | 2026-08-01 | open | Medium |
+| **`solo_only` accounts can never see their seeded starter content — confirmed via direct code trace, not speculative.** Two independent causes: (1) `app-core.js:303` seeds off the raw DB role, but `starter-content.js:84` re-checks the live (by-then-reassigned-to-'solo') role and bails immediately — seeding silently never runs; (2) even if it ran, every seeded artifact is written `is_personal: false`, but a `solo_only` account's reads always filter `is_personal = true` (role is permanently 'solo') — structurally invisible either way. Needs the seeder to know it's seeding for a `solo_only` account and flip `is_personal` accordingly, plus the role-check fix — a real multi-part fix, not a quick patch. Affects the one real `solo_only` account today. | 2026-08-01 | open | **High** |
+| **`workout_template_exercises` writes carry no app-level ownership anchor**, unlike every sibling in the template family (`saveEditTemplate`/`deleteTemplate`/`saveEditExercise`/`deleteExercise`/`toggleExerciseArchived` all anchor AND verify row count). Includes the `_propagateExerciseChangeToTemplates` fan-out and its `_checkSiblingPropagation` lookup (`program_phases`, also unanchored). Not directly reachable through the UI; reasoned as RLS-only-defended, not proven — needs the same live-probe treatment this session gave `client_1rms`/`exercises`/`goals`. | 2026-08-01 | open | Medium |
 
 **Rowing/Running/SkiErg SQL (run in Supabase SQL editor):**
 ```sql

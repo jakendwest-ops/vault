@@ -4,6 +4,85 @@ Newest first.
 
 ---
 
+## 2026-08-01 — weekly full-file review closes a stored-XSS cluster in the runner — pushed de54bdb, pre-push hook 56/57 smoke green
+
+_Continuing the same overall session as 2026-07-30 below (crossed midnight). After the CRITICAL
+`workout_logs` fix, Jake approved a 3-item plan: (1) security follow-up on the fix's blast radius —
+done, see 2026-07-30 entry below; (2) the weekly full-file review, 8+ days overdue per `os-lint` — this
+entry; (3) the Solo account-type decision — still outstanding, needs Jake directly, not something to
+build unilaterally._
+
+**Done:**
+- Ran `multi-agent-review` in **full-file mode** (whole files, not a diff) against the 2 highest-churn
+  modules: `app-runner.js` and `app-workouts.js` (44/43 commits in the last 30 days, well ahead of the
+  rest). Scoped to 2 modules instead of the usual 2-3 given how much ground the session had already
+  covered.
+- `js/app-runner.js` (v47→v48) — escaped ~15 previously-unescaped sinks: `_buildTargetCols`/
+  `_renderTargetBarHtml` (5 fields — reps, %1RM, effort, rest, jump-distance target), the cardio
+  target-chip row (7 fields), 4 wizard-branch input `placeholder=`/`value=` attributes, the PT-note
+  block, and `ex.targetReps` in the header.
+- `js/app-workouts.js` (v47→v48) — escaped 4 more minor sinks in the same class (template name in a
+  client-assignment row, phase name, muscle-group section header, superset-group badge, legacy reps
+  field).
+- `tests/full-file-review-2026-08-01.spec.js` (new, 3 tests) — red-first verified against the pre-fix
+  code.
+
+**Bugs found + fixed:**
+- **Stored-XSS cluster in the runner's prescription-rendering path.** `sets_json`/`notes` are
+  coach-authored JSONB with no schema enforcement, and roughly 15 places rendered them straight into
+  `innerHTML`/attribute sinks with no escaping. Every single one had an escaped sibling elsewhere in the
+  same file, proving this was drift accumulated over many sessions, not a deliberate choice —
+  `_buildTargetCols` escaped exactly one field (`tempo`) out of six; the PT-note block's twin in
+  `app-workouts.js` already escaped all three of its branches. Confirmed direction: coach-authored data
+  renders unescaped to whoever runs that session in the gym. The other direction (a client writing to
+  their own plan clone's `workout_template_exercises`, the shape that's hit this codebase 3+ times
+  before) needs a live probe to confirm or rule out — not done this session, on the ledger.
+- **Two more tables live-probed for the same shape of gap as the CRITICAL `workout_logs` fix, both
+  confirmed already RLS-safe**: `client_1rms` INSERT with an untrusted `client_id` (same file, ~100
+  lines from the fixed code); a client attempting to INSERT into `exercises` claiming an unrelated
+  coach's `coach_id`. Neither needed a fix.
+
+**Found, NOT fixed, deliberately deferred:**
+- **`solo_only` accounts can never see their own seeded starter content — confirmed via direct code
+  trace, not speculation.** Two independent causes stacked on top of each other: (1) `app-core.js:303`
+  correctly gates seeding on the raw DB role, but `starter-content.js:84` re-checks the live
+  `currentProfile.role`, which has already been reassigned to `'solo'` by the time seeding would run —
+  so seeding silently never executes, and the flag never flips, so this repeats on every login forever;
+  (2) even if seeding DID run, every artifact is written `is_personal: false`, but a `solo_only`
+  account's reads always require `is_personal: true` (role is permanently `'solo'`) — so the content
+  would be invisible regardless of cause (1). Needs a real fix to the seeder (make it `solo_only`-aware)
+  plus the role-check — deferred to its own session rather than rushed at the end of an already very
+  long one. Affects the one real `solo_only` account in production today.
+- `workout_template_exercises` writes (add/edit/delete + the propagation fan-out) carry no app-level
+  ownership anchor, unlike every sibling in the template family. Reasoned as RLS-only-defended, not
+  proven — same "reasoned isn't proven" gap this session's other probes closed for their own tables.
+
+**Decided:**
+- The third review angle (duplicates/render-safety) hit the same API spend limit an agent hit earlier in
+  this session. Rather than retry (likely to hit the same wall), substituted a lighter direct check
+  myself: grepped all 9 modules for duplicate function names (clean — classic scripts share one global
+  scope, so a collision anywhere would silently shadow a function) and compared `setInterval`/
+  `clearInterval` counts in both files (17 clears vs 7 sets — safe direction, no leak signal). Not as
+  thorough as a full agent pass, but a reasonable substitute given the constraint, and better than
+  skipping the angle entirely.
+- Verified every finding by reading the cited lines directly before fixing anything (the review's own
+  Step 2) — this is what caught that Agent A's Finding 2/3 (client_1rms, exercises INSERT) were already
+  safe, avoiding two unnecessary defensive-hardening changes that would have added a round-trip query for
+  zero remaining benefit.
+
+**Why:**
+- `os-lint`'s full-file-review gate exists because diff-only review has a structural blind spot: code
+  nobody's touched recently never gets looked at again. This XSS cluster is the proof — none of it was
+  introduced by a recent diff; it accumulated because 2026-07-29/30's fixes only ever looked at the lines
+  they were already changing.
+
+`tests/full-file-review-2026-08-01.spec.js` — 3 tests, all red-first verified. Full suite: 307 passed,
+same 5 pre-existing unrelated `client_programs`-fixture-gap failures, 1 unrelated flake (a different test
+than earlier this session, passed on retry), 2 skipped. Cache-bust: app-runner v47→48, app-workouts
+v47→48. `os-lint`'s `full-file-review` marker updated.
+
+---
+
 ## 2026-07-30 — CRITICAL workout_logs RLS gap closed + 3 "fixed" bugs from 2026-07-29 root-caused + 19-site PII sweep — pushed 74d3024, pre-push hook 56/57 smoke green
 
 _Session opened with `/hello-claude`, then Jake handed over the exact repro steps for the add-exercise bug
