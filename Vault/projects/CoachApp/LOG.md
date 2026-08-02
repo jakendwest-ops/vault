@@ -4,6 +4,60 @@ Newest first.
 
 ---
 
+## 2026-08-02 — pushed the Solo-genuine-role feature + 2 new live-bug batches (v9/v29/v9/v52/v51/v34)
+
+**Done:**
+- Pushed `master` to `origin` (`de54bdb..393f1f6`, 21 commits) — closed out the Solo-genuine-role feature
+  that had sat local-only since 2026-08-01, plus the previous session's 5 easy-win ledger items, plus this
+  session's 2 new batches below. Pre-push hook (`checks.sh` + full Playwright suite) passed clean both times.
+- **Batch 1 (`3728890`, test fix `2029fc7`):** diary "No sets logged" note instead of `0/0/0` tiles
+  (`renderProgressPerSession`); client-authored per-exercise notes now render in `openWorkoutLog` (previously
+  write-only, fetched via `*` but never rendered); app-level ownership anchor (`_verifyTemplateOwnership`)
+  added to `saveEditTemplateExercise`/`deleteTemplateExercise` as defense-in-depth; `weight_logs` INSERT and
+  `workout_template_exercises` UPDATE cross-tenant writes confirmed already RLS-safe via live 2-account
+  probes, now with permanent regression tests.
+- **Batch 2 (`393f1f6`):** jump height/distance exercises now prescribe a rep RANGE, not a single value, in
+  all 3 places that render it (builder `renderTemplateSets`, runner target bar `_buildTargetCols`, day-row
+  formatter `_fmtSetDetail`) — one shared 2026-07-22 design choice, all fixed together, Jake's live report on
+  "Full Body A → Box Jump." Builder's per-set editor decluttered per Jake's live request: BW, Assist, and the
+  round-Repeat control (input + button) removed from the header; `repeatTemplateSet` (now unreachable, its
+  only caller gone) deleted along with its 2 tests. BW/Assist toggles stay visible only on a set that already
+  carries the flag — a legacy escape hatch (same pattern as the file's existing "Pace / km (legacy)" row) so
+  old bodyweight/assisted sets stay editable, but new sets can't acquire the flag via this control anymore.
+- 12 new/updated tests total in `tests/ledger-fixes-2026-08-02.spec.js`; 2 dead tests removed from
+  `tests/intervals-2026-07-24.spec.js` (their only subject, `repeatTemplateSet`, no longer exists).
+- Answered a live advisory question (swipe-to-delete globally): zero existing gesture code in the codebase —
+  new infrastructure, not a retrofit. Not scoped further; Jake said "just curiosity for now."
+
+**Bugs found + fixed:**
+- Multi-agent review caught the ownership-anchor test itself calling the real functions with swapped/null
+  ids — passed for the wrong reason (short-circuited before ever reaching the anchor check). Fixed the
+  argument order + added the minimal modal DOM the functions read from, then re-verified red→green by
+  temporarily neutering `_verifyTemplateOwnership`: the test still passed, because RLS alone already blocks
+  the cross-tenant write — confirms the anchor is genuine defense-in-depth, not the only thing blocking it.
+- Mid-session process mistake: launched a second full Playwright run while an earlier one was still in
+  flight against the same dev server, then separately edited `app-workouts.js` while a different run was
+  still in flight — both caught and stopped before they produced misleading results (les-053's own lesson,
+  reconfirmed live). No real damage; both re-run clean afterward.
+- Found (not caused) a 5th test in `client-workout.spec.js` now failing — "renders a hero card... Up next."
+  Reproduced it against clean, already-committed HEAD (via a backed-up-and-restored file swap, not
+  `git stash`) *before* concluding it wasn't a regression from tonight's edits — same long-open embed-chain
+  issue as the other 4 pre-existing failures in that file, just newly surfaced.
+
+**Decided:**
+- BW/Assist toggle visibility keyed on the set's own flag, not a permanent removal — chosen specifically so
+  a coach can still see/undo an old bodyweight-tagged set, rather than stranding it (les-043 shape).
+- One combined commit for both jump-reps-range and BW/Assist/Repeat, rather than splitting via `git add -p`
+  — both are small, same-conversation builder-UI changes; the risk of a manual patch-split outweighed the
+  benefit of two atomic commits here.
+
+**Why:**
+- The ownership-anchor test fix matters beyond this one bug: it's a reusable technique (temporarily neuter
+  the guard, confirm the test goes red, then revert) for verifying a "the test caught a real bug" claim
+  empirically instead of by re-reading the code and hoping.
+
+---
+
 ## 2026-08-01 (2nd save) — "Solo becomes a genuine role" built and merged to master locally — 1ef09c9, NOT pushed
 
 _Continuing the same overall session as the entry below (crossed from the weekly full-file review straight

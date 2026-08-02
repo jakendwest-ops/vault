@@ -1,13 +1,35 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-08-01 (2nd save) — **"Solo becomes a genuine role" data-model work shipped, merged to
-master locally (`1ef09c9`), not yet pushed** — closes the "Solo must become a genuine, independent account
-type" decision that slipped past the 31 July beta target. Scope-decomposed during brainstorming: this covers
-the DATA MODEL only (`profiles.role='solo'` now genuinely stored, not computed); public signup for solo
-accounts was explicitly deferred to its own future roadmap conversation, not built. Full writeup in STATUS.md
-(top of file) and the design spec (`docs/superpowers/specs/2026-08-01-solo-genuine-role-design.md`)._
+_Last updated: 2026-08-02 — **everything below is now PUSHED to origin/master** (`de54bdb..393f1f6`): the
+"Solo becomes a genuine role" data-model work (was local-only as of 2026-08-01), last session's 5 easy-win
+ledger items, and tonight's 2 new fix batches (diary/notes/ownership-anchor; jump-reps range + builder
+declutter). Solo closes the "Solo must become a genuine, independent account type" decision that slipped past
+the 31 July beta target. Scope-decomposed during brainstorming: this covers the DATA MODEL only
+(`profiles.role='solo'` now genuinely stored, not computed); public signup for solo accounts was explicitly
+deferred to its own future roadmap conversation, not built. Full writeup in STATUS.md (top of file) and the
+design spec (`docs/superpowers/specs/2026-08-01-solo-genuine-role-design.md`)._
 
 ---
+
+## 🐛 Session backlog — 2026-08-02
+
+Two small live-bug batches, both built, multi-agent-reviewed, and pushed same session. Full detail in
+STATUS.md (top of file + the bug ledger rows dated 2026-08-02).
+
+- **Diary/notes/ownership-anchor batch** — diary "No sets logged" note (was 0/0/0 tiles); client-authored
+  per-exercise notes now render in `openWorkoutLog` (previously write-only); app-level ownership anchor added
+  to `saveEditTemplateExercise`/`deleteTemplateExercise` as defense-in-depth; `weight_logs`/
+  `workout_template_exercises` cross-tenant writes confirmed already RLS-safe via live 2-account probes, now
+  with permanent regression tests.
+- **Jump reps range + builder declutter** — jump height/distance exercises now prescribe a rep RANGE (not a
+  single value) in all 3 places that render it (builder, runner target bar, day-row text) — one shared
+  2026-07-22 design choice, fixed together. Builder's per-set editor decluttered per Jake's live request: BW,
+  Assist, and the round-Repeat control removed (Repeat had nothing persisted, so it and its dead
+  `repeatTemplateSet` function were deleted outright; BW/Assist stay visible only on a set that already
+  carries the flag, so old data stays editable).
+- **Swipe-to-delete, globally** — re-raised by Jake ("how big a job is this?"), answered as pure advisory: zero
+  existing gesture code in the codebase today, so this is new infrastructure (one shared component + a
+  retrofit across every list with a delete button), not scoped further — Jake said "just curiosity for now."
 
 ## 🗓 Solo/signup — scoped but deliberately NOT built this session
 
@@ -24,7 +46,7 @@ _Full detail in STATUS.md (top of file). Built via `superpowers:brainstorming` �
 writing-plans` → 4-task Subagent-Driven Development build (isolated worktree) → final whole-branch review →
 local merge. This section is the roadmap-level pointer, not a duplicate of the full writeup._
 
-**✅ Shipped (local merge `1ef09c9`, not yet pushed):** `profiles.role='solo'` is now a real, permanently-
+**✅ Shipped, PUSHED 2026-08-02:** `profiles.role='solo'` is now a real, permanently-
 stored value for the one real `solo_only` account (migration: `scripts/migrate-solo-role-2026-08-01.sql`,
 not yet run). `loadUserInfo()`'s `solo_only`-flag-checking branch replaced with one keyed on the native role
 (with a permanent transitional OR-clause so code-before-migration deploy ordering can't reopen the coach-view
