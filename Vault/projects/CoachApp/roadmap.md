@@ -1,20 +1,21 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-08-02 — **everything below is now PUSHED to origin/master** (`de54bdb..393f1f6`): the
-"Solo becomes a genuine role" data-model work (was local-only as of 2026-08-01), last session's 5 easy-win
-ledger items, and tonight's 2 new fix batches (diary/notes/ownership-anchor; jump-reps range + builder
-declutter). Solo closes the "Solo must become a genuine, independent account type" decision that slipped past
-the 31 July beta target. Scope-decomposed during brainstorming: this covers the DATA MODEL only
-(`profiles.role='solo'` now genuinely stored, not computed); public signup for solo accounts was explicitly
-deferred to its own future roadmap conversation, not built. Full writeup in STATUS.md (top of file) and the
-design spec (`docs/superpowers/specs/2026-08-01-solo-genuine-role-design.md`)._
+_Last updated: 2026-08-02 (end of session) — **everything below is now PUSHED to origin/master**
+(`de54bdb..3457d90`): the "Solo becomes a genuine role" data-model work (was local-only as of 2026-08-01),
+last session's 5 easy-win ledger items, and 5 fix batches from today (diary/notes/ownership-anchor;
+jump-reps range + builder declutter; Box Jump wizard fix + boundary audit; the CRITICAL `events` RLS fix;
+mobile calendar CSS fix + 3 more investigated). Solo closes the "Solo must become a genuine, independent
+account type" decision that slipped past the 31 July beta target. Scope-decomposed during brainstorming:
+this covers the DATA MODEL only (`profiles.role='solo'` now genuinely stored, not computed); public signup
+for solo accounts was explicitly deferred to its own future roadmap conversation, not built. Full writeup in
+STATUS.md (top of file) and the design spec (`docs/superpowers/specs/2026-08-01-solo-genuine-role-design.md`)._
 
 ---
 
 ## 🐛 Session backlog — 2026-08-02
 
-Two small live-bug batches, both built, multi-agent-reviewed, and pushed same session. Full detail in
-STATUS.md (top of file + the bug ledger rows dated 2026-08-02).
+Five fix batches today, all built (or investigated), multi-agent-reviewed where code changed, and pushed
+same session. Full detail in STATUS.md (top of file + the bug ledger rows dated 2026-08-02).
 
 - **Diary/notes/ownership-anchor batch** — diary "No sets logged" note (was 0/0/0 tiles); client-authored
   per-exercise notes now render in `openWorkoutLog` (previously write-only); app-level ownership anchor added
@@ -30,6 +31,17 @@ STATUS.md (top of file + the bug ledger rows dated 2026-08-02).
 - **Swipe-to-delete, globally** — re-raised by Jake ("how big a job is this?"), answered as pure advisory: zero
   existing gesture code in the codebase today, so this is new infrastructure (one shared component + a
   retrofit across every list with a delete button), not scoped further — Jake said "just curiosity for now."
+- **Box Jump wizard fix + boundary audit** — Jake reported Box Jump height wasn't recorded live; root-caused
+  to the runner's alternate (wizard-mode) logging screen having no jump case at all. Fixed. Also closed out
+  the PT/Personal boundary audit: `client_1rms`/`goals` confirmed safe, `events` confirmed vulnerable.
+- **🔴 CRITICAL — `events` RLS gap.** An unrelated coach could create a fake calendar event against another
+  coach's real client (a policy's read-rule was being silently reused as the write-check, and its OR clause
+  had a self-authorship escape hatch). Jake ran the corrected policy live; confirmed red→green.
+- **Mobile calendar CSS Grid fix + 3 more investigated** — a long workout name could visibly break the
+  calendar grid; reproduced live, fixed with `min-width:0;overflow:hidden`. Cardio builder's "4 wrong
+  counts" and 2 earlier picks (duplicate-picker, CSS vars) all turned out already fixed elsewhere — ledger
+  hygiene only. 1RM 0.5kg-shift and the `workout_logs` fixture-isolation bug were both re-investigated with
+  no confirmed mechanism found, left open with what was ruled out documented.
 
 ## 🗓 Solo/signup — scoped but deliberately NOT built this session
 

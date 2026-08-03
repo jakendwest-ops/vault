@@ -1,9 +1,33 @@
 # CoachApp — STATUS
-_Last updated: 2026-08-02 — **All of this session's work is PUSHED to origin/master** (`de54bdb..393f1f6`,
-21 commits total: the Solo-genuine-role feature that was pending push from 2026-08-01 below, the previous
-session's 5 easy-win ledger items, and 3 new fix batches built and multi-agent-reviewed tonight).
+_Last updated: 2026-08-02 (end of session) — **Everything today is PUSHED to origin/master**
+(`de54bdb..3457d90`, 24 commits total: the Solo-genuine-role feature pending push from 2026-08-01 below, the
+previous session's 5 easy-win ledger items, and 5 new fix batches built and multi-agent-reviewed today).
+Confirmed via `git fetch` + `git log origin/master..HEAD` (empty) at end of session — local and origin are
+byte-identical, nothing outstanding.
 
-**Tonight's 3 new batches (all reviewed, all tested, all pushed):**
+**Today's 5 batches, in order (all reviewed, all tested, all pushed):**
+
+1. Diary/notes/ownership-anchor (`3728890`, review-caught test fix `2029fc7`) — see below.
+2. Jump reps range + builder declutter (`393f1f6`) — see below.
+3. **Box Jump wizard fix + PT/Personal boundary audit (`98b1b9b`)** — the runner's wizard-mode logging
+   screen had no jump_height/jump_distance case at all (predates the metric_type system), so a jump
+   exercise reaching it had nowhere to enter a height — fixed. Boundary audit closed out: `client_1rms` and
+   `goals` confirmed already RLS-safe; `events` confirmed genuinely vulnerable (see #4).
+4. **🔴 CRITICAL — `events` RLS gap found and fixed, confirmed by Jake live.** The `"coach access"` policy's
+   `qual` (`client_id IN (your clients) OR created_by = you`, meant to cover client-less personal calendar
+   entries) was being silently reused as the write-check too, so the self-authorship half of that OR let
+   any coach insert an event against ANY client. Jake ran a targeted `ALTER POLICY ... WITH CHECK` live;
+   re-ran the probe that caught it red→green, then independently verified legitimate coach writes
+   (own-client + personal client-less events) still work.
+5. **Mobile calendar CSS Grid fix + 3 more backlog items investigated (`3457d90`)** — the calendar grid
+   genuinely broke on a long workout name (reproduced live via DOM injection before fixing: columns
+   misaligned, days missing from view). Fixed with `min-width:0;overflow:hidden` on every day cell. Also:
+   cardio set builder's "4 wrong counts" and the add-workout-picker/CSS-vars items from earlier today all
+   turned out already fixed in prior sessions (ledger hygiene only); the 1RM 0.5kg-shift report and the
+   `workout_logs` fixture-isolation bug were both re-investigated with no confirmed mechanism found and left
+   honestly open rather than guessed at.
+
+**Earlier batches, detail:**
 
 1. **Diary/notes/ownership-anchor batch (`3728890`, review-caught test fix in `2029fc7`)** — diary now shows
    "No sets logged" instead of `0/0/0` tiles; client-authored per-exercise notes (typed in the runner,
