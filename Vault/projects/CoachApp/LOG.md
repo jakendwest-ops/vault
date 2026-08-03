@@ -4,6 +4,43 @@ Newest first.
 
 ---
 
+## 2026-08-02 (continued 2) — 4 more backlog items: calendar grid fix + 3 investigated (v8)
+
+**Done:**
+- Picked 4 more items from the backlog (a 5th, invite-email PT logo, was dropped by Jake before building).
+- **Mobile calendar grid genuinely blew out on a long workout name — fixed.** Roadmap Area 3 #12 had the
+  right diagnosis: day cells already had `overflow:hidden`/`text-overflow:ellipsis` on the text itself, but
+  the cell (the actual CSS Grid item) had no `min-width:0` — a Grid item's default min-width is content-based,
+  not 0, so the ellipsis never got the chance to apply. Reproduced live via direct DOM injection first (a
+  screenshot showed the grid visibly misaligned — columns pushed out, days missing, text off the page edge)
+  before fixing. Added `min-width:0;overflow:hidden` to every day cell. 2 new tests. Cache-bust:
+  app-calendar-goals v7→8.
+- **Cardio set builder's "4 wrong counts"** (2026-07-22) — re-checked against current code, all 4 already
+  fixed by the later "+ More targets" progressive-disclosure redesign (watts exists, distance is
+  metres-based, pace is collapsed by default, Pace/km is legacy-only). Ledger hygiene only.
+- **1RM 0.5kg silent-shift report** (2026-07-09) — re-investigated `save1RM` end to end and the display
+  formatter; no rounding/dedup/cross-exercise logic anywhere that could explain the reported mechanism.
+  Left open, documented what was ruled out, flagged as needing a live repro rather than guessed at.
+- **Fixture-isolation bug — suite erodes seeded `workout_logs`** (2026-07-12) — checked all 14 `workout_logs`
+  DELETE call sites across the whole test suite; every one is scoped by a specific row id, none broad
+  enough to explain the erosion. Found a related but distinct contamination class already documented
+  (`programs.spec.js:874-878`, debris templates sorting ahead of "Push Day A" and getting grabbed by
+  "first Start button" runner tests) but couldn't confirm it's the same mechanism. Left open.
+
+**Bugs found + fixed:**
+- The calendar grid blowout above — genuinely reproduced, not assumed from the roadmap note alone.
+
+**Decided:**
+- For the 1RM-shift and fixture-isolation items, chose to document a clean "ruled out" trail and leave both
+  open rather than force a guessed fix — neither had a confirmed mechanism after real investigation, and
+  this project's Iron Law is explicit about not fixing on a guess.
+
+**Why:**
+- Two of four picks turned out to already be fixed (ledger hygiene, not code) — reinforces the value of
+  checking current code before building, a pattern that's now paid off repeatedly this session.
+
+---
+
 ## 2026-08-02 (continued) — Box Jump wizard fix, PT/Personal boundary audit closed, CRITICAL events RLS gap found + fixed (v52)
 
 **Done:**
