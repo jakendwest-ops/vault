@@ -4,6 +4,58 @@ Newest first.
 
 ---
 
+## 2026-08-02 (continued) — Box Jump wizard fix, PT/Personal boundary audit closed, CRITICAL events RLS gap found + fixed (v52)
+
+**Done:**
+- Jake reported live: Box Jump height not recorded this morning. Root-caused to the runner's wizard-mode
+  logging path (`logRunnerSet` + its render branch) having no jump_height/jump_distance case at all —
+  it predates the metric_type system, so a jump exercise reaching that screen fell into the plain
+  weight/reps branch with no height field anywhere. Jump exercises normally route to the fast table
+  instead (which already worked), so the exact trigger for this specific morning wasn't independently
+  reproduced live, but the gap matches the symptom exactly and is fixed regardless — the wizard now
+  shows a Height/Distance + Jumps input pair, gated on the same `_exMetricType` resolver the table uses.
+  3 new tests (read-side, empty-input guard, render-side via a monkey-patched `_isPlainStrengthExercise`
+  to force the otherwise-unreachable wizard branch).
+- Picked 5 "easy wins" from the backlog per Jake's ask. 3 turned out already shipped in earlier sessions
+  and never checked off the ledger (add-workout-picker duplicate discriminator, 2026-07-23; app-wide
+  undefined CSS vars, 2026-07-22) or the kanban board (same CSS-vars item; pinch-to-zoom, fixed earlier
+  this same session). Ledger/board hygiene only, no code changed for those.
+- `~/.claude` backup repo's `.gitignore` generalized from a manually-maintained per-project allowlist to
+  `/projects/*/memory` — covers any current or future project's memory dir automatically, closing a gap
+  flagged 2026-07-05. Verified via `git check-ignore` that both real memory dirs stay tracked and
+  everything else (transcripts, settings.json) stays ignored. Committed + pushed to claude-config directly.
+- Old Jake-West PT-account client record: handed to Jake with a safe diagnostic SELECT rather than
+  guessing at production data myself — moved to "Needs Jake" on the kanban board.
+- Continued the PT/Personal boundary audit (open since 2026-07-13): live 2-account probes for
+  `client_1rms` (INSERT + `delete1RM`'s anchor-less DELETE) and `goals` INSERT — both confirmed already
+  RLS-safe.
+
+**Bugs found + fixed:**
+- 🔴 **CRITICAL — `events` INSERT let an unrelated coach create a fake calendar entry against another
+  coach's real client.** The `"coach access"` policy is `cmd: ALL` with no explicit `WITH CHECK`, so
+  Postgres reused its `qual` — `client_id IN (your clients) OR created_by = you` — for writes too. That
+  OR exists to let a coach manage client-less personal calendar entries, but since the app always sets
+  `created_by` to whoever's inserting, it trivially satisfied the write-check on ANY insert regardless of
+  whose `client_id` was actually set. I don't have introspection access to read live policy text from the
+  client side, so Jake ran the diagnostic (`SELECT policyname, cmd, qual, with_check FROM pg_policies
+  WHERE tablename = 'events'`) and pasted it back; fixed with a targeted `ALTER POLICY ... WITH CHECK`
+  that keeps the personal-event case but requires genuine ownership whenever `client_id` is set. Jake ran
+  it live, confirmed. Re-ran the exact probe that caught this: red before, green after (×2), then
+  independently verified legitimate coach writes (own-client + client-less personal events) still work.
+
+**Decided:**
+- The residual "none of tonight's 5 boundary probes independently confirm solo ownership" gap (flagged by
+  multi-agent review) is real but non-blocking — `_getCurrentClientId()` already handles this correctly by
+  design for solo's own self-view. Logged as a future follow-up rather than expanding scope tonight.
+
+**Why:**
+- This is the second CRITICAL, confirmed-exploitable RLS gap this project has found via live 2-account
+  probing rather than code-reading alone (the first was `workout_logs`, 2026-07-30) — reinforces that
+  "reasoned isn't proven" for tenancy boundaries specifically; every remaining un-probed table on the
+  original 2026-07-13 list is now closed out.
+
+---
+
 ## 2026-08-02 — pushed the Solo-genuine-role feature + 2 new live-bug batches (v9/v29/v9/v52/v51/v34)
 
 **Done:**
