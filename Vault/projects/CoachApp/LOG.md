@@ -4,6 +4,66 @@ Newest first.
 
 ---
 
+## 2026-08-05 — Exercise builder mobile grid restructure + 3 measured investigations (`980d324`)
+
+**Done:**
+- Jake picked 4 items from the previous session's kanban shortlist: the exercise-builder mobile scroll fix,
+  plus 3 he asked me to pick myself off the open ledger. Chose the two paired-by-suspected-root-cause
+  timing reports (Workouts-page delay + new-template slow save) and the `workout_logs` fixture-count item —
+  explicitly skipped the 1RM 0.5kg-shift bug since the ledger already says that one needs Jake's own
+  devtools on a live repro, which I can't run for him.
+- **Built and approved a live interactive HTML preview before touching any code** — recreated the exact
+  current builder markup/CSS (verbatim from `renderTemplateSets` + `main.css` tokens) side by side with a
+  proposed 2-column grid, both fully interactive (add/copy/delete a set, live scroll-height measurement).
+  Jake approved the grid direction from this preview.
+- **Shipped the grid restructure** (`980d324`): `.ts-grid`/`.ts-cell` (main.css) pack Reps/Weight/Rest/Effort
+  into 2 columns instead of 4 stacked full-width rows, across the weight_reps/unilateral, timed_hold and
+  jump branches (cardio/interval already had progressive disclosure — untouched). Two new helpers, `gmini`/
+  `cell`, sit alongside the existing `mini`/`row` (which stay live, used by the untouched branches). Every
+  input id, value-fallback expression and conditional (bodyweight/assisted/AMRAP) preserved exactly —
+  `flushTemplateSets` reads purely by id, never by row position. "+ More targets" (Intensity/Tempo/Countdown)
+  also grid-packed, Intensity kept as one combined min–max cell.
+- **Workouts-page delay + new-template slow save**, investigated together (3rd pass on this bug family):
+  traced `renderWorkoutTemplates` and `saveNewTemplate → openTemplate` end to end (1 query, 2 round-trips —
+  no N+1, no unbounded loop), then MEASURED live in Chromium against the real E2E account rather than
+  reading further: Workouts-page nav ≈242ms, template create+display ≈450ms. Both fast. Code is clean on a
+  3rd independent look. Left open — the strongest remaining lead is Edge's own Tracking Prevention blocking
+  supabase-js's session-storage read (Jake's own console already showed this ×12), which I can't reproduce
+  in this environment's Chromium; flagged a cheap experiment for Jake to run on his own device.
+- **`workout_logs` fixture-count investigation** — re-checked all 14 DELETE call sites across the test suite
+  (confirms 2026-08-02's finding: all narrowly scoped). Then read `scripts/seed-test-data.js` for the first
+  time in this investigation's history: it only ever inserts 5 rows, gated to run once — not 13. A live
+  count against the real E2E client found **154** rows currently, with ~30 "Push Day A" entries (6× the seed)
+  plus dozens of distinct timestamped `[E2E]`-tagged names from many different spec files. **Reframed the
+  whole premise**: this was never erosion (rows disappearing) — it's accumulated debris across many sessions
+  that nothing has ever swept. Deliberately did NOT mass-delete tonight (destructive action under session
+  momentum, against a shared account, this late — recommended a dedicated cleanup pass instead).
+- Full suite (post-restructure): 337 passed / 5 pre-existing `client-workout.spec.js` failures (unchanged
+  baseline) / 1 pre-existing flaky (`runner.spec.js:400`, unrelated) / 2 skipped. mobile-checked at 390×844
+  across all 3 restructured set types (screenshots, not just assertions). Multi-agent review (3 fixed
+  angles) clean — verifier pass independently re-ran Agent A's and B's grep checks and reproduced them.
+
+**Bugs found + fixed:** none this session — builder change was a pure layout restructure with no logic
+change; the other 3 items were investigations, not fixes (2 left open with new evidence, 1 shipped).
+
+**Decided:**
+- Ship the builder grid restructure as one commit covering all 3 affected branches together (not weight_reps
+  alone) — same root shape, same fix, avoids a "fixed the instance, not the class" gap on timed_hold/jump.
+- Don't act on the `workout_logs` accumulation finding same-session — it's real and worth fixing, but a
+  same-night mass-delete under momentum is exactly the kind of action this project's rules ask to slow down
+  on, and some of the debris rows may still be load-bearing for currently-passing tests.
+
+**Why:**
+- Both the timing investigation and the fixture-count investigation are the SAME lesson in two different
+  shapes: two prior sessions had already read this code and found nothing, so a third static read was
+  unlikely to succeed where two didn't — the actual unlock in both cases was running something and reading
+  a real number (a live timing measurement; a live row count) instead of reasoning about the code further.
+  The fixture-count number in particular flipped the entire framing of a bug that had been open since
+  2026-07-12 — "erosion" and "accumulation" call for completely different fixes, and neither is a guess this
+  session was willing to close on.
+
+---
+
 ## 2026-08-02 (continued 2) — 4 more backlog items: calendar grid fix + 3 investigated (v8)
 
 **Done:**

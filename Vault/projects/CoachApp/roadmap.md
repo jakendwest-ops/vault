@@ -1,6 +1,33 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-08-02 (end of session) — **everything below is now PUSHED to origin/master**
+_Last updated: 2026-08-05 (end of session) — **PUSHED to origin/master** (`3457d90..980d324`). Picked 4 items
+off the kanban shortlist: the exercise-builder mobile grid restructure (shipped) plus 3 investigations
+(Workouts-page delay, new-template slow save, `workout_logs` fixture count) — measured live, not reasoned
+about. Full detail in STATUS.md (top of file)._
+
+---
+
+## 🐛 Session backlog — 2026-08-05
+
+- **✅ Shipped — exercise builder set-editor is now a 2-column grid on mobile.** Closes the 2026-07-22
+  "scrolls too much + resembles Heavyset" report. Reps/Weight/Rest/Effort packed into `.ts-grid` across
+  weight_reps/unilateral, timed_hold and jump (cardio/interval already had progressive disclosure, untouched).
+  Every input id/fallback/conditional preserved. Live interactive HTML preview approved by Jake before any
+  code was touched. mobile-checked at 390×844, multi-agent review clean. Cache-bust: main.css v8→9,
+  app-workouts.js v52→53.
+- **Workouts-page delay + new-template slow save — measured, still open.** Both code paths traced end to
+  end and timed live: Workouts-page nav ≈242ms, template create+display ≈450ms — both fast, no code
+  bottleneck found on a 3rd look. Leading candidate is now Edge's Tracking Prevention blocking supabase-js's
+  own session-storage read on every call (matches Jake's own console evidence) — needs Jake to test with
+  Tracking Prevention set to Basic as a cheap experiment; can't be reproduced in this environment's Chromium.
+- **`workout_logs` "fixture erosion" reframed as accumulation.** Live count found 154 rows against the E2E
+  client, not 13/4 — the seed script only ever creates 5. This is debris built up across many test sessions
+  (never swept), not rows disappearing. Recommend a dedicated cleanup session (sql-safety discipline even
+  though it's a test account) rather than a same-session mass-delete under momentum — not done tonight.
+
+---
+
+_Previous, 2026-08-02 (end of session) — **everything below was PUSHED to origin/master that day**
 (`de54bdb..3457d90`): the "Solo becomes a genuine role" data-model work (was local-only as of 2026-08-01),
 last session's 5 easy-win ledger items, and 5 fix batches from today (diary/notes/ownership-anchor;
 jump-reps range + builder declutter; Box Jump wizard fix + boundary audit; the CRITICAL `events` RLS fix;
