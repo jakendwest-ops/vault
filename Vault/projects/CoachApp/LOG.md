@@ -4,6 +4,125 @@ Newest first.
 
 ---
 
+## 2026-08-09 — Cardio/interval metric_type merge + in-app solo-account invites (v55/v55/v36, `1379c05`/`1a5cb72`)
+
+**Done:**
+- **Merged `cardio` metric_type into `interval`** (`1379c05`) — Jake: "having cardio and intervals as 2
+  separate categories is redundant and intervals should be the only 1," driven by builder-dropdown clutter,
+  not a missing capability. Confirmed directly before building: never prescribed varied-length rounds
+  (interval's existing block model already covers a steady effort as `sets:1,cycles:1` or a genuine
+  repeating pattern), and wanted to keep manual/no-timer logging for the simple case (plain Cardio had it,
+  Intervals-only didn't). Removed the `Cardio` option from the builder; added a "Steady effort / Repeating"
+  toggle (derived from the block's own fields via a new shared `_isSteadyIntervalBlock()` predicate, not a
+  stored flag) so the simple case stays as easy to prescribe as before. Runner's manual LOG button + "+Add
+  extra set" extended to steady-effort blocks via new `_isSteadyEffortBlock()`. app-workouts v54→55,
+  app-runner v54→55.
+- **Live data migration** (`scripts/merge-cardio-into-interval-2026-08-09.sql`) — reshaped every real
+  `workout_template_exercises`/`exercises` row from cardio-array-shape to interval-block-shape. Read-only
+  check ran first (confirmed the "never varied rounds" claim against every real row, not just memory); full
+  backup table taken before either UPDATE, RLS enabled on it per Supabase's own warning. Spot-checked after
+  running — every row reshaped correctly (Assault Bike 10×15s/45s → `workSecs:15,restSecs:45,sets:10`;
+  SkiErg "10km Steady State" → `workDistanceM:10000,sets:1,cycles:1`, etc). Historical
+  `workout_log_exercises`/`workout_log_sets` deliberately left untouched (every progress/chart read path
+  already treats cardio+interval symmetrically). DB CHECK constraint NOT tightened — `'cardio'` stays
+  DB-allowed (same precedent as `'amrap'`).
+- **In-app "Invite a personal user"** (`1a5cb72`) — Jake needed to onboard a beta-testing friend as a
+  standalone solo account. First attempt: a local Node script (`scripts/invite-solo-user.cjs`) using the
+  Supabase service-role key, run manually with `SUPABASE_SERVICE_KEY=... node scripts/...`. Jake rejected
+  this as too convoluted to scale ("even if we have to build the solution"). Rebuilt: a new Supabase Edge
+  Function (`supabase/functions/invite-solo-user/index.ts` — the only place a service-role-level capability
+  may safely live) + a Settings-page card gated to `jakendwest@gmail.com` (matching the only existing
+  owner-gate convention, `sudoAsClient`/"View as") + `inviteSoloUser()` mirroring the existing
+  `sendClientInvite`'s shape. The Edge Function independently re-verifies the caller's identity server-side
+  (`supabase.auth.getUser()` against the caller's own token, hard 403 otherwise) — the client-side gate is a
+  UI convenience only. On success: real Supabase invite email → the same tested `#invite-form` acceptance
+  screen every client invite already uses → `profiles.role='solo'` + a self-referential `clients` row
+  (`coach_id: null`), never coach-linked at any point. app-progress v35→36.
+- **Deployed live by Jake** via the Supabase Dashboard's browser-based Edge Function editor ("Via Editor" —
+  no CLI is installed or tracked in this repo). **Verified end to end, both halves**: signed in as the E2E
+  test account and called the deployed function directly — got a genuine server-side `403 {"error":"Not
+  authorized"}`, confirming the security boundary is real, not just a hidden button; then Jake sent a real
+  invite through the Settings card — the resulting profile came back exactly as designed
+  (`role:'solo', coach_id:null`, self-referential `user_id`, `starter_seeded:false`).
+- **Ledger hygiene**: corrected a stale STATUS.md row claiming the solo-account starter-content seeding bug
+  (role-check race + `is_personal` mismatch) was "NOT FIXED" — it was actually fixed same-day, 2026-08-01,
+  a few hours after that row was written (`fab4945`/`9357c31`); the row was simply never closed out. Re-ran
+  its test coverage (`tests/solo-genuine-role-2026-08-01.spec.js`, 4/4 green) to confirm it's still correct
+  before relying on it for the new solo-account onboarding flow.
+
+**Bugs found + fixed (multi-agent review, both features, same session):**
+- Cardio/interval merge (4 issues): a legacy unmigrated `metric_type='cardio'` row showed "Intervals"
+  selected in the builder dropdown but rendered the OLD per-set cardio editor underneath (fixed — the
+  initial render call now normalizes `'cardio'`→`'interval'` too, not just the select's own option); a
+  sibling occurrence of a "reads the cardio-only `duration` field" bug one call-depth deeper in
+  `startIntervalTimer`'s own next-round scheduling (same fix pattern applied); `+Add extra set` on a steady
+  block didn't refresh the live timer's phase list, so starting the timer for the added round would have
+  silently ended the exercise one round early (fixed — `addExtraCardioSet` now extends the interval block
+  itself for interval-shaped exercises, not push an incompatible array duplicate); a hand-edited
+  `sets:1/cycles:1` block (not via the toggle) could show "Steady effort" while still carrying nonzero
+  warmup/cooldown (fixed by extracting the shared `_isSteadyIntervalBlock` predicate both surfaces now call).
+- Invite-solo-user (5 issues): no guard against silently converting an ALREADY-EXISTING coach/client account
+  into solo if an email were ever reused/mistyped (real data-safety gap — now refuses with a 409 and a clear
+  message); a swallowed error on the `clients` existence-check; the local script's final log line printed
+  the invitee's name (PII, trimmed to id/role/status only); a stale button-revert `setTimeout` could stomp a
+  second invite's in-progress "Sending…" label if sent within 3s of the first (fixed with a tracked/cleared
+  timer); the "Name and email required" validation message never cleared on a later successful send.
+
+**Decided:**
+- Reuse the existing `sendClientInvite`/Edge-Function pattern rather than inventing a new
+  account-provisioning mechanism — matches an established, production-proven shape instead of adding a
+  second one.
+- Don't tighten the `metric_type` CHECK constraint to drop `'cardio'` — leave it DB-allowed for historical
+  rows, matching the existing `'amrap'` precedent (DB permits more than the UI currently writes).
+- Genuinely open public signup for solo accounts remains explicitly deferred — this session closed the
+  "no UI path to onboard a new solo account" gap, not the separate "should anyone with the URL be able to
+  self-provision" decision, which stays Jake's to make later.
+
+**Why:**
+- The cardio/interval merge was pure UI-clutter-driven (Jake was explicit it wasn't about a missing
+  capability) — the whole design goal was "don't make the simple case any harder than it already was,"
+  which is why the Steady/Repeating toggle exists as a derived, zero-new-fields UI layer rather than a
+  data-model change.
+- The invite-solo-user rebuild happened because the first (script-based) solution technically worked but
+  didn't match how Jake actually wants to operate day to day — a good reminder that "functionally correct"
+  and "actually usable at the pace this project needs" aren't the same bar.
+
+---
+
+## 2026-08-08 — Interval runner stale-duration fix + cardio/interval capture card + Programs builder lazy pool (v53→55 app-runner, v52→54 app-workouts/app-programs)
+
+**Done:**
+- **Programs builder day-slot picker pool made lazy, not eager** (`27e6e01`) — full detail already in
+  STATUS.md's bug ledger (2026-08-07 investigation → 2026-08-08 fix); not re-detailed here to avoid drift
+  between the two files.
+- **Interval runner pre-Start card stale work/rest duration fix** (`645820a`) — the pre-Start cardio card
+  read legacy `duration`/`restMin` fields unconditionally instead of branching on `_isIntervalExercise(ex)`
+  to read `workSecs`/`restSecs` for interval exercises, showing a stale prescription left over from before
+  an interval block's own editor fields (which never touch `duration`/`restMin`) had been switched to.
+  Confirmed NOT a functional bug — the actual timer always used the correct fields via the phase-walk
+  engine; only the pre-Start display was wrong. Red→green test added, reproduced Jake's exact live report.
+  app-runner v52→53.
+- **Cardio/interval exercise-finish capture card + quick-prefs popover** (`bbc2bc0`) — HR/watts capture
+  already worked end-to-end but was unreachable during a session (the fullscreen interval/cardio timer
+  overlay painted over the pre-Start card's inputs for almost the entire exercise). Pace was half-built
+  (captured, never saved); stroke rate didn't exist. Moved capture to one new card shown once when a
+  cardio/interval exercise finishes — the one point the overlay is guaranteed gone. Which metrics get asked
+  for is a per-device localStorage toggle, shared with a new quick-prefs icon+popover (also surfaces the
+  existing metric/imperial units toggle, previously Settings-only, from the runner and builder headers too).
+  2 new DB columns (`pace_500m_secs`, `stroke_rate_spm` on `workout_log_sets`). Multi-agent review caught and
+  fixed a pace lower-bound CHECK-constraint risk and a lost placeholder-hint regression. app-core v9→10,
+  app-programs v30→31, app-workouts v53→54, app-runner v53→54, app-progress v34→35.
+
+**Bugs found + fixed:**
+- See `645820a`/`bbc2bc0` details above — both are fixes in their own right, not separate bug-hunt findings.
+
+**Why:**
+- The capture-card redesign sidesteps the overlay-occlusion problem structurally (capture at exercise-finish,
+  never mid-timer) rather than patching z-index/DOM nesting — the same "fix the class" instinct this
+  project favors throughout.
+
+---
+
 ## 2026-08-05 — Exercise builder mobile grid restructure + 3 measured investigations (`980d324`)
 
 **Done:**

@@ -1,9 +1,41 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-08-05 (end of session) — **PUSHED to origin/master** (`3457d90..980d324`). Picked 4 items
-off the kanban shortlist: the exercise-builder mobile grid restructure (shipped) plus 3 investigations
-(Workouts-page delay, new-template slow save, `workout_logs` fixture count) — measured live, not reasoned
-about. Full detail in STATUS.md (top of file)._
+_Last updated: 2026-08-09 (end of session) — **PUSHED to origin/master** (`980d324..1a5cb72`, 5 commits
+across 2026-08-08/09). Headline work: merged the redundant `cardio` metric_type into `interval` (with a
+live data migration), and built an in-app "Invite a personal user" flow (Edge Function + Settings card) so
+Jake can onboard beta testers without a terminal. Also in this gap: the Programs builder day-slot picker
+made lazy not eager, an interval-runner stale-duration display fix, and the cardio/interval exercise-finish
+capture card + quick-prefs popover. Full detail in STATUS.md (top of file + bug ledger)._
+
+---
+
+## 🐛 Session backlog — 2026-08-08/09
+
+- **✅ Shipped — merged `cardio` metric_type into `interval` as the sole cardio-family type (`1379c05`).**
+  Jake: "having cardio and intervals as 2 separate categories is redundant." Confirmed against live data
+  first (every real row was either a genuine repeating pattern or a single steady effort, never varied
+  round lengths) before writing the migration. Builder dropdown lost the `Cardio` option; a new "Steady
+  effort / Repeating" toggle (derived, not stored) keeps the simple case as easy to prescribe as plain
+  Cardio was. Multi-agent review caught 4 real issues, all fixed same session. Live migration run + spot-
+  checked. See STATUS.md bug ledger + the new Continuity block entry for the shared `_isSteadyIntervalBlock`
+  predicate future sessions must reuse, not reimplement.
+- **✅ Shipped — in-app "Invite a personal user" (`1a5cb72`).** Needed to onboard a beta-testing friend as a
+  standalone solo account. First attempt (a local script needing a manually-pasted Supabase service-role
+  key each time) was rejected by Jake as too convoluted to scale. Rebuilt as a Supabase Edge Function
+  (`supabase/functions/invite-solo-user/index.ts` — the only place a service-role capability may safely
+  live) + a Settings-page card gated to Jake's own account. Multi-agent review caught 5 real issues
+  (including a real data-safety gap: no guard against silently converting an existing coach/client account
+  into solo), all fixed. Deployed via the Supabase Dashboard's browser editor (no CLI), verified end to end
+  — a real non-owner session got a genuine server-side 403, and a real invite correctly produced
+  `role:'solo'` with a self-referential `clients` row. Closes half of the long-deferred "Solo/signup" item
+  (see the box further down this file) — genuinely open public signup remains a separate, still-deliberate
+  deferral.
+- **✅ Shipped — Programs builder day-slot picker pool is now lazy, not eager (`27e6e01`).** Full detail
+  already in STATUS.md's bug ledger (2026-08-07 investigation, 2026-08-08 fix) — this backlog entry exists
+  only so this file doesn't silently miss it; not re-detailed here.
+- **✅ Shipped — interval runner pre-Start card stale work/rest duration fix (`645820a`)**, and **cardio/
+  interval exercise-finish capture card + quick-prefs popover (`bbc2bc0`)** — both full-detail in STATUS.md's
+  bug ledger, same reasoning as above.
 
 ---
 
@@ -70,14 +102,21 @@ same session. Full detail in STATUS.md (top of file + the bug ledger rows dated 
   hygiene only. 1RM 0.5kg-shift and the `workout_logs` fixture-isolation bug were both re-investigated with
   no confirmed mechanism found, left open with what was ruled out documented.
 
-## 🗓 Solo/signup — scoped but deliberately NOT built this session
+## 🗓 Solo/signup — data model done, onboarding path now built (2026-08-09), open PUBLIC signup still deferred
 
 Jake's own decomposition during brainstorming: the data model (done, see below) and public signup/onboarding
 for new solo accounts (a real, larger future need — "some users will sign up... and will not have a link to
-a coach or PT") are two separate subsystems. Signup needs its own brainstorm→spec→plan cycle — today's work
-does not touch `handle_new_user` (still hard-codes `role='coach'` for every signup) or add any UI path to
-create a solo account without Jake running SQL by hand. Add to the next session's shortlist when Jake wants
-to pick it up.
+a coach or PT") are two separate subsystems. **Update 2026-08-09**: the "no UI path to create a solo account
+without Jake running SQL by hand" half of this gap is now closed — Jake needed to onboard a beta-testing
+friend, first tried a local script (too convoluted, wouldn't scale for repeated use), then an in-app
+"Invite a personal user" Settings card + a new `invite-solo-user` Edge Function, gated to Jake's own account
+only. Deployed live, verified end to end (real invite sent, `role='solo'`, self-referential `clients` row
+confirmed). **Still NOT built, still a deliberate deferral**: genuine OPEN public signup (anyone with the
+URL self-provisioning a solo account with no gate) — `handle_new_user` still hard-codes `role='coach'` for
+every raw signup, and self-signup itself is still removed client-side (2026-07-24 incident). The new
+mechanism is invite-only, triggered by Jake per person, not a public form — that remains its own future
+decision if/when Jake wants genuinely open solo signup, not something this session's work should be read as
+having quietly shipped.
 
 ## 🐛 Session backlog — 2026-08-01, 2nd save (Solo becomes a genuine role)
 
@@ -668,7 +707,7 @@ _Jake's master account gets a third "Personal" pill. Solo user's own client reco
 | Delete old Jake West PT-account client record | 🗓 Planned | Clean up PT dashboard — only real/test clients should remain |
 | Upgrade path: solo → PT-coached | 💡 Future | Solo accepts PT invite, coach_id stamped, retains history |
 | Upgrade path: solo → becomes a PT | 💡 Future | Role change; gains coach dashboard + client management |
-| **Solo becomes a genuine, stored account type (data model)** | **✅ Done 2026-08-01** (local merge, not pushed) | `profiles.role='solo'` now genuinely stored for the locked-down `solo_only` account, not computed in memory every login — see STATUS.md/design spec. **Separate mechanism from this table's other rows**, which are about the MASTER account's own Personal/solo view (Jake's own account, still role-cycling via `switchView()`, unaffected). Public signup for new solo accounts NOT built — own future item, see the box near the top of this file. |
+| **Solo becomes a genuine, stored account type (data model)** | **✅ Done 2026-08-01, pushed same month** | `profiles.role='solo'` now genuinely stored for the locked-down `solo_only` account, not computed in memory every login — see STATUS.md/design spec. **Separate mechanism from this table's other rows**, which are about the MASTER account's own Personal/solo view (Jake's own account, still role-cycling via `switchView()`, unaffected). **Onboarding path added 2026-08-09** — in-app "Invite a personal user" (Settings card + Edge Function), no SQL by hand needed anymore. Genuinely open public signup for new solo accounts still NOT built — deliberate, see the box near the top of this file. |
 | **Personal account mirrors Client view exactly** | 🗓 Planned, needs scoping | 2026-07-05: Jake's own architecture statement — the only difference between Personal and Client should be no client/PT linkage. Confirmed real diffs exist today (`renderSoloDashboard` lacks the sudo/branding banners `renderClientDashboard` has; solo has a unique 4-tile stats row). Needs a dedicated session — ripples into the redundant-1RMs-on-Workouts-page and calendar-preview-parity items. See roadmap session backlog Area 3 #15. **2026-07-08 re-confirmed:** Jake restated this more strongly — solo should have zero links to any PT/client page. Re-checked: the solo nav and view-switcher gating already have no leaked links, so that half already holds. The gaps are unchanged (sudo/branding banners, unique stats row) — see session backlog 2026-07-08 Area 4 #11. |
 
 ---
