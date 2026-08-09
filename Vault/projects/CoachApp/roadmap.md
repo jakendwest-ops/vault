@@ -9,6 +9,51 @@ capture card + quick-prefs popover. Full detail in STATUS.md (top of file + bug 
 
 ---
 
+## 🛠 Session backlog — 2026-08-09 (2nd save) — OS, ledger + strategy; no app code
+
+- **✅ `os-lint` gained `ledger-drift`** — flags any bug row whose text claims `FIXED + LIVE` while its Status
+  cell still says `open`. Six rows were in that state, oldest fixed 2026-07-23; `stale-bugs` 21 → 15. Verified
+  red→green. `/save` Step 3a now gates on it. Root cause was an ambiguous instruction ("mark it fixed" never
+  said *which field*), not discipline. Pushed to claude-config `1f6095c`.
+- **✅ `/save` skill renumbered 1–12** — a top-level `Step 3b` collided with the `### 3b` sub-heading under
+  Step 3. Five internal cross-references updated; the `## YYYY-MM-DD` heading inside the LOG-entry code block
+  deliberately untouched.
+- **✅ Predictions 62 → 32 ungraded** (20 correct / 8 incorrect / 2 partial). Calibration finding: every
+  settleable "this fix will hold" prediction was **wrong**; every "this will surface a problem" was **right**.
+- **✅ Conditioning runner teardown at 390×844** — the 2026-08-07 "HR/watts mounted beneath the interval
+  overlay" finding is genuinely fixed by the capture card (`bbc2bc0`); verified by driving a real interval to
+  completion, `overlay: false` asserted, zero page errors.
+- **✅ `coachapp-product-strategy.md` refreshed** + a competitor research pass on conditioning.
+
+**🆕 New items from this session:**
+- **🔴 Root-cause the 5 `client-workout.spec.js` baseline failures.** Written off as a "documented baseline"
+  for weeks. One asserts *"client_programs embed chain resolves fully for the client role"* — the exact claim
+  pth-098 says is safely closed. With a real beta tester now onboarded, "a client cannot see their assigned
+  program" is the worst possible live failure and there is a red test saying it might be true. **Highest-risk
+  unknown on the board.** Probably stale; nobody has checked.
+- **🗓 Cardio metric_type follow-up (needs Jake):** the 2026-08-09 retag set 7 exercises to `cardio`; `1379c05`
+  then merged `cardio` into `interval`. Read-only check with Jake. Not harmful — the builder lands a legacy
+  `cardio` row on "Intervals" — but untidy. **Do not re-run the merge script** (its first statement drops the
+  original backup table).
+- **🗓 Rowing/Running/SkiErg DELETE row now conflicts with the retag** — its names match none of Jake's actual
+  exercises and Postgres `IN` is case-sensitive, so it would likely delete zero rows; if any matched they are
+  exercises he actively trains with. Retire or re-scope to the real duplicates (`Dead-stop`/`Dead-Stop`/
+  `Deadstop Barbell Row`, `Rowerg`/`RowErg`). Jake's decision.
+- **🗓 Finish the competitor pass** — trial TrueCoach (14d) and PT Distinction (30d) and try to build
+  *"2 × 20:00 @ 1:50/500m, 5:00 rest"*. Converts two "no evidence" cells into fact. Needs Jake's signup.
+
+**Decisions:**
+- **Stroke rate deferred** — Jake answered "thinking ahead, not hit it yet" when asked when he last felt the
+  pain. Plate-calculator profile (les-039). It has since shipped anyway as an opt-in toggle chip on the
+  capture card, which sidesteps the clutter objection.
+- **Pace argued against as an input** (distance + duration are already captured, so a third field invites
+  self-contradiction) — overtaken by the capture card's per-device toggle, off by default. Better answer than
+  the objection.
+- **Anti-bloat guardrail flagged as the one under real pressure** — feature surface has grown a lot and a large
+  share of recent sessions fix complexity rather than add capability. Breached by accretion, not by decision.
+
+---
+
 ## 🐛 Session backlog — 2026-08-08/09
 
 - **✅ Shipped — merged `cardio` metric_type into `interval` as the sole cardio-family type (`1379c05`).**
@@ -304,7 +349,7 @@ _From Jake's live feedback (screenshots of his Personal account): the Workouts-p
 
 **2nd save (same day):**
 - **Repo-root `CLAUDE.md` added** (coachapp `bed9625`) after reviewing a claude.ai starter-pack brainstorm — the repo had no in-repo grounding, so ritual-less sessions started blind. Guarded by a new os-lint `claude-md` drift check (claude-config `53103e8`); widening its regex caught + fixed a stale 8-module ref in `deploy-check`. Rest of the starter pack rejected (wrong stack / duplicates existing systems).
-- **New to-do (deferred, Low):** pinch-to-zoom disabled — `index.html:5` `maximum-scale=1.0` blocks phone zoom (accessibility). Investigate the iOS-input-zoom trade-off + `font-size:16px` fix before changing.
+- **New to-do (deferred, Low):** pinch-to-zoom disabled — `index.html:5` `maximum-scale=1.0` blocks phone zoom (accessibility). Investigate the iOS-input-zoom trade-off + `font-size:16px` fix before changing. — **✅ DONE 2026-08-01, verified 2026-08-09:** `index.html:5` no longer sets `maximum-scale`, and `css/main.css:61` sets `input, textarea, select { font-size: 16px }` so removing the zoom lock doesn't trade 'can't zoom' for 'jump-zooms on every field tap'. Both confirmed in the current files.
 - **Fixed the wiki `guide-coachapp-roadmap` Mermaid diagram** — two node labels had unquoted parentheses (`.limit(100)`, `(e600010)`); quoted them (same class as the 07-11 apostrophe break).
 
 ## 🐛 Session backlog — 2026-07-12 (session 26 cont. — 3 program bugs from real use + the empty-app beta blocker SOLVED)
@@ -322,7 +367,7 @@ _Same-day continuation. (A) Fixed 3 program-workflow bugs Jake hit in real use: 
 _Built the behavioural RLS audit and ran /deploy-check end-to-end for the first time. It found a **live cross-tenant storage leak** (any coach could read/delete any client's progress photos — bucket was private, but object policies were scoped by bucket_id alone). Fixed red→green. Also fixed Personal Bests (never displayed for anyone), caught 2 real runner bugs in a pre-push review, removed the progress-photos feature, wrote the ICO breach procedure. Full detail in LOG._
 
 - **✅ Done:** behavioural RLS audit (`rls-audit.spec.js`, 4 probes + self-test); storage security (`storage-privacy.spec.js`); storage leak fix (`fix-storage-rls-2026-07-12.sql`); Personal Bests fix (app-progress v10); runner review fixes (app-runner v22); progress-photos feature removal (app-clients v5); ICO procedure; /deploy-check run + skill hardened (RLS + storage steps → behavioural).
-- **🐛 New bug (open, Medium):** the suite erodes the E2E client's `workout_logs` (13→4 across runs) — a test deletes fixture logs it doesn't own without recreating them. Not breaking anything yet; Probe B's new lower bound will now fail loudly if it hits zero. Likely in runner.spec.js or client-workout.spec.js.
+- **🐛 New bug (open, Medium):** the suite erodes the E2E client's `workout_logs` (13→4 across runs) — a test deletes fixture logs it doesn't own without recreating them. Not breaking anything yet; Probe B's new lower bound will now fail loudly if it hits zero. Likely in runner.spec.js or client-workout.spec.js. — **❌ PREMISE WRONG, reframed 2026-08-05:** it is not erosion. All 14 `workout_logs` DELETE call sites are narrowly scoped; a live count found **154** rows — accumulated un-swept `[E2E]` debris across many sessions. The '13→4' baseline was never verified against its stated source. Still open, but as a *cleanup* task, not a test-isolation bug. (Graded pth-122 incorrect on this basis.)
 - **🚨 Confirmed open (CRITICAL):** the empty-new-coach beta blocker (see Beta prep) — still not started, top candidate for next session.
 - **Coverage note:** Probe B is still vacuous on `performance_logs` (0 seeded rows); Probe C covers client_programs/1rms/check-ins but not performance_logs reads. Minor — seed those if extending.
 

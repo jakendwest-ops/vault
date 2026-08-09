@@ -456,3 +456,27 @@ _No data yet — not observed this session._
 - Terse one-word confirmations continue unchanged ("deployed", "approved") — long-banked pattern, holding under a session involving real production account creation.
 
 **No draft→ship diff this session** (code + infra/deployment steps; no external-facing prose drafted in his voice).
+
+
+**Additional signals — 2026-08-09 session 2 (ledger drift, predictions, strategy refresh)**
+
+- **All-caps fired at *verbosity*, not at a failed fix.** "WHAT DO YOU NEED FROM ME" came after he had asked
+  the same question twice and been given context, options and status instead of a short list. The banked
+  reading (all-caps = patience exhausted) holds, but the trigger here was new: not a broken build, just an
+  answer that did not answer. When he asks "what do you need from me", the correct reply is a numbered list of
+  asks and nothing else — no status, no preamble.
+- **Restates a standing rule by name when it is broken.** "claude you need to give me snippets and not expect
+  me to go looking for them" — addresses the agent directly and states the *standard*, not the instance
+  (I had said "the snippet from a few messages back"). He does not re-litigate; he restates the rule once and
+  expects it to hold from then on. (Same rule already banked as paste-SQL-inline; this is him enforcing it.)
+- **"work in order"** — new shape. Having been given a numbered plan, he expects it executed in that sequence
+  without per-item re-confirmation. Read it as blanket approval for the whole list, not just the next item.
+- **Terse process-improvement question as a genuine ask, not a rhetorical one.** "please can you explain how
+  these things got missed when I have followed the workflow of hello-claude and save" — he wants the
+  structural cause, and he is explicitly not accepting "you should have been more careful" as an answer. Same
+  instinct as the banked "turns failures into permanent systems": diagnose the system, then fix the system.
+- **"whats our plan" / "what do you propse"** — asks for a recommendation, not a survey. Both times the useful
+  answer was 3 items in priority order with one recommended, not an exhaustive backlog.
+- Typos left uncorrected ("numbererd", "propse") — already banked, holds.
+
+**No draft→ship diff this session** (no external-facing prose drafted in his voice).

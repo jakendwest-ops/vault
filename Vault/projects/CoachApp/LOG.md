@@ -4,6 +4,73 @@ Newest first.
 
 ---
 
+## 2026-08-09 (2nd save) — The health check was lying: ledger drift found, fixed, and made impossible (no app code)
+
+**Done:**
+- **Found and fixed 17 days of ledger drift.** Six rows said `✅ FIXED + LIVE <commit>` in their *description*
+  while their *Status cell* still said `open`. Verified each against its cited commit rather than trusting the
+  row text — `7fe41e0`'s commit message never mentions the delete-set button resize, so that one was confirmed
+  by reading the actual diff (`32×32` delete against the `44×44` tick, present in both the commit and current
+  code). Relabelled `fixed — awaiting Jake` — a relabel, **not** a close. `stale-bugs` 21 → 15.
+- **New `os-lint` check `ledger-drift`** (`hooks/os-lint.mjs`, reuses `bugRows()`): flags any row whose text
+  claims fixed while the cell says open. Deliberately excludes `HALF FIXED` rows and rows whose own text says
+  the fix was insufficient — exclusions tuned against the real STATUS.md, not guessed. Verified red→green:
+  GREEN on the corrected file, RED after reverting one row (it named the row exactly), GREEN after restoring.
+- **`/save` Step 3a hardened + skill renumbered 1–12.** Step 3a already said to mark a fix `fixed — awaiting
+  Jake`; it never said **which field**, and that ambiguity resolved the same wrong way every time. It now
+  states plainly that writing the ✅ into the text is not updating the status, and gates on `ledger-drift`
+  being GREEN. Separately a top-level `Step 3b` collided with the `### 3b` sub-heading under Step 3 —
+  renumbered, five shifted cross-references updated, and the `## YYYY-MM-DD` heading inside the LOG-template
+  code block deliberately left alone. Pushed to claude-config (`346954a..1f6095c`).
+- **Graded 30 of 62 overdue predictions** (20 correct / 8 incorrect / 2 partial); 62 → 32 ungraded. Handled the
+  fact that `pth-016` and `pth-090` each appear **twice** with different claims — matched on `(id, verify_by)`,
+  never id alone. Backup at `predictions.jsonl.bak-2026-08-09`; all 132 lines re-verified as valid JSON after.
+- **Conditioning-runner teardown at 390×844.** Drove a real interval exercise end to end and looked at every
+  screen. The 2026-08-07 "HR/watts mounted beneath the interval overlay" finding is genuinely fixed by the
+  capture card (`bbc2bc0`): the rest timer is a compact header bar rather than a fullscreen overlay, and the
+  capture card renders after the block with `overlay: false` asserted. Erg targets (pace/500m, watts, HR zone,
+  rest) all render on the pre-Start card. Zero page errors.
+- **Refreshed `coachapp-product-strategy.md`** (5 weeks stale, and strength-biased — a sweep of the whole
+  research corpus for conditioning terms returns essentially nothing) and ran a competitor research pass.
+- **Jake ran the cardio metric_type retag SQL live** — 7 cardio machines were tagged `weight_reps`, routing
+  them to the strength table with no duration/distance/HR/watts capture at all. Retagged to `cardio` in both
+  `exercises` and `workout_template_exercises`; verification returned 0/0.
+
+**Bugs found + fixed:**
+- The ledger drift above — a process bug, but the one doing the most damage: `os-lint` was RED at every session
+  start with a count inflated by already-done work, which trains everyone to stop reading it. The genuinely
+  open rows were buried by the noise.
+
+**UNVERIFIED (banked):**
+- The capture card shows prescribed targets as grey **placeholders** (145/160/210). Code-correct — `value` is
+  empty, so Continue-without-typing saves nothing. But this is the exact pattern Jake reversed once before
+  ("a pre-filled value is indistinguishable from one you actually entered"). Needs his eyes in a real gym.
+- Whether any `metric_type = 'cardio'` rows survive after `1379c05` merged cardio into interval. Read-only
+  check is with Jake.
+
+**Decided:**
+- **Dropped a fix I had already proposed.** A `backToGoals` null-container fallback guards a state that cannot
+  occur — `openGoal` writes to `#tab-content` with no null check of its own, so it would throw before the Back
+  button ever rendered. Shipping it would have been cargo-cult defensive code. Said so rather than quietly
+  including it to look thorough.
+- **Corrections appended to historical roadmap entries, never rewritten** (pinch-to-zoom now done, verified in
+  the current files; the `workout_logs` "erosion" premise wrong). Same argument as LOG entries — they record
+  what was believed at the time.
+- **Stroke rate deferred** on Jake's own answer ("thinking ahead, not hit it yet") — plate-calculator profile
+  (les-039). It has since shipped anyway as an opt-in toggle chip, which is a better answer than the objection.
+
+**Why:**
+- The calibration result from grading is the most useful output here, and it is one-directional: **every
+  settleable "this fix will hold" prediction was wrong** (pth-071, -094, -085, -078, -096, -064, -122, -075);
+  **every "this will surface a problem" prediction was right** (pth-053, -074, -080, -016). Confidence in
+  stability is systematically overstated on this project; confidence in things going wrong is well calibrated.
+  Worth carrying into how future "done and stable" claims get worded.
+- Most of the 15 remaining unsettleable `world` predictions are blocked for one honest reason: **the live
+  verification they depend on never happened**, and each maps to a ledger row already sitting at `fixed —
+  awaiting Jake`. The prediction backlog and the ledger backlog are the same backlog.
+
+---
+
 ## 2026-08-09 — Cardio/interval metric_type merge + in-app solo-account invites (v55/v55/v36, `1379c05`/`1a5cb72`)
 
 **Done:**
