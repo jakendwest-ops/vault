@@ -68,7 +68,7 @@ Zero rows means the Delete-my-account button fails at runtime for the first pers
 
    The zero-argument part is the security-relevant detail, not just the existence. A `SECURITY DEFINER`
    function executes with the DEFINER's privileges, so one that accepted a user id could be coerced into
-   deleting someone else'''s account. Taking no arguments means it can only resolve the caller from
+   deleting someone else's account. Taking no arguments means it can only resolve the caller from
    `auth.uid()` internally — safe by construction rather than by discipline. The Delete-my-account
    button will work for the first person who taps it.
 
