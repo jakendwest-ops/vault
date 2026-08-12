@@ -672,9 +672,9 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=11 · app-dashboard v=9 · app-clients v=10 · app-programs v=36 · app-calendar-goals v=9 · app-workouts v=61 · app-runner v=64 · app-progress v=37 · starter-content v=5 — **all pushed and live as of 2026-08-11 (`c4e7ecb`).**
+**App version:** app-core v=11 · app-dashboard v=9 · app-clients v=10 · app-programs v=37 · app-calendar-goals v=9 · app-workouts v=62 · app-runner v=65 · app-progress v=37 · starter-content v=5 — **all pushed and live as of 2026-08-11 (`b52c5ea`).**
 **CSS version:** v=9 (main.css) — `.ts-grid`/`.ts-cell` added 2026-08-05 for the builder set-editor. `--surface-2`/`--bg-accent`/`--text-accent` DEFINED 2026-07-23 (were referenced 54× and defined nowhere)
-**✅ PUSHED 2026-08-11 — `origin/master` = `c4e7ecb`**, working tree clean apart from untracked debug
+**✅ PUSHED 2026-08-11 — `origin/master` = `b52c5ea`** (11 commits; `b52c5ea` is the post-/deploy-check fix), working tree clean apart from untracked debug
 screenshots. `checks.sh` passed on the push (55 passed, 1 flaky). Deploy queued on GitHub Actions.
 **Live verification still owed:** the runner changed heavily and is the screen Jake uses mid-session.
 
