@@ -63,7 +63,14 @@ Zero rows means the Delete-my-account button fails at runtime for the first pers
 4. **Link the policy from the Settings "Data & privacy" card** as well as the invite form.
 5. **Obtain consent retroactively from the existing beta tester** — fix-forward does not apply here; a
    consent you never took is not repaired by taking it from the next person.
-6. **Verify `delete_current_user` exists** (SQL above).
+6. ~~**Verify `delete_current_user` exists**~~ — ✅ **VERIFIED 2026-08-12 by Jake.** Returns one row:
+   `proname: delete_current_user`, `args: ""` (none), `security_definer: true`.
+
+   The zero-argument part is the security-relevant detail, not just the existence. A `SECURITY DEFINER`
+   function executes with the DEFINER's privileges, so one that accepted a user id could be coerced into
+   deleting someone else'''s account. Taking no arguments means it can only resolve the caller from
+   `auth.uid()` internally — safe by construction rather than by discipline. The Delete-my-account
+   button will work for the first person who taps it.
 
 ## What closes this
 
