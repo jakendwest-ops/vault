@@ -1,3 +1,46 @@
+## 2026-08-11 — Refinement session: 10 commits pushed, zero new features (core v11 / clients v10 / calendar-goals v9 / programs v36 / workouts v61 / runner v64)
+
+**Done:**
+- Removed the `assisted` flag entirely — 4 builder lines + 6 runner references (`d09db2b`, workouts v58 / runner v58)
+- Removed the per-set `amrap` flag, finishing Jake's 2026-08-02 set-editor declutter (`eb08be1`, workouts v59)
+- Effort label now derived from `effort_type` instead of hardcoded "RPE" (`5f892d3`, runner v59)
+- `_applyCardioCapture` attaches to the last COUNTABLE round, not the last row (`2c7ff09`, runner v60)
+- Four raw set-count sites routed through `_countableSets`; phase-aware row labels (`40db93e`, runner v61)
+- Five highest-damage writes routed through `dbq()` with failure counters (`d4b2689`, programs v33 / workouts v60)
+- Runner wizard deleted: 155 net lines, plus the routing change that made its fallback unnecessary (`262f092`, runner v62)
+- 8 pre-push review findings fixed (`4f23ce0`, `730c03f`, `c4e7ecb`)
+- **Bug ledger migrated out of STATUS.md** into `bugs/` — 125 files + 8 new; os-lint + /save + hello-claude updated
+- 6 new Playwright specs, 5 existing specs updated to match deliberate removals
+
+**Bugs found + fixed:**
+- `assisted` wrote the ASSIST load to `weight_kg` unchanged — sign-flipped every derived strength number. Unreachable UI + zero live sets, so fix-forward.
+- Session detail hardcoded "RPE" while `workout_log_sets` stores `effort_type` — RIR displayed as its inverse.
+- `if (s.effort)` dropped a logged effort of 0; RIR 0 = "to failure" is real and common.
+- Capture card stamped HR/watts/pace onto `loggedSets[length-1]`, which is the cool-down on an interval — every Progress aggregate filters those out.
+- Runner counted raw rows while My Progress counted work rounds; 4 sites.
+- 21 writes never inspected their error; the 5 that lose or corrupt data now report.
+- `_resolveMetricType` returns `metric_type` VERBATIM, so the wizard's "anything else" fallback was genuinely reachable on drifted rows.
+
+**Bugs I INTRODUCED and the review caught (5):**
+- Set-count fix landed on the coach's screen only; the athlete's finish screen kept numbering every row under a contradicting header.
+- My new null-return path in `_cloneTemplateForClient` made a pre-existing bare `continue` swallow a case it never used to — `duplicatePhaseWeek` then reported success when every client copy was skipped.
+- Reintroduced the showToast clobber documented 1,200 lines up in the same file: three error toasts painted over by the success toast, so the user sees only green.
+- The routing change left `showTargets` on the old allowlist, dropping the prescription bar + 1RM banner (and stranding `showRunnerOneRMSheet`).
+- Rollback deletes were themselves silent writes — a blocked delete returns `{data: [], error: null}`, and the orphan reaches `downloadMyData`'s GDPR export.
+
+**UNVERIFIED (banked):**
+- Nothing live-verified by Jake. Deploy queued at save time. The runner changed heavily and is the mid-gym screen — one real workout on live is the ask.
+
+**Decided:**
+- Keep Obsidian, do NOT move to GitHub Projects. Decisive reason: `fixes #123` auto-close is precisely the guess-closure the Vault's closure rule exists to prevent (the 2026-07-06 slow-Workouts-page close that stayed broken 7 days). The real defect was the FILE FORMAT, fixed in place.
+- Ledger = one file per bug, `YYYY-MM-DD-slug.md`. Date prefix chosen after the first attempt used newest-first NNN, which would have required renumbering all 125 on the next insert.
+- `bodyweight`'s conditional toggle left alone — its unreachability is Jake's own 2026-08-02 instruction, and unlike `assisted` it does real work in the runner.
+- Orphaned `startStrengthSetTimer` subsystem (~75 lines) deliberately NOT removed this session — `stopStrengthSetTimer` is wired into `discardRunner`'s teardown, which had a leak fix in `fbe8491`. Runtime no-op as it stands.
+
+**Why:**
+- Jake's framing was "refine what we have to bring it up to par", so every change is a fix or a removal.
+- Three separate review agents died on a session limit mid-gate; I ran the angles inline, said so plainly, and re-ran the real 3-agent review when capacity returned. It then found 8 things — including 5 of mine — which is the whole argument for not treating the gate as ceremony.
+
 # CoachApp — Session Log
 
 Newest first.

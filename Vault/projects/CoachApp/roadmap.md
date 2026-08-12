@@ -9,6 +9,40 @@ capture card + quick-prefs popover. Full detail in STATUS.md (top of file + bug 
 
 ---
 
+## 🐛 Session backlog — 2026-08-11 (refinement: 10 commits pushed, zero new features)
+
+**Shipped + live (`8e7573d..c4e7ecb`)** — all carry a red→green test:
+- ✅ `assisted` flag removed — it sign-flipped `weight_kg` into volume/e1RM/PBs (`d09db2b`)
+- ✅ `amrap` flag removed — finishes the 2026-08-02 set-editor declutter (`eb08be1`)
+- ✅ RIR no longer displayed as RPE; effort-0 no longer dropped (`5f892d3`)
+- ✅ Captured HR/watts/pace survive a cool-down (`2c7ff09`)
+- ✅ Coach and athlete set counts agree; warm-up/cool-down rows named (`40db93e`, `730c03f`)
+- ✅ 5 highest-damage silent writes now report (`d4b2689`)
+- ✅ Runner wizard deleted + routing fallback fixed (`262f092`)
+- ✅ 8 pre-push review findings (`4f23ce0`, `730c03f`, `c4e7ecb`)
+- ✅ Bug ledger migrated to `bugs/`, one file per bug; os-lint `bug-files` check added
+
+**NEW — open, needs Jake:**
+- 🔴 **`runner.spec.js` is flaky 6-of-38**, so `checks.sh` blocks pushes at random. Nothing fails
+  deterministically (full suite: 384 passed / 0 failed / 8 flaky). Fixture-borrowing pattern. A gate
+  that fails randomly trains you to ignore it — worth fixing before that happens.
+- 🗓 **The in-gym runner captures NO effort at all.** `_blankTableRow` has no effort field; the RPE/RIR
+  column in the runner is the TARGET. Effort only reaches the DB via the manual Log Session modal.
+  Decision needed: build capture, or accept and document.
+- 🗓 **Supersets are inert in the runner** — `supersetGroup` is written but has no reader since the
+  wizard deletion. Deliberate; the grouped-work slice rebuilds it.
+- 🗓 **Finish-screen distance vs My Progress distance still disagree** (warm-up/cool-down included vs
+  excluded). Deliberately NOT aligned — "total distance covered" vs "work distance" is a product call.
+- 🔧 **16 unchecked writes remain** — cleanup deletes plus `starter_seeded` (a failure there re-seeds
+  ~40 exercises on next login). Follow-up pass.
+- 🔧 **~75 lines of orphaned timer code** (`startStrengthSetTimer`/`renderStrengthSetTimer`/
+  `addExtraStrengthSet`) — zero callers, but teardown is wired into `discardRunner`. Runtime no-op.
+
+**Decided:**
+- ❌ **GitHub Projects rejected** for bug tracking. `fixes #123` auto-close is the guess-closure the
+  Vault rule exists to prevent. Revisit only if a second beta tester needs to file bugs — and then as a
+  public intake feeding the Vault, not a replacement for it.
+
 ## 🛠 Session backlog — 2026-08-09 (2nd save) — OS, ledger + strategy; no app code
 
 - **✅ `os-lint` gained `ledger-drift`** — flags any bug row whose text claims `FIXED + LIVE` while its Status

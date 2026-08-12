@@ -1,7 +1,49 @@
 # CoachApp — STATUS
-_Last updated: 2026-08-09 (end of session) — **no app code shipped this session; the work was the operating
-system, the bug ledger, and strategy.** `~/.claude` pushed (`346954a..1f6095c`). App repo untouched and
-already current at `fbe8491`._
+_Last updated: 2026-08-11 (end of session) — **refinement session: 10 commits PUSHED
+(`8e7573d..c4e7ecb`), zero new features.** Deploy queued on GitHub Actions. Also: the bug ledger left
+STATUS.md entirely (see below), and `~/.claude` + Vault both pushed._
+
+**1. 🔴 Three live data-integrity bugs shipped, all of which made numbers WRONG rather than absent.**
+(a) `assisted` recorded band-assistance as *lifted* weight into `weight_kg` — a −20kg assisted pull-up
+would have stored as +20kg and fed volume, e1RM and PB detection. Unreachable via the UI, and a live
+count found **zero** affected sets, so fix-forward with no repair (`d09db2b`). (b) A logged **RIR was
+displayed as RPE** — opposite scales, so a brutal set read as trivial to any coach setting next week's
+load (`5f892d3`). (c) **Captured HR/watts/pace/stroke-rate were discarded** whenever an interval had a
+cool-down: the capture attached to the last logged row, which is the cool-down, and every Progress
+aggregate filters cool-downs out by design. Silent at input, at save, and at the chart (`2c7ff09`).
+
+**2. The coach and the athlete were reading different set counts off the same session.** A 4-round
+interval wrapped in a warm-up and cool-down said **6 sets** in the runner + coach view and **4** in My
+Progress. All four raw-count sites now call `_countableSets` itself rather than re-implementing the
+predicate; warm-up/cool-down rows are NAMED and work rounds renumbered 1..N so the table agrees with its
+own header (`40db93e`). **The first attempt was half-done** — it fixed the coach's screen and introduced
+the same contradiction on the athlete's finish screen; caught by the pre-push review (`730c03f`).
+
+**3. Five highest-damage silent writes closed, from a scan that found 21.** A failed clone returned a
+valid id for an EMPTY workout; `duplicatePhaseWeek` saved the coach's week but not the client's and said
+it worked; `deletePhaseWeek`'s 4-step renumber could half-fail and still say "Week deleted" (`d4b2689`).
+**16 remain deliberately** — cleanup deletes whose worst case is an orphan row, plus `starter_seeded`.
+
+**4. The runner's dead wizard deleted — 155 lines, and the class that made it reachable.** Only 133 were
+wizard-only; `logRunnerSet` is shared with cardio. The real fix was routing: `_isPlainStrengthExercise`
+was an allowlist of 5 metric types with the wizard catching "anything else", and *anything else was
+reachable* because `_resolveMetricType` returns `metric_type` verbatim. Now `ex.type !== 'cardio'`, so
+the table is the fallback. Verified ZERO wizard-bound rows live (53 templates, 105 logged) before cutting
+(`262f092`). **Consequence: `supersetGroup` now has no reader — supersets are inert in the runner** until
+the grouped-work slice.
+
+**5. The pre-push review earned its place: 8 findings, 5 of them regressions THIS session introduced.**
+Worst was reintroducing a toast-clobber bug documented 1,200 lines up in the same file from a previous
+review — three error toasts painted over by the success toast, so the user sees only green. Also: the
+half-done set-count fix; a silent-skip my own silent-writes fix made newly reachable; the routing change
+dropping the prescription bar and 1RM banner; and rollback deletes that were themselves silent writes
+(a surviving orphan reaches the GDPR export). All fixed (`4f23ce0`, `730c03f`, `c4e7ecb`).
+
+**6. The bug ledger left STATUS.md.** 125 rows in a markdown table → `bugs/`, one file per bug with
+frontmatter. That table shape had caused two real failures: unescaped `|` in prose split rows so os-lint
+skipped them, and a Status cell at the far right of a 6,923-character line drifted from its own text for
+17 days. Round-trip verified BEFORE the table was deleted (125 in / 125 out / 0 malformed); stale-bugs
+read 12 before and 12 after. os-lint gained a `bug-files` check, proven RED→GREEN on a probe.
 
 **1. 🔴 The health check had been lying, and is now mechanically prevented from lying again.** Six ledger rows
 said `✅ FIXED + LIVE <commit>` in their **description** while their **Status cell** still said `open` — the
@@ -630,9 +672,13 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=10 · app-dashboard v=9 · app-clients v=9 · app-programs v=31 · app-calendar-goals v=8 · app-workouts v=56 · app-runner v=56 · app-progress v=37 · starter-content v=5  _(2026-08-09: in-app "Invite a personal user" (Edge Function + Settings card) + the cardio/interval metric_type merge, both this save's headline work. Before that, same push-gap: Programs builder day-slot picker pool made lazy not eager (2026-08-08), the interval runner stale-duration display fix, and the cardio/interval exercise-finish capture card + quick-prefs popover. Before that: 2026-08-05 exercise-builder set-editor grid restructure.)_
+**App version:** app-core v=11 · app-dashboard v=9 · app-clients v=10 · app-programs v=36 · app-calendar-goals v=9 · app-workouts v=61 · app-runner v=64 · app-progress v=37 · starter-content v=5 — **all pushed and live as of 2026-08-11 (`c4e7ecb`).**
 **CSS version:** v=9 (main.css) — `.ts-grid`/`.ts-cell` added 2026-08-05 for the builder set-editor. `--surface-2`/`--bg-accent`/`--text-accent` DEFINED 2026-07-23 (were referenced 54× and defined nowhere)
-**⚠️ NOT PUSHED — local master ahead of `origin/master` by several commits** (`1ef09c9`, the Solo-genuine-role
+**✅ PUSHED 2026-08-11 — `origin/master` = `c4e7ecb`**, working tree clean apart from untracked debug
+screenshots. `checks.sh` passed on the push (55 passed, 1 flaky). Deploy queued on GitHub Actions.
+**Live verification still owed:** the runner changed heavily and is the screen Jake uses mid-session.
+
+_Historic note, superseded:_ **NOT PUSHED — local master ahead of `origin/master` by several commits** (`1ef09c9`, the Solo-genuine-role
 merge, plus 2 earlier same-day commits it absorbed). Jake's explicit choice this save — push is tomorrow's
 first job, before the SQL migration and live verification (see top of file for the full sequencing). Previous
 confirmed-pushed state: `origin/master` = `74d3024`. Latest local: **a CRITICAL confirmed-

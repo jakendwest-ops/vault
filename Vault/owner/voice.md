@@ -480,3 +480,24 @@ _No data yet — not observed this session._
 - Typos left uncorrected ("numbererd", "propse") — already banked, holds.
 
 **No draft→ship diff this session** (no external-facing prose drafted in his voice).
+
+### Observed 2026-08-11 (casual/AI register)
+
+- **Stacks a directive onto a question in one breath.** "answer me this and also launch the agents." /
+  "continue the push. And then once done, give me a summary in plain English." He is not choosing between
+  the two — he wants both, in that order, and expects the work to proceed while the question is answered.
+  Do not treat a question as a stop signal.
+- **Re-asks when an answer gets buried.** "what about my query about git projects" — his GitHub-Projects
+  question had been answered in full, but inside a message that also launched three review agents, so it
+  vanished under the output. The lesson is mine, not his: **answer a direct question as its own message, or
+  at the top, never woven into a wall of work status.** He will not go hunting for it, and re-asking is the
+  only signal you get.
+- **Retracts cleanly, no hedging.** "continue with push and disregard my last message about adding a new
+  prompt." No apology, no explanation of why he changed his mind. Take it literally and drop the thread.
+- **One-word approvals carry full scope.** "approved" / "push" — given after a message that laid out a
+  multi-step sequence, it approves the whole sequence, not just the next step. Same shape as the banked
+  "work in order".
+- **Asks the strategic question mid-build, unprompted.** "Do I need a GitHub project rather than obsidian"
+  arrived in the middle of a refinement session with 10 commits pending. He context-switches to tooling and
+  process questions without waiting for a natural break, and expects a decisive answer — a recommendation,
+  not options. (Consistent with the banked "asks for a recommendation, not a survey".)
