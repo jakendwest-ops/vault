@@ -481,6 +481,28 @@ _No data yet — not observed this session._
 
 **No draft→ship diff this session** (no external-facing prose drafted in his voice).
 
+### Observed 2026-08-12 (casual/AI register)
+
+- **States a standing rule in one flat sentence, no hedging.** *"Do not change code to fix a problem
+  that does not exist yet."* No "I think", no "maybe we should". When he escalates a preference to a
+  rule he does it in the imperative and it applies from then on. Bank it as a rule, not a comment.
+- **Pulls up drift by naming the rule I broke, not the instance.** *"You have a rule that means you
+  need to give me technical summaries and plain english summaries. Why are you no longer implementing
+  this."* Same shape as the banked "claude you need to give me snippets" — he restates the STANDARD and
+  expects it to hold, rather than re-litigating the one case. The correct reply is to fix it durably
+  (update the memory), not just to rewrite that one paragraph.
+- **Says when he does not understand, plainly and without embarrassment.** *"i dont know what the below
+  means."* / *"paste it where?"* / *"what does this mean in plain englis"*. He will tell you — which
+  means silence is NOT evidence you were clear. He is also unbothered about asking twice.
+- **Owns his own errors flatly and moves on.** *"I did do full body b this morning, but I must have
+  forgotten to save so this appears to be user error."* No defensiveness, and he closes the thread
+  himself. Don't dwell or reassure — confirm and move to the next thing.
+- **One-word go-aheads on destructive operations.** *"delete"* / *"yes delete the dead data"*. Terse
+  approval is still full approval, but the terseness is exactly why the ASK has to spell out the blast
+  radius beforehand — he is answering the question as posed, not re-deriving it.
+- **Ends with thanks when a correction lands well** — *"thank you. Do not change code…"* — praise and
+  the next instruction in the same breath. The thanks is not a stopping point.
+
 ### Observed 2026-08-11 (casual/AI register)
 
 - **Stacks a directive onto a question in one breath.** "answer me this and also launch the agents." /

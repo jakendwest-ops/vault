@@ -1,6 +1,6 @@
 ---
 id: 2026-08-12-mountmodal-not-adopted-clients-calendar-goals
-status: open
+status: fixed-awaiting-jake
 priority: high
 reported: 2026-08-12
 status_detail: "found by the full-codebase architecture audit; reintroduces a previously-fixed, documented race"
@@ -42,3 +42,24 @@ Route all 7 modal-creator functions through `mountModal(overlay)` instead of raw
 ## Documentation note
 
 STATUS.md's Continuity block currently states the canonical modal pattern is plain `document.createElement` → `document.body.appendChild` ("Never embed in `el.innerHTML`... see `showAssignProgramModal` as canonical"), which predates `mountModal()` and doesn't mention it at all — even the cited "canonical" example doesn't call `mountModal()`. Worth updating that section to point at `mountModal()` as the current standard, since the stale doc is the plausible reason these two files never adopted it.
+
+---
+
+**✅ FIXED + LIVE `02963e2` (2026-08-12).** All 10 modals routed through `mountModal`.
+
+Cost demonstrated by reverting the fix and watching the test go red:
+
+    add-client: {"overlays":2, "nameInputs":2, "whatSaveSees":"FIRST INSTANCE"}
+
+Two overlays, two elements sharing `#nc-name`, and `getElementById` returning the STALE one
+underneath — so a double-tap gives a fresh-looking empty form on top while the save handler reads the
+hidden one.
+
+Measured, and the audit needed correcting in both directions: **7 of the 10 had NO guard** (all 3 in
+app-clients.js including the async `showEditClientModal` the audit named, plus 4 in
+app-calendar-goals.js). The other 3 hand-rolled the same `existing.remove()` logic — correct, but
+three private copies of one rule is how it drifts, so they go through the helper too. The audit's
+app-clients claim was exactly right; its calendar-goals framing was looser than the evidence.
+
+Pinned by `tests/modal-stacking-2026-08-12.spec.js` (3 tests), the third structural and reading
+source from disk — the bug was never one modal, it was a whole file never adopting the helper.

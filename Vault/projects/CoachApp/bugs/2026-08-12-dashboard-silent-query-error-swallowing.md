@@ -1,6 +1,6 @@
 ---
 id: 2026-08-12-dashboard-silent-query-error-swallowing
-status: open
+status: fixed-awaiting-jake
 priority: high
 reported: 2026-08-12
 status_detail: "found by the full-codebase architecture audit; first-page-every-login render path"
@@ -30,3 +30,20 @@ This is a different instance of the same silent-failure class that commit `d4b26
 ## Suggested fix direction
 
 Check `error` on each destructure (or route through `dbq()`, which already handles this) and at minimum `log.error` on failure so a real outage is distinguishable from an empty account in the console — a user-facing toast/banner is a product decision (a dashboard-wide "some data couldn't load" banner vs. per-card) worth scoping separately.
+
+---
+
+**✅ FIXED + LIVE `c343924` (2026-08-12).** Worse than reported: not 18 fetches but **19** — the
+coach dashboard's own client-list query was not in the audit's tally. None destructured `error`.
+
+All three dashboards now capture every fetch error, a shared `_failedFetches` collects them by
+human-readable label, and `_fetchFailureBanner` renders ONE banner naming exactly what failed with a
+Retry that re-enters through `navigate(page, 'replace')` — the app's own router, rather than
+re-implementing "which dashboard am I", which the master account's view-switching makes non-obvious.
+
+Labelled per item ("your goals", "weight history") rather than "something went wrong": a message that
+does not say WHAT failed cannot tell the user whether the missing thing mattered.
+
+Pinned by `tests/dashboard-fetch-failures-2026-08-12.spec.js` (3 tests), verified red-before by
+neutering the banner. The third test is the one that stops this becoming its own problem: a HEALTHY
+dashboard must show NO banner. A permanent warning is one nobody reads.

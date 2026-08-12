@@ -9,6 +9,34 @@ capture card + quick-prefs popover. Full detail in STATUS.md (top of file + bug 
 
 ---
 
+## 🐛 Session backlog — 2026-08-12 (audit response + escaping sweep; 16 commits live)
+
+**Shipped + live (`8e7573d..9d0003b`)** — every item red→green tested:
+- ✅ `ownWorkout` fixture + runner.spec conversion — **gate now 3/3 clean, 0 flaky** (`ee928b3`, `c15eb82`)
+- ✅ Dashboard fetch-error visibility — 19 queries had zero error checks (`c343924`)
+- ✅ 10 modals through `mountModal` — 7 had no guard at all (`02963e2`)
+- ✅ Progress chart leak + 2 silent deletes (`bfb319c`)
+- ✅ Escaping sweep, 20 sites + `scripts/check-escaping.mjs` blocking pushes (`2e9535d`, `9d0003b`)
+- ✅ Runner notes textarea escaped (`9e4bab7`); favicon (`096895e`)
+- ✅ RLS verified behaviourally — 2 audit findings downgraded High → Medium (`15ff641`)
+- ✅ ~350 rows of dead `[E2E]` data purged, 0 real rows touched
+
+**RESOLVED this session:**
+- ✅ `runner.spec.js` flakiness — closed on evidence: `checks.sh` 3 consecutive runs, 0 flaky each
+
+**Still open, from the audit (deliberately NOT pre-emptively fixed — see the rule below):**
+- 🔴 `app-programs.js` ~20 phase/programme writes with no ownership anchor — **the audit's largest
+  single finding, still UNVERIFIED.** Next action is a behavioural probe, NOT code.
+- 🗓 `goals`/`goal_milestones` writes unanchored; `app-workouts.js` anchor inconsistency
+- 🗓 coach → another coach's client vector on the client-scoped tables (only `weight_logs` is covered)
+- 🔧 ~75 lines of orphaned timer code from the wizard deletion — teardown is wired into
+  `discardRunner`, so it is all-or-nothing. **Not doing it: nothing is broken.**
+- 🔧 `programs.spec.js` / `client-workout.spec.js` still borrow fixtures. **Not doing it: gate is clean.**
+
+**Standing rule adopted 2026-08-12 (Jake, verbatim):** *"Do not change code to fix a problem that does
+not exist yet."* Verifying is free and always allowed; changing working code needs evidence the problem
+is live. This is why the two items above are listed as deliberate non-actions rather than backlog.
+
 ## 🔴 GDPR — BLOCKS INVITING ANY NEW USER (found 2026-08-11 by /deploy-check)
 
 **Does not block deploying code.** Two different gates: "is this code safe to ship" (yes) and "are we

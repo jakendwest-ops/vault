@@ -1,6 +1,6 @@
 ---
 id: 2026-08-12-stored-xss-recurrence-across-5-files
-status: open
+status: fixed-awaiting-jake
 priority: high
 reported: 2026-08-12
 status_detail: "found by the full-codebase architecture audit; recurring class, 5th/6th/7th time this pattern has been found in this project"
@@ -33,3 +33,34 @@ Found by the 2026-08-12 full-codebase audit (`architecture-audit-2026-08-12.md`)
 ## Suggested fix direction
 
 Same shape as the prior 4 fixes: wrap each site in `escapeHtml()` (or `escapeAttr()` for onclick-string contexts). Given this is the 5th+ recurrence, also worth a repo-wide grep sweep (`grep -rn '\${' js/*.js` filtered to interpolations of known free-text fields — `name`, `notes`, `description`, `full_name`, `email`, `title`) as a one-time closing pass, rather than relying on catching each new instance during unrelated feature work.
+
+---
+
+**✅ FIXED + LIVE `2e9535d` + `9d0003b` (2026-08-12). 20 sites, and the class is now mechanically
+detected.**
+
+Escaped: a client's real `full_name` rendered raw in BOTH app-dashboard.js and app-calendar-goals.js
+(the audit's cross-file finding, correct), session names, performance-log name and unit, phase names,
+day_label, template names, exercise category, programme descriptions, and two attribute contexts.
+
+**The sweep itself shipped a worse bug than the one it fixed, caught by pre-push review:** I used
+`escapeAttr` in plain `value=""` attributes. `escapeAttr` is for a user string inside a JS STRING
+LITERAL in an attribute (`onclick="fn('${escapeAttr(x)}')"`) — it backslash-escapes first. In a plain
+attribute the browser hands `.value` back WITH the backslash, and `saveSettingsProfile` writes it to
+`profiles.full_name`. It compounds on every save:
+
+    O'Brien -> O\'Brien -> O\\\'Brien -> O\\\\\\\'Brien
+
+`app-clients.js:442` had used `escapeHtml` on that same field all along. Verified empirically, then
+fixed at all 3 sites.
+
+**Rule 9d was also scoped narrower than the class it certified** — it omitted `.name`, the commonest
+free-text field here, so it would have caught 6 of 17 sites and reported CLEAN while three live sinks
+sat in app-programs.js:57, app-calendar-goals.js:144 and app-workouts.js:624 (now escaped). It also
+filtered whole LINES, so an escaped interpolation masked an unescaped neighbour — the same hole class
+as the `!==` exclusion removed one commit earlier.
+
+Now `scripts/check-escaping.mjs`, called from checks.sh, proven against all six shapes and blocking
+pushes. Pinned by `tests/escaping-sweep-2026-08-12.spec.js` (4 tests) — rewritten after review,
+because its first version tested the helpers rather than the call sites and would have stayed green
+if the whole sweep were reverted.

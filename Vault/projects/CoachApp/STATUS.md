@@ -1,7 +1,47 @@
 # CoachApp — STATUS
-_Last updated: 2026-08-11 (end of session) — **refinement session: 10 commits PUSHED
-(`8e7573d..c4e7ecb`), zero new features.** Deploy queued on GitHub Actions. Also: the bug ledger left
-STATUS.md entirely (see below), and `~/.claude` + Vault both pushed._
+_Last updated: 2026-08-12 (end of session) — **16 commits PUSHED and deployed
+(`8e7573d..9d0003b`), zero new features.** A full-codebase architecture audit arrived from another
+session; its findings were verified rather than accepted, and both directions moved._
+
+**1. 🔴 The audit's headline finding was overstated, and proving it took one test.** It filed 7 High
+findings on missing ownership anchors, all "UNVERIFIED", and named the verification as its own item 6.
+Its sharpest claim — *"a signed-in client could call `saveClientWeight('<another clients uuid>')` from
+devtools"* — is **false in practice**: as the E2E client against a different client's id, all four
+inserts are refused by RLS specifically (42501) and the `clients` UPDATE matches zero rows. Two rows
+downgraded High → Medium. **The test itself needed hardening twice** before it proved anything: it
+could not distinguish an RLS refusal from a schema rejection, and it mutated a real client's
+`goal_weight_kg` without capturing or restoring it — so a loose policy would have corrupted real data
+while the test passed green.
+
+**2. 🔴 My own escaping sweep shipped a worse bug than the one it fixed.** `escapeAttr` in a plain
+`value=""` backslash-escapes, the browser hands `.value` back WITH the backslash, and
+`saveSettingsProfile` writes it to `profiles.full_name` — compounding on every save
+(`O'Brien -> O\'Brien -> O\\\'Brien`). Caught by pre-push review, verified empirically, fixed at all
+3 sites (`9d0003b`). `app-clients.js:442` had used `escapeHtml` on that same field all along.
+
+**3. `checks.sh` rule 9d was scoped narrower than the class it certified — twice.** First version
+excluded any line containing `===`/`!==`, which let an unescaped `program.description` through on the
+very run meant to prove it. Second omitted `.name` — the commonest free-text field here — so it would
+have caught 6 of 17 sites and reported CLEAN while three live sinks sat in the tree. Now
+`scripts/check-escaping.mjs`: per-MATCH extraction, markup-context aware, proven against all six
+shapes. **A detector scoped narrower than its class is worse than none — it closes the ledger row.**
+
+**4. ✅ The push gate is trustworthy again.** `runner.spec.js` clicked `Start`.first() 22 times —
+"whatever workout is first" — which other tests mutate mid-run. Replaced with an `ownWorkout` fixture
+(each test owns its workout; a client cannot insert a template, so it is created as the PT in a second
+context). **`checks.sh` run three consecutive times: 56 passed, 0 failed, 0 flaky in every one.** Full
+suite 382-387/6-9 flaky → **413 passed / 0-1 flaky**.
+
+**5. ~350 rows of dead test data purged**, with Jake's go-ahead: 100 fake workout logs, 153 fake
+templates, 100 fake programmes. That account held 156 templates of which **3 were real**. Zero real
+rows touched, zero dangling references — the 2026-07-10 data-loss shape was explicitly guarded against.
+
+**6. Shipped from the audit:** dashboard fetch errors are now visible (19 queries, none had an error
+check — a failed load was indistinguishable from an empty account on the first screen of every login);
+10 modals routed through `mountModal` (proven: a double-tap gave 2 overlays and the save read the
+hidden one); Progress chart leak + 2 silent deletes; 20 escaping sites; a favicon, because a
+permanently-red console trains you to ignore console errors.
+
 
 **1. 🔴 Three live data-integrity bugs shipped, all of which made numbers WRONG rather than absent.**
 (a) `assisted` recorded band-assistance as *lifted* weight into `weight_kg` — a −20kg assisted pull-up
@@ -672,9 +712,11 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=11 · app-dashboard v=9 · app-clients v=10 · app-programs v=37 · app-calendar-goals v=9 · app-workouts v=62 · app-runner v=65 · app-progress v=37 · starter-content v=5 — **all pushed and live as of 2026-08-11 (`b52c5ea`).**
+**App version:** app-core v=11 · app-dashboard v=11 · app-clients v=11 · app-programs v=39 · app-calendar-goals v=12 · app-workouts v=64 · app-runner v=68 · app-progress v=40 · starter-content v=5 — **all pushed and live as of 2026-08-12 (`9d0003b`).**
 **CSS version:** v=9 (main.css) — `.ts-grid`/`.ts-cell` added 2026-08-05 for the builder set-editor. `--surface-2`/`--bg-accent`/`--text-accent` DEFINED 2026-07-23 (were referenced 54× and defined nowhere)
-**✅ PUSHED 2026-08-11 — `origin/master` = `b52c5ea`** (11 commits; `b52c5ea` is the post-/deploy-check fix), working tree clean apart from untracked debug
+**✅ PUSHED 2026-08-12 — `origin/master` = `9d0003b`** (16 commits over two days; deploy green)
+
+_Historic:_ **PUSHED 2026-08-11 — `origin/master` = `b52c5ea`** (11 commits; `b52c5ea` is the post-/deploy-check fix), working tree clean apart from untracked debug
 screenshots. `checks.sh` passed on the push (55 passed, 1 flaky). Deploy queued on GitHub Actions.
 **Live verification still owed:** the runner changed heavily and is the screen Jake uses mid-session.
 
@@ -840,6 +882,18 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 
 ## In progress / known gaps
 
+- **Full-codebase architecture audit — 2026-08-12, see `architecture-audit-2026-08-12.md`.** First-ever
+  structured review of all 9 JS modules (prior review tooling only ever covered a diff or the top 2-3
+  highest-churn files). 10 actionable findings filed as their own `bugs/*.md` rows (ownership-anchor gaps
+  in app-progress.js/app-clients.js/app-programs.js/app-workouts.js, a 5th+ recurrence of the stored-XSS
+  class across 5 files, mountModal() not adopted in 2 files, silent dashboard query-error swallowing, a
+  stale goal-writes ledger item refiled with a new sibling, a chart-instance leak, dead code). Purely
+  descriptive/architectural findings that aren't fixable bugs live only in the audit doc: `blueprint.md`
+  is stale against the later solo-role redesign; `data-model.md` has 2 dangling `[[project-coachapp-
+  architecture]]` wikilinks the audit doc is a candidate to satisfy; `dbq()`'s own definer (app-core.js)
+  only uses it for 2 of its own 8 calls, which plausibly explains repo-wide low adoption (24 of 292
+  `db.from()` calls); no in-repo README/architecture doc exists. No live RLS/SQL probe was run (out of
+  scope) — every ownership-anchor finding is an app-level gap, not a confirmed exploit.
 - **Runner set-accuracy build (session 11, 2026-07-03) — built + Playwright-verified, NOT YET PUSHED.** Per-set target display fixed (table mode was hardcoded to always show set 1's prescription — now dynamic, tracking the current working set like the wizard already did); delete-a-set added (wizard edit sheet + table rows, neither existed before); live rep tally (current exercise's running reps vs. same exercise's total last session, updates per set); swap/add exercise now opens the **literal same modal** used in the workout builder (library picker + 1RM group + full set-target builder + notes + superset) via a parameterised `showAddExerciseToTemplateModal(templateId, runnerCtx)` — corrected from an initial simplified picker after Jake's live-test feedback that "the same modal" meant literal reuse, not a stylistically-matching rebuild. Tick checkbox redesigned (white → green on complete, was near-invisible); delete button redesigned (red "Delete" label, was a bare ✕). All four came from Jake live-testing the approved build in the same session — see LOG for the full before/after per item.
 - **Programs picker "Filter workouts below" search — ✅ Done 2026-07-11.** The recommended fix (replace the native `<select>` with a live-filtering tap-row list) shipped as `_openWorkoutPicker`. It closed **three** complaints at once: this one (a plain `<select>` gives no visible feedback until manually opened, so it looks broken), Jake's separate complaint that the assign-workout list would grow unmanageably, and his 2026-07-11 question about telling three same-named "Upper Body" workouts apart — all three were the same root cause, an `<option>` being unable to hold anything but plain text. app-programs v16.
 - **`deleteProgram()` orphan-cleanup — ✅ Done (66bf1fd, 2026-07-03).** See "What's working" above. Historical backlog note: the fix stops *future* debris, but the existing ~993-template backlog on the main coach account (found while researching this fix) is separate and still needs its own cleanup pass — same class as the 65 orphans cleaned 2026-07-02. Jake's calls so far: skip building a one-click replace/update-assignment flow for now (just prevent silent double-assign); when calendar integration is built, it should write real per-session `calendar_events` rows, not a lighter marker.

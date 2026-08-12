@@ -1,6 +1,6 @@
 ---
 id: 2026-08-12-progress-chart-leak-and-silent-delete-failures
-status: open
+status: fixed-awaiting-jake
 priority: medium
 reported: 2026-08-12
 status_detail: "found by the full-codebase architecture audit"
@@ -26,3 +26,17 @@ Contrast: `delete1RM` (242) uses `dbq()`, which auto-shows a toast on error (js/
 ## Suggested fix direction
 
 Chart leak: add the same `Chart.getChart(id)?.destroy()` guard already used elsewhere in this file, to both `pw-chart` and `resting-hr-chart`. Silent deletes: route `deletePerfLog`/`deleteWeightLog` through `dbq()` (or add a matching `showToast` on error) to match the file's own established pattern.
+
+---
+
+**✅ FIXED + LIVE `bfb319c` (2026-08-12).** Both halves confirmed exactly as reported.
+
+Charts: `pw-chart` and `resting-hr-chart` created a Chart without destroying the previous instance,
+leaking it plus its listeners and animation loop. Uses the file's own existing
+`Chart.getChart(id)?.destroy()` precedent. My first scan claimed SIX leaking sites — that was wrong,
+a 9-line look-behind missed guards 13 lines up and the array teardowns. **The audit's count of 2 was
+right and mine was not.**
+
+Deletes: `deletePerfLog`/`deleteWeightLog` now toast on error AND on zero rows — a policy-blocked
+delete returns `{ data: [], error: null }`, so an error-only guard treats "refused" as "succeeded",
+re-renders, and the row is still sitting there with no explanation.

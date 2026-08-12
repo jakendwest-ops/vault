@@ -1,3 +1,41 @@
+## 2026-08-12 — Audit response + escaping sweep; every checked claim moved (dashboard v11 / clients v11 / calendar-goals v12 / programs v39 / workouts v64 / runner v68 / progress v40)
+
+**Done:**
+- `ownWorkout` fixture + `runner.spec.js` conversion — 6 flaky → 0 (`ee928b3`, `c15eb82`)
+- Behavioural RLS probe answering the audit's own item 6 (`15ff641`)
+- Runner "Your notes" textarea escaped — `</textarea>` genuinely broke out (`9e4bab7`)
+- Dashboard fetch-error visibility: 19 queries, zero error checks (`c343924`)
+- Progress chart leak + 2 silent deletes; RLS probe hardened after review (`bfb319c`)
+- 10 modals through `mountModal` (`02963e2`)
+- Favicon — killed the permanent red console error (`096895e`)
+- Escaping sweep, 20 sites + `scripts/check-escaping.mjs` as checks.sh rule 9d (`2e9535d`, `9d0003b`)
+- `.gitignore` for the debug screenshots two reviews flagged (`cd19fb3`)
+- ~350 rows of dead `[E2E]` test data purged with Jake's go-ahead
+
+**Bugs found + fixed:**
+- Dashboards rendered a failed fetch as an EMPTY section — "no sessions" and "couldn't load" were identical, on the first screen of every login.
+- 10 modals bypassed `mountModal`; 7 had no guard at all. Double-tap → 2 overlays, save reads the hidden one.
+- `pw-chart`/`resting-hr-chart` leaked a Chart instance per render; 2 deletes failed silently.
+- 20 unescaped free-text sites incl. a client's real name in two files.
+- Runner notes textarea rendered raw.
+
+**Bugs I INTRODUCED this session and review caught:**
+- **`escapeAttr` in a plain `value=""` corrupts and then SAVES** — compounds on every save. The worst thing I nearly shipped all week.
+- Rule 9d scoped narrower than its class, twice (the `===` exclusion, then omitting `.name`).
+- The escaping spec tested the helpers not the call sites — would have stayed green if the whole sweep were reverted — and its payload had no apostrophe, so it asserted the broken property and PASSED.
+- The RLS probe could not tell an RLS refusal from a schema rejection, and mutated a real `goal_weight_kg` without restoring it.
+
+**UNVERIFIED (banked):**
+- Nothing live-verified by Jake. His Full Body B save this afternoon ran on the new code but the probe output was not re-run against it.
+
+**Decided:**
+- **Jake's standing rule: "Do not change code to fix a problem that does not exist yet."** Banked as `feedback_no_speculative_fixes`. Immediately dropped `programs.spec.js`/`client-workout.spec.js` conversion (gate is 3/3 clean) and the orphaned timer removal. Changes S4's ORDER: verify behaviourally first, write helpers only where a probe finds a real gap.
+- Plain-English rule widened: it covers DECISIONS, not just bugs. Jake pulled me up on a paragraph explaining why I was *not* doing something.
+- Track A closed on evidence (3 consecutive clean gate runs), not on converting every spec.
+
+**Why:**
+- The audit was good work and still needed checking. Its top finding was overstated; three of my own counter-claims were also wrong (6 chart leaks vs 2; "your session is missing" from querying the wrong account; the calendar-goals modal framing). **Every claim that got checked moved.**
+
 ## 2026-08-11 — Refinement session: 10 commits pushed, zero new features (core v11 / clients v10 / calendar-goals v9 / programs v36 / workouts v61 / runner v64)
 
 **Done:**
