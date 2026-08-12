@@ -9,6 +9,37 @@ capture card + quick-prefs popover. Full detail in STATUS.md (top of file + bug 
 
 ---
 
+## 🔴 GDPR — BLOCKS INVITING ANY NEW USER (found 2026-08-11 by /deploy-check)
+
+**Does not block deploying code.** Two different gates: "is this code safe to ship" (yes) and "are we
+lawful for a new data subject" (no). Do not conflate them.
+
+The app has **no consent capture anywhere** and **no privacy policy at all**. Signup is invite-only, but
+the invite form — where a beta tester actually activates their account — has no checkbox and nothing to
+link to. A real outside beta tester was onboarded 2026-08-09 under exactly this gap, so it is live, not
+hypothetical. `CRITICAL.md` classes this app as handling UK GDPR **special-category (health) data**.
+
+Already in place, so this is a gap and not a rebuild: the Settings "Data & privacy" card, `downloadMyData()`
+(full export bundle), `deleteAccount()` → `delete_current_user`, and EU storage.
+
+In dependency order:
+
+1. 🗓 **Write the privacy policy** — the long pole, and **Jake's to write or approve**; it is a document,
+   not code. What is collected (incl. health data and photos), why, lawful basis, storage location
+   (Supabase `eu-west-1`), retention, subject rights, contact.
+2. 🗓 **Host it** — a static page in the repo is enough; this is a Pages site.
+3. 🗓 **Consent checkbox on `#invite-form`**, linking to the policy, blocking activation until ticked.
+   Persist `consented_at` **and the policy version**, so a later policy change is detectable rather than
+   silently assumed.
+4. 🗓 **Link the policy from the Settings card** too, not only the invite form.
+5. 🗓 **Take consent retroactively from the existing beta tester.** Fix-forward does not apply — a consent
+   never taken is not repaired by taking it from the next person.
+6. 🗓 **Verify `delete_current_user` exists in the DB** — the call site is there but it cannot be tested
+   without destroying a real account. SQL in the ledger file.
+
+Ledger: `bugs/2026-08-11-gdpr-no-consent-capture-and-no-privacy-policy.md` (status `open`, priority
+`critical`). Steps 1 and 5 need Jake and cannot be closed by a test.
+
 ## 🐛 Session backlog — 2026-08-11 (refinement: 10 commits pushed, zero new features)
 
 **Shipped + live (`8e7573d..c4e7ecb`)** — all carry a red→green test:
