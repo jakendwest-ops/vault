@@ -712,9 +712,16 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=11 · app-dashboard v=11 · app-clients v=11 · app-programs v=39 · app-calendar-goals v=12 · app-workouts v=64 · app-runner v=68 · app-progress v=40 · starter-content v=5 — **all pushed and live as of 2026-08-12 (`9d0003b`).**
+**App version:** app-core v=11 · app-dashboard v=11 · app-clients v=11 · app-programs v=40 · app-calendar-goals v=13 · app-workouts v=65 · app-runner v=69 · app-progress v=41 · starter-content v=5 — **all pushed and live as of 2026-08-14 (`d337418`).**
 **CSS version:** v=9 (main.css) — `.ts-grid`/`.ts-cell` added 2026-08-05 for the builder set-editor. `--surface-2`/`--bg-accent`/`--text-accent` DEFINED 2026-07-23 (were referenced 54× and defined nowhere)
-**✅ PUSHED 2026-08-12 — `origin/master` = `9d0003b`** (16 commits over two days; deploy green)
+**✅ PUSHED 2026-08-14 — `origin/master` = `d337418`** (session 1 of 3 on Jake's screenshot feedback; deploy green, `checks.sh` 56 passed / 0 flaky on the push)
+
+**Live verification owed (2026-08-14):** three surfaces Jake should eyeball — the calendar day modal, the
+AMRAP/Unilateral pills in the builder + runner, and the 1RM grid. **Specifically: set Settings → weight to
+`lb` and open 1RMs.** That is where the review caught a crash, and it should be confirmed by him, not only
+by a test.
+
+_Historic:_ **PUSHED 2026-08-12 — `origin/master` = `9d0003b`** (16 commits over two days; deploy green)
 
 _Historic:_ **PUSHED 2026-08-11 — `origin/master` = `b52c5ea`** (11 commits; `b52c5ea` is the post-/deploy-check fix), working tree clean apart from untracked debug
 screenshots. `checks.sh` passed on the push (55 passed, 1 flaky). Deploy queued on GitHub Actions.
@@ -914,6 +921,31 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 ---
 
 ## Continuity block
+
+### A weight unit is a TEST DIMENSION, not a display detail (2026-08-14)
+`weightToPref` (`js/app-core.js:85`) returns a **number** in kg but a **STRING** in lb — its lb branch exits
+through `_stripTrailingZero`, which is `String(v).replace(...)`. So **never call a number method on its
+return value**; `parseFloat` first, exactly as `fmtWeight` (`js/app-core.js:110`) does. Writing
+`weightToPref(x).toFixed(1)` threw `TypeError` and killed the entire Progress page for any lb user with a
+recorded 1RM — caught by pre-push review, never shipped.
+
+**The whole Playwright suite runs at the `kg` default (`js/app-core.js:72`) and nothing flips it**, so this
+class is invisible to every existing test. Any new surface rendering a weight needs a kg/lb matrix test —
+the precedent is `tests/screenshot-feedback-2026-08-14.spec.js` ("1RM grid survives a non-default weight
+unit"). Same reasoning applies to `jumpHeightToPref` / `cardioDistanceToPref`, which have the identical
+number-or-string shape.
+
+### `flushTemplateSets` preserves un-rendered fields — so every per-set flag needs a type gate (2026-08-14)
+Switching an exercise's Type does **not** clear set fields the new type doesn't render; that is deliberate
+(it lets a user flip back without retyping). The consequence: a per-set flag toggled under one type survives
+into another where it is meaningless. `amrap` toggled on weight_reps then switched to Jump produced "AMRAP
+jumps" in the runner, "AMRAP:" as the set label in two detail views, and **nothing** in the collapsed day
+row — three surfaces disagreeing about one set.
+
+**Gate it once at `_cleanTemplateSets`, never at the render sites** — that function takes `metricType` as a
+third argument for exactly this (`_AMRAP_TYPES`). The same class already has a guard for stale `weight` on a
+jump set in `_buildTargetCols` (`js/app-runner.js`). Note `_cleanTemplateSets` is an **allowlist**, so a
+caller that forgets the third argument silently drops the flag — that is a feature, and a test caught it.
 
 ### Cardio/interval — one metric_type now, not two (2026-08-09)
 `'cardio'` is **no longer a selectable metric_type** — the builder's exercise-type `<select>` only offers

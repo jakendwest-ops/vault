@@ -1,3 +1,74 @@
+## 2026-08-14 — Jake's screenshot feedback, session 1 of 3: two items were smaller than they looked, one wasn't a bug (calendar-goals v13 / programs v40 / workouts v65 / runner v69 / progress v41)
+
+**Done:** — all live in one commit, `d337418`, deploy green
+- **Calendar day modal now renders the full prescription** (`3 × 3 reps · 60kg · RPE 5 · 1:30 rest`).
+  `showClientDayDetail` was the ONLY prescription surface in the app never calling `_fmtSetsCollapsed` —
+  a gap `app-workouts.js:198` had already named. Data was already fetched; helper already reachable.
+- **AMRAP restored as a per-set pill** — reverses `eb08be1` (2026-08-11), both directions on Jake's call.
+  Safe because it was trimmed as *unused surface*, never as a bug, unlike `assisted`.
+- **NEW on top of that revert:** the runner's target column shows `AMRAP`, or `8–10+` with a rep floor.
+  AMRAP had never touched `app-runner.js` in its entire previous life.
+- **Unilateral pill** + a **"per side"** annotation on prescriptions.
+- **1RM grid is permanent**, not just the empty state; promoted to its own Progress tab.
+- 9 new tests in `screenshot-feedback-2026-08-14.spec.js`; 5 existing spec files updated.
+
+**Bugs found + fixed:**
+- **BLOCKING, caught by pre-push review — the 1RM grid crashed the whole Progress page in `lb`.**
+  `weightToPref` returns a **number** in kg but a **STRING** in lb (exits via `_stripTrailingZero`), so
+  `.toFixed()` on its return threw `TypeError` inside a template-literal `.map()`. Trigger: lb + ≥1
+  recorded 1RM. **The entire suite runs at the kg default and nothing flips it**, so no test could have
+  caught it. `fmtWeight` does `parseFloat(v).toFixed()` — parse first — and is the precedent I ignored.
+- **Calendar rendered the MASTER template while its ▶ Start button ran the CLIENT'S clone.** Nearly
+  invisible while only names/set-counts showed; showing real numbers would have printed figures the runner
+  never uses. Query widened to embed the clone; master kept as fallback.
+- **Save-all would have buried real 1RM history.** `client_1rms` is append-only ("+ Update" always
+  INSERTed), so writing every row would stamp a duplicate dated today for every untouched lift.
+- `_refresh1RMs` could throw **after** a successful write — a save that worked, looking like it failed.
+- Stale `amrap` survived a metric-type switch → "AMRAP jumps"; three surfaces disagreed about one set.
+  Gated once at `_cleanTemplateSets` (which now takes `metricType`), not three times at the render sites.
+- `isUnilateral` bypassed `_resolveMetricType`, so **legacy** unilateral rows never said "per side" —
+  defeating the very thing Jake asked for. Routed through the shared resolver at all 4 sites.
+- A typed `0`/junk in the 1RM grid was silently discarded; in a mixed save the other rows saved while that
+  one re-rendered looking saved. Now rejected by name.
+- Editing a legacy 1RM could **silently auto-create an `exercises` library row** from a screen with no
+  picker. Restricted to the Big 5 — the helper's own documented contract.
+- **Two affordances dropped with the removed 1RM cards** — backdating and Epley "estimate from a set".
+  Restored behind a per-row `⋯`. The documented "removing a container drops what it hosted" shape, again.
+
+**UNVERIFIED (banked):**
+- All three surfaces need Jake's eyes on live: calendar day modal, the two pills, the 1RM grid.
+- **Specifically: Settings → weight = `lb`, then open 1RMs.** That is where the crash was.
+
+**Decided:**
+- **AMRAP is per-SET**, not per-exercise (Jake) — "3 × 8, then 1 × AMRAP" is the real programming idiom.
+- **Propagation will reach the same programme only**, never a client's live assigned plan (Jake).
+- **1RM grid always**, replacing the card layout outright (Jake).
+- **Session identity gets a real `family_id` column**, not smarter name-matching (Jake). This is the
+  single decision that unlocks both remaining items — the propagation prompt and the picker are the same
+  gap seen from two ends.
+- Sequenced 3 sessions: pills+calendar+1RM → identity+picker (migration) → charts. Charts last: largest
+  single-file churn, wants a quiet tree.
+
+**Why:**
+- Two of Jake's five items were **already-open ledger rows** (2026-07-22 picker, 23 days; 2026-07-19 coach
+  parity, 26 days). They weren't new feedback — they were him hitting, in real use, two things the ledger
+  already knew were unfinished. That is what they'd been missing: a live reproduction.
+- **Item 4 wasn't a bug.** There is only ONE `renderClient1RMs`, serving both audiences. Alex Turner has no
+  1RMs and got the Big-5 empty state; Jake has rows and got a card layout. Empty vs populated, not PT vs
+  Personal — and Jake could never have seen the grid again on his own account.
+- **Item 3's runner half was already complete** — L/R entry, the `side` column, the imbalance chart, five
+  spec files. The whole problem was one `<select>` option nobody would find.
+
+**Gate health — logged, not fixed:**
+- The push gate flaked **4 times in one day across 4 unrelated files**, having measured 3 consecutive clean
+  runs on 2026-08-12. **My first diagnosis was wrong**: I wrote it up as shared-fixture contamination
+  because the first two events fit, then the third run showed the dominant signature is a **login timeout**
+  (`#app-shell` never visible), i.e. hundreds of `signInWithPassword` calls per run. Corrected in the
+  ledger, because the wrong diagnosis would have sent the next session rewriting fixtures and fixing
+  nothing. Fix auth first (stored `storageState`), fixtures second.
+
+---
+
 ## 2026-08-12 — Audit response + escaping sweep; every checked claim moved (dashboard v11 / clients v11 / calendar-goals v12 / programs v39 / workouts v64 / runner v68 / progress v40)
 
 **Done:**

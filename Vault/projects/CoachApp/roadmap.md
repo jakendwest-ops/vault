@@ -1,11 +1,57 @@
 # CoachApp Roadmap
 
-_Last updated: 2026-08-09 (end of session) — **PUSHED to origin/master** (`980d324..1a5cb72`, 5 commits
-across 2026-08-08/09). Headline work: merged the redundant `cardio` metric_type into `interval` (with a
-live data migration), and built an in-app "Invite a personal user" flow (Edge Function + Settings card) so
-Jake can onboard beta testers without a terminal. Also in this gap: the Programs builder day-slot picker
-made lazy not eager, an interval-runner stale-duration display fix, and the cardio/interval exercise-finish
-capture card + quick-prefs popover. Full detail in STATUS.md (top of file + bug ledger)._
+_Last updated: 2026-08-14 (end of session) — **PUSHED to origin/master** (`d337418`, deploy green).
+Session 1 of 3 responding to Jake's live screenshot feedback: calendar day-modal detail, AMRAP + Unilateral
+pills, and the 1RM grid. Two of his five items turned out to be **already-open ledger rows** now carrying a
+live reproduction; a third was not a bug at all (the "better" 1RM grid was the empty state). Pre-push review
+caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
+
+---
+
+## 🐛 Session backlog — 2026-08-14 (Jake's screenshot feedback, session 1 of 3; live `d337418`)
+
+Jake drove the live app and sent 8 screenshots + 5 numbered items. **Two of the five were already-open
+ledger rows** (2026-07-22 picker, 2026-07-19 coach parity) — 23 and 26 days old — now carrying a live
+reproduction, which is exactly what they had been missing.
+
+**Shipped + live (`d337418`)** — every fix red→green verified by neutering it and watching it fail:
+- ✅ **Calendar day modal shows the full prescription** — it was the ONLY prescription-rendering surface in
+  the app never calling `_fmtSetsCollapsed`. Also fixed: it rendered the MASTER template while its ▶ Start
+  button runs the CLIENT'S clone (app-calendar-goals v13)
+- ✅ **AMRAP restored as a per-set pill** (reverses `eb08be1` — both directions on Jake's own call) + **new
+  on top of the revert**: the runner's target column now shows `AMRAP`, or `8–10+` with a rep floor
+  (app-workouts v65, app-runner v69)
+- ✅ **Unilateral pill** — the runner half was **already fully built**; the only gap was that its on-switch
+  was buried in a `<select>`. Plus a **"per side"** annotation, which no prescription had
+- ✅ **1RM grid is now permanent**, not just the empty state, with its own Progress tab (app-progress v41).
+  ⚠️ partially reverses the 2026-07-08 restructure that moved 1RMs INTO Personal Bests
+
+**Found + fixed while building (unreported):** "+ Update" always INSERTED, so a naive Save-all would have
+buried real 1RM history under duplicates dated today; `_refresh1RMs` could throw AFTER a successful write,
+making a save that worked look like it failed.
+
+**Caught by pre-push multi-agent review — 1 blocking + 5 real:** `weightToPref` returns a number in kg but a
+**STRING** in lb, so `.toFixed()` on it **crashed the entire Progress page for any lb user with a recorded
+1RM** — invisible to the suite, which runs wholly at the kg default; stale `amrap` surviving a type switch
+→ "AMRAP jumps"; `isUnilateral` bypassing `_resolveMetricType` so legacy rows never said "per side";
+a typed `0` silently discarded; a legacy 1RM edit silently auto-creating an `exercises` library row; and
+**two affordances dropped with the removed 1RM cards** (backdating, Epley estimate) — the documented
+"removing a container drops what it hosted" shape, hit again.
+
+**🗓 Next — session 2:** items 1 + 2 **together** (propagation prompt + Add-workout picker). Same root
+cause — *the app has no concept of "these template rows are the same session"*, inferring it from a name
+string in one place and ignoring names in the other — and both depend on one `family_id` migration. Jake
+chose real identity over smarter name-matching; propagation scope is **the same programme only**, never a
+client's live assigned plan. **This is the session with a schema change: the backfill wants Jake's eyes
+before any code reads it.**
+
+**🗓 Then session 3:** the charts — see ④ Coach parity below, whose scope is now **corrected to
+bidirectional**.
+
+**🔴 New, logged not fixed:** the push gate flaked **4 times in one day across 4 unrelated files**. My first
+diagnosis (shared fixtures) was **wrong** and has been corrected in the ledger — the dominant signature is a
+**login timeout**, i.e. hundreds of `signInWithPassword` calls in one suite run. Fix auth first (stored
+`storageState`), fixtures second.
 
 ---
 
@@ -407,7 +453,7 @@ _Jake (screenshot of his Personal Progress page): "very sparse… does not show 
 - **✅ ②c Adaptive fast table** — runner fast table renders columns per metric_type; wizard retired for strength types (cardio only). app-runner v25. 8 stale runner tests updated.
 - **✅ ②d Manual HR (SHIPPED)** — cardio avg/max-HR inputs in the runner + resting HR on the **bodyweight form** (moved off check-in — that form is client-dashboard-only, so solo couldn't reach it; Jake's call). `resting_hr` on `weight_logs` (migration `scripts/add-resting-hr-2026-07-19.sql`, run live). app-runner v26, app-clients v7, app-dashboard v5.
 - **✅ ③ Display rebuild + SetGraph-informed analytics (SHIPPED)** — app-progress v20, app-runner v28. **B1** metric_type trend cards for every type (top weight/est-1RM/volume, cardio distance-pace-HR, unilateral **L-vs-R** dual line, jump, timed) + **Personal Records** block (best set `100 kg × 10`) + range selector + smart weekly/monthly aggregation. **B2** Intensity (kg/rep). **B3** Recent-sessions **diary** — per-workout summary tiles + per-metric **vs-previous deltas** (▲/▼ + %) + set-details line; Per-exercise now the default sub-tab. **B4** resting-HR trend on Body tab. **B5** Cardio-bests section removed. **B6** our own metric colour palette. **C** live runner **"vs last session"** block (shows from the moment you reach a strength exercise). SetGraph analytics reference ingested into the wiki. _Deferred: the finish-screen volume under-count for unilateral/timed was NOT tackled — still open._
-- **🗓 ④ Coach parity** — factor the trend view to `(clientId, role)` and render it read-only in the coach's client-profile too. Today `renderClientPerformance`/`renderClientWeight` still show the OLD view; resting-HR input/chart are self-view only. **The queued fast-follow.**
+- **🗓 ④ Coach parity — SCOPE CORRECTED 2026-08-14, it was half wrong.** This said solo got the good analytics and the coach view must catch up. Jake, from live use, said the **opposite**. Reading the code: **both are true, of different tabs**, which is why it sat 26 days. Coach **Weight** is genuinely AHEAD (dual axis, 1M/3M/6M/All ranges, 7-day rolling average, full data table — `js/app-progress.js:585-811`); coach **Performance** is genuinely BEHIND (no ranges, no metric chips, no records block), which is what this item originally and correctly said. **Corrected scope, bidirectional:** coach→solo for the weight chart as the house style; solo→coach for the trend-card machinery (`_TREND_RANGES`/`_TREND_METRICS`/`_METRIC_COLORS`/`_aggregateSeries`); and extract a shared `_renderMetricChart` so "one style" is structural — there are **7 `new Chart(` sites, all in one file, with ZERO shared config** and 3 different teardown idioms; 6 of the 7 would change. **Three concrete defects to fix in the same pass:** float artifacts live in Jake's screenshot (`20.800000000000004%` — `js/app-progress.js:794` has no rounding); the reference chart **hardcodes light-theme colours** while the solo charts correctly read CSS vars (adopt its structure, their theming, or ship light-only colours app-wide); and `window.__perfCharts` is reset to `{}` **without destroying** the previous instances (`:450`), leaking every expanded chart on each PB save/delete — the sibling missed by the 2026-08-12 `pw-chart` fix. **The 1RM half of Jake's sentence is already resolved** — it was never a coach/personal fork. **Session 3 of 3, deliberately last: largest single-file churn, wants a quiet tree.**
 - **Done:** multi-agent-review (0-blocking, fixed a duplicate `_epley1RM`) → merged to master → **pushed live, CI green** (two deploys: `a02292e` then `95e8e8f`). Full suite 168/1-flaky/2-skip.
 - **Decisions locked:** analytics mirror SetGraph's DATA depth, never its design (our flat cards/wording/colours/Chart.js — anti-plagiarism, Jake flagged it twice); the runner vs-last block shows a "beat it" reference from the start (deltas fill in as you log — his live-use call); resting HR on the bodyweight form (solo-reachable); per-workout analytics = the enhanced diary now (session-trend chart is a later fast-follow); avg-rest deferred (needs new per-set timestamp capture). Prior locked: first-class metric_type drives capture+storage+charts; typed columns; one adaptive fast table; unilateral = two side-rows; AMRAP = per-set flag.
 

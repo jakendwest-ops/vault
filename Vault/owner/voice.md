@@ -481,6 +481,27 @@ _No data yet — not observed this session._
 
 **No draft→ship diff this session** (no external-facing prose drafted in his voice).
 
+### Observed 2026-08-14 (casual/AI register)
+
+- **🔑 The biggest ask is often LAST, least specific, and prefaced by an escalator.** His feedback message
+  ran five tidy numbered items, then: *"In fact, the entire UI for weight/performance/programs/1RM is
+  better on ALEX TURNER profile than it is on my personal account… Please include this graph type for all
+  sections that require a graph."* That trailing paragraph was larger than items 1–5 combined — a whole
+  session of work — and reads as an afterthought because it is unnumbered. **I skimmed it and he replied
+  "re-read my last message".** Watch for *"In fact"*, *"Also"*, *"The entire…"* at the end of a list: the
+  numbered items are what he catalogued, the closing sentence is what he actually wants.
+- **Numbered lists = a catalogue, not a priority order.** He numbers to make sure nothing is dropped, not
+  to rank. Item 3 (pills) was a feature ask, item 4 turned out not to be a bug at all. Don't infer
+  importance from position — ask, or infer from how much he says about each.
+- **Screenshots carry the evidence; the prose points at it.** *"From screenshot 1 you can see that
+  threshold intervals is being used… however when I try to add this session"* — the words assume you have
+  looked. Reading the text without the images loses the report.
+- **Typos left uncorrected when he is moving fast** (*"chaning"*, *"amending/updating"*). A sign he is
+  dictating from live use, not composing — the content is a field report, and the details in it (which
+  screen, which day slot) are precise even when the spelling is not.
+- **"continue" means resume the work, not "acknowledge me".** Given twice in a row here. A reply that only
+  summarises status is a wasted turn; he wants the next action taken.
+
 ### Observed 2026-08-12 (casual/AI register)
 
 - **States a standing rule in one flat sentence, no hedging.** *"Do not change code to fix a problem
