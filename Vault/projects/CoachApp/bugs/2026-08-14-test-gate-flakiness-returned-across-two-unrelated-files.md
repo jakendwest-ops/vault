@@ -14,8 +14,11 @@ reported: 2026-08-14
 > most a secondary contributor. Corrected here rather than left half-right, because the wrong diagnosis
 > would have sent the next session to rewrite fixtures and fix nothing.
 
-**This is the fixture-isolation problem returning, in the two files that were deliberately NOT converted
-on 2026-08-11.** At the time that decision was correct and is recorded as such in
+**~~This is the fixture-isolation problem returning, in the two files that were deliberately NOT
+converted on 2026-08-11.~~ — WRONG, see the correction above and the dose-response evidence at the
+bottom. Left struck through rather than deleted, because the mistake is the lesson: it fit two data
+points and it was the known problem, which is exactly why it was believed.** The 2026-08-11 decision
+was nonetheless correct at the time and is recorded as such in
 `2026-08-11-runner-spec-is-flaky-6-of-38-...md`: the gate had just been measured at **3 consecutive
 `checks.sh` runs, 56 passed / 0 flaky**, so per Jake's standing rule of 2026-08-12 — *"do not change code
 to fix a problem that does not exist yet"* — `programs.spec.js` and `client-workout.spec.js` were left
@@ -102,3 +105,21 @@ five reported items. Logged with the evidence so the next session starts from me
 
 **Closes when:** `checks.sh` runs three consecutive times at 0 flaky AND two consecutive full-suite runs
 show 0 failed / 0 flaky. One green run is not evidence when the defect is non-determinism.
+
+---
+
+**STRONGER EVIDENCE, same day (session 2).** A full-suite run late in the session returned **1 failed +
+11 flaky**, against 1-2 flaky earlier the same day. **All 12 failure signatures were identical:**
+
+    TimeoutError: page.waitForSelector   (waiting for #app-shell, inside loginAs)
+
+Not one product assertion failed. And the flake COUNT rose monotonically with the number of full suites
+run in the session (~6 by that point, each performing ~430 sign-ins).
+
+That dose-response is the diagnosis: a shared-fixture problem does not get worse the more times you run
+the suite in a day, but a **rate limit** does. It also means late-session suite runs have degraded
+signal — a run finishing green late in a heavy session is weaker evidence than the same run early on,
+and failures must be CLASSIFIED (login-timeout vs product assertion), never just counted.
+
+Practical consequence until this is fixed: prefer `checks.sh` (57 tests) as the trustworthy gate late in
+a session, and treat a full-suite flake count as a measure of the session, not of the code.

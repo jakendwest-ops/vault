@@ -1,3 +1,75 @@
+## 2026-08-16 → 08-18 — Per program, PB consolidation, password reset, and a weekly review that found 9 (core v11→13 · dashboard v11→12 · clients v11→12 · calendar-goals v13→14 · workouts v66→70 · runner v69→71 · progress v43→48)
+
+**Done:**
+- **"Per program" comparison tab** (`328d2b7`, progress v44) — two blocks on one axis by WEEK OF BLOCK, so
+  runs months apart line up. `_clampBlockChain` + `_ptsInBlock` + `_blockWeekIndex` + `_loadProgramBlocks`.
+- **escapeAttr → escapeHtml in 58 plain attributes** (`667755e`, runner v70 / workouts v67) plus
+  `scripts/check-escaping.mjs` strengthened.
+- **Bodyweight lifts chart reps; the two-block journey fixed** (`9fa32e4`, progress v45).
+- **Personal Bests consolidation** (`7bd1493`, core v13 / dashboard v12 / clients v12 / progress v46) —
+  1RM tab renamed "Personal Bests"; old page became "Benchmarks"; ONE shared `_pbFormHtml`; unit is now a
+  category-driven dropdown.
+- **Bodyweight toggle fixed** (`6fc7c50`, workouts v68) — `_BW_TYPES`, wider than `_AMRAP_TYPES`.
+- **Password reset flow** (`f7a8105`, progress v47) — forgot-password link, request form, set-password
+  form, and the `PASSWORD_RECOVERY` guard.
+- **Six silent-refusal writes** (`ad83591`, runner v71 / workouts v69 / progress v48).
+- **Stale set fields** (`53071cf`, workouts v70) — the EDIT path now cleans; jump targets gated per key.
+- **Weekly full-file review ran** (2026-08-17, 8 days overdue) over app-runner / app-workouts /
+  app-progress — 9,235 lines. 9 issues, all filed as individual `bugs/` rows. Marker updated.
+
+**Bugs found + fixed:**
+- **The bodyweight toggle could never be switched on.** `${s.bodyweight ? tog('BW', …) : ''}` — the pill
+  that SETS the flag only rendered when it was already true. Bootstrap deadlock, so no template exercise
+  created since that gate could ever be bodyweight — which made the reps-charting shipped the day before
+  unreachable for new data. Verbatim the defect that got `assisted` deleted 2026-08-11, whose explanatory
+  note sits 220 lines above the twin that survived it.
+- **A policy-refused write reports success.** `{ data: [], error: null }` — no error, zero rows. Six sites
+  checked only `error`. `saveCoachNotes` showed a green "Saved ✓" over nothing; `deleteWorkoutLog`
+  navigated away as though the session were gone. Trigger: a client transferred between coaches.
+- **The template EDIT path skipped `_cleanTemplateSets`** while both siblings called it, so a stale jump
+  target made the coach's plan preview say "40cm · 8-10 jumps" on six surfaces while the runner showed
+  weight × reps. Same row, two different exercises.
+- **No password reset flow existed at all** — and re-inviting silently sends nothing (the Edge Function is
+  idempotent), and a dashboard recovery link was inert (`PASSWORD_RECOVERY` was swallowed). A real beta
+  user had no route back in; recovering him would have needed hand-written SQL.
+- **Two date bugs, both mine, both shipped green under my own tests.** `toISOString()` on a local-midnight
+  Date reports the PREVIOUS day in any UTC+ zone, turning `_mondayOfWeek`'s Monday into a Sunday for ~7
+  months of the year. And millisecond week arithmetic breaks across the spring DST change (7 days minus an
+  hour floors to 0), so week 1 swallowed 13 days. Invisible because every fixture was a March date — GMT,
+  the one window where a UTC bug cannot fail.
+
+**UNVERIFIED (banked):**
+- Everything above. **Jake has confirmed none of the ~12 deploys since 2026-08-14.**
+- Specifically worth his eyes: the BW pill on a FRESH set in the template editor; the renamed Progress
+  tabs (Personal Bests / Benchmarks); a password reset end to end; Settings → weight = `lb`, then 1RMs.
+- Colin West (`bouncer358@outlook.com`) has not yet completed a reset.
+- Whether any rows carry a stale jump target — he ran the inspect query and replied "success" but the row
+  count was not captured.
+
+**Decided:**
+- **Do not delete the Personal Bests page**, despite Jake asking to. His own data settled it: the strength
+  half IS superseded, but that page is the only home cardio bests have had since 2026-07-08. The 1RM tab
+  took the NAME; nothing was deleted and no data moved.
+- **A block is a date range, and the UI must say so.** No programme reference exists on `workout_logs`, so
+  "sessions logged between X and Y" is the honest phrasing and "sessions from this programme" is not.
+- **Fix stale-field bugs at the GATE, never in the renderer** — patching `_fmtSetDetail` would leave bad
+  data on disk and hide one of six surfaces.
+- **Only the INSERT branch of propagation counts 0 rows as a failure.** For update/delete it is the
+  documented no-op; counting it would cry wolf on the common case. Pinned by a test.
+- **The E2E test did not find the bugs.** Reading code and adversarial review found essentially all of
+  them; the tests' value was proving the fixes and catching my own regressions. Worth acting on.
+
+**Why:**
+- The review caught **nine real defects in my own work across six consecutive commits** — including a fix
+  that DELETED a workout session in a case I had not considered, a clone-cleanup that was itself the
+  unchecked unanchored write the commit existed to remove, and a "fix" for a review finding that threw a
+  ReferenceError on exactly the path it was added to report. **Three of my own tests were decorative** —
+  re-typing logic inside the test rather than calling shipped code, staying green when I broke the source.
+  The red-before discipline is what caught all three.
+- `client_program_blocks` is append-only by design, so a test that performs a real restart CANNOT clean up
+  after itself. The first draft of the two-block spec did exactly that and left two permanent junk rows on
+  Jake's own account. It now stubs the blocks and only uses real `workout_logs`.
+
 ## 2026-08-14 — Jake's screenshot feedback, session 1 of 3: two items were smaller than they looked, one wasn't a bug (calendar-goals v13 / programs v40 / workouts v65 / runner v69 / progress v41)
 
 **Done:** — all live in one commit, `d337418`, deploy green

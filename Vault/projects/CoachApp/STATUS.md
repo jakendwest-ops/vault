@@ -712,7 +712,7 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=11 · app-dashboard v=11 · app-clients v=11 · app-programs v=40 · app-calendar-goals v=13 · app-workouts v=65 · app-runner v=69 · app-progress v=41 · starter-content v=5 — **all pushed and live as of 2026-08-14 (`d337418`).**
+**App version:** app-core v=13 · app-dashboard v=12 · app-clients v=12 · app-programs v=42 · app-calendar-goals v=14 · app-workouts v=70 · app-runner v=71 · app-progress v=48 · starter-content v=5 — **all pushed and live as of 2026-08-18 (`53071cf`).**
 **CSS version:** v=9 (main.css) — `.ts-grid`/`.ts-cell` added 2026-08-05 for the builder set-editor. `--surface-2`/`--bg-accent`/`--text-accent` DEFINED 2026-07-23 (were referenced 54× and defined nowhere)
 **✅ PUSHED 2026-08-14 — `origin/master` = `d337418`** (session 1 of 3 on Jake's screenshot feedback; deploy green, `checks.sh` 56 passed / 0 flaky on the push)
 
@@ -921,6 +921,75 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 ---
 
 ## Continuity block
+
+### A policy-refused write returns `{ data: [], error: null }` (2026-08-18)
+No error, ZERO rows. **Checking only `error` reports a refusal as a success.** Every write that a user is
+told succeeded must `.select()` and branch on ROWCOUNT — the pattern is `deletePerfLog`
+(`js/app-progress.js`). Six sites were fixed in `ad83591` after `saveCoachNotes` was found showing a green
+"Saved ✓" over a write that never landed (a client transferred between coaches keeps `coach_id` = the OLD
+coach on every pre-transfer `workout_logs` row).
+
+**The asymmetry is deliberate and must not be "fixed":** in `_propagateExerciseChangeToTemplates`, only the
+INSERT branch counts 0 rows as a failure. For update/delete, 0 rows is the documented "this target doesn't
+contain that exercise" no-op, and counting it would fire alarms on the common case. There is a test pinning
+this (`tests/silent-refusal-2026-08-18.spec.js`).
+
+### A recovery link ESTABLISHES A SESSION (2026-08-18)
+So `currentUser` is set the moment the user opens it. Without a guard, `showApp()` fires and the app boots
+straight past the set-password form into the dashboard — the user lands logged in with the single-use link
+already burned and no password set. `onAuthStateChange` must show the form on `PASSWORD_RECOVERY` **and** on
+a `type=recovery` hash, and the app shell must stay hidden until the password is set
+(`js/app-progress.js`, tests in `tests/password-reset-2026-08-18.spec.js`). This used to be a bare
+`if (event === 'PASSWORD_RECOVERY') return`, which is why a dashboard-sent recovery link did nothing at all.
+
+`_initialHash` is captured at the TOP of `app-core.js`, before the supabase client is constructed, because
+supabase-js consumes and clears the hash while establishing the session. Anything reading the link type must
+read `_initialHash`, never `window.location.hash`.
+
+### `_cleanTemplateSets` is an ALLOWLIST, and EVERY writer must call it (2026-08-18)
+42 emitted keys; a key it stops emitting is silently gone from every saved row with no error at any layer.
+`tests/stale-set-fields-2026-08-18.spec.js` pins the count — if it changes, a field was added or removed on
+the save path for every template exercise.
+
+`flushTemplateSets` deliberately PRESERVES fields the current type does not render, so the metric-type gates
+inside `_cleanTemplateSets` are the only thing stopping a stale field riding onto the wrong exercise type.
+**The EDIT path skipped it entirely until `53071cf`** while both siblings cleaned.
+
+Gate **per key, never per family**: `targetHeightCm` only on `jump_height`, `targetDistanceM` only on
+`jump_distance`. A family-wide gate still let a `jump_distance` row keep a height, and `_fmtSetDetail`
+prefers height unconditionally — so the preview showed "40cm" where the runner showed "2.4 m".
+
+### `_fmtSetDetail` infers the exercise type from SET DATA, the runner from `metric_type` (2026-08-18)
+`} else if (s.targetHeightCm || s.targetDistanceM) {` (`js/app-workouts.js:290`). That is why a stale field
+makes the coach's plan preview and the athlete's in-gym screen disagree about what the exercise is, across
+six surfaces. **Fix stale data at the gate, never in the renderer** — patching `_fmtSetDetail` leaves the
+bad data on disk and hides only one of the six.
+
+### Playwright `has-text()` is a case-insensitive SUBSTRING match (2026-08-18)
+`button:has-text("End")` matched a new **"S-end- reset link"** button and broke 24 runner assertions. Use
+`button:text-is("End")` for an exact match. 30 locators across 5 files were tightened; adding any button
+whose label contains a shorter button's label will otherwise break unrelated specs.
+
+### A block ends where the same programme's NEXT RUN begins (2026-08-17)
+`client_program_blocks.ended_at` is the day RESTART WAS PRESSED, not the day the block's training finished,
+and the next block's start is snapped back to ITS OWN Monday — so the two can overlap by up to six days or
+leave a gap. **No rule about the end date alone can fix that.** `_ptsInBlock` is a plainly INCLUSIVE filter;
+the overlap is resolved once in `_clampBlockChain` (`js/app-progress.js`), scoped to the same `progKey` so
+two genuinely concurrent programmes still overlap legitimately.
+
+### The BW toggle must render unconditionally (2026-08-17)
+It used to render only `${s.bodyweight ? … : ''}` — and that toggle is the ONLY thing that can set the flag.
+A bootstrap deadlock: no template exercise created after that gate could ever be marked bodyweight, which
+also made the bodyweight reps-charting unreachable for new data. Same defect that got `assisted` deleted on
+2026-08-11. `_BW_TYPES` is deliberately WIDER than `_AMRAP_TYPES` (it includes `timed_hold` — the runner has
+always rendered a BW cell for a hold).
+
+### NEVER use `toISOString()` for a calendar date (2026-08-16)
+It converts to UTC, so a local-midnight Date in any UTC+ zone (Europe/London under BST — most of the year)
+reports the PREVIOUS day. Use `_ymdLocal` (`js/app-core.js`). This silently turned `_mondayOfWeek`'s Monday
+into a Sunday. Millisecond date arithmetic is equally unsafe across a DST change — local midnight to local
+midnight over a spring-forward is 7 days MINUS an hour; anchor at NOON (`_blockWeekIndex`).
+
 
 ### A weight unit is a TEST DIMENSION, not a display detail (2026-08-14)
 `weightToPref` (`js/app-core.js:85`) returns a **number** in kg but a **STRING** in lb — its lb branch exits

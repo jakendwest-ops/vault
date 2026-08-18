@@ -42,5 +42,16 @@ its own existing prompt.
 
 **Planned session 2 of 3.** Ships together with the picker fix; both depend on the same migration.
 
+**PARTIAL — cause 1 of 4 is closed, 2026-08-18.** `saveEditTemplate` now sets
+`window._lastExerciseChange = { op: 'rename', … }` and calls `_afterTemplateExerciseSave`
+(`js/app-workouts.js:2791`), so renaming IS wired to propagation. Verified in shipped code during /save.
+
+**Cause 2 is NOT fixed** — `moveTemplateExercise` still never sets `_lastExerciseChange` nor calls
+`_afterTemplateExerciseSave` (grep returns 0 matches in its body). Causes 3 and 4 not re-checked.
+
+Deliberately left `open` rather than restatused: the closure condition below is explicit and none of it has
+happened. Recorded here so the next session does not re-derive cause 1 from scratch — that near-miss is why
+this note exists.
+
 **Closes when:** Jake renames a session in a periodized phase and is offered — and takes — the propagation
 prompt, plus a red→green test per change shape (rename, reorder, exercise edit).

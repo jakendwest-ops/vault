@@ -8,6 +8,60 @@ caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
 
 ---
 
+## 🐛 Session backlog — 2026-08-16 → 08-18 (sessions 2 + 3 of the screenshot arc, then the weekly review; live `53071cf`)
+
+**Sessions 2 and 3 of the 2026-08-14 arc are DONE** — the two 🗓 markers below are ticked here rather than
+edited in place, so the original plan stays readable:
+- ✅ **Session 2 — propagation prompt + Add-workout picker**, on the `family_id` migration Jake approved.
+  213 templates → 64 families, 0 unassigned; backfilled on identical CONTENT, not name (his data had 39
+  name-families vs 67 content-families — a 28-family gap of same-named-but-different sessions).
+- ✅ **Session 3 — the charts.** "Per program" comparison tab shipped (`328d2b7`).
+
+**Shipped + live** — every fix red→green verified by reverting it and watching the test fail:
+- ✅ **"Per program" tab** — compares two training blocks on one axis by WEEK OF BLOCK, so runs months
+  apart line up (app-progress v44). A block is a DATE RANGE: `workout_logs` carries no programme
+  reference, so every label says "sessions logged between X and Y", never "sessions from this programme".
+- ✅ **Personal Bests consolidation** (`7bd1493`, app-progress v46 + core/dashboard/clients). The 1RM tab
+  took the name; the old page became **Benchmarks**. Jake's data said his instinct was half right — his
+  strength PBs WERE superseded (4 exercises, unused since 25 June, vs the 1RM tab's 12 from 1 July) but
+  that page is the only home cardio bests have had since the 2026-07-08 fold-in. Deleting it would have
+  taken 6 months of 5k times (31:12 → 25:06), a Skierg PB and 11 entries with notes.
+- ✅ **Password reset flow** (`f7a8105`, app-progress v47) — see the new ledger row. Built because a real
+  beta user was stuck with no route back in.
+- ✅ **escapeAttr in 58 plain attributes** (`667755e`) — the class, not the instance.
+- ✅ **Bodyweight toggle could never be switched on** (`6fc7c50`, app-workouts v68).
+- ✅ **Six writes that reported success when the DB refused them** (`ad83591`).
+- ✅ **Stale set fields riding onto the wrong exercise type** (`53071cf`, app-workouts v70).
+
+**Weekly full-file review ran 2026-08-17** (8 days overdue; marker now current). 9 issues found across
+app-runner / app-workouts / app-progress, all filed as individual ledger rows. **4 of 9 fixed so far.**
+
+**Caught by pre-push review — and this is the number that matters:** *nine* real defects in my own work
+across six consecutive commits, none of which I found myself. Including one where my fix **deleted a
+workout session** in a case I had not considered, one where the clone-cleanup I added was *itself* the
+unchecked unanchored write the commit existed to eliminate, and one where my "fix" for a review finding
+threw a ReferenceError on exactly the path it was added to report. Also: **three of my own tests were
+decorative** — they re-typed the logic inside the test instead of calling the shipped code, and stayed
+green when I deliberately broke the source.
+
+**Two date bugs shipped green under my own tests** (`9fa32e4`): `toISOString()` turning Monday into Sunday
+for ~7 months of the year, and millisecond week arithmetic breaking across the spring DST change. Both
+invisible because every date fixture was pinned to March — GMT, the one window where a UTC bug cannot
+fail. Same shape as the kg/lb blind spot.
+
+**🗓 Next — bugs 3–5 of the 5-bug plan** (`C:\Users\jaken\.claude\plans\3-things-come-to-dynamic-naur.md`):
+3. Interval blocks default to a 0-second work period — "Start timer" ends the workout instantly.
+4. The escapeAttr class declared closed on 2026-08-16 — **9 sites survive** in concatenated form that the
+   checker structurally cannot see. Fix the CHECKER first, watch it go red, then the sites.
+5. Two Progress renders missing guards every sibling has (one crashes; one was introduced 2026-08-17).
+
+**🗓 Still needs Jake, not me:**
+- **GDPR** — the only open `critical`. Needs his policy wording; everything else around it is buildable.
+- **The Back-button audit** (asked 2026-08-07, never done) — really a verification session, better driven
+  by him.
+- **100 ledger rows sit at `fixed — awaiting Jake`** and he has confirmed none of the last ~12 deploys.
+  That is the largest single risk on this project right now: everything new is built on unverified fixes.
+
 ## 🐛 Session backlog — 2026-08-14 (Jake's screenshot feedback, session 1 of 3; live `d337418`)
 
 Jake drove the live app and sent 8 screenshots + 5 numbered items. **Two of the five were already-open
