@@ -712,7 +712,7 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=13 · app-dashboard v=12 · app-clients v=12 · app-programs v=42 · app-calendar-goals v=14 · app-workouts v=70 · app-runner v=71 · app-progress v=48 · starter-content v=5 — **all pushed and live as of 2026-08-18 (`53071cf`).**
+**App version:** app-core v=13 · app-dashboard v=12 · app-clients v=12 · app-programs v=42 · app-calendar-goals v=14 · app-workouts v=73 · app-runner v=73 · app-progress v=48 · starter-content v=5 — **all pushed and live as of 2026-08-19 (`28258aa`).**
 **CSS version:** v=9 (main.css) — `.ts-grid`/`.ts-cell` added 2026-08-05 for the builder set-editor. `--surface-2`/`--bg-accent`/`--text-accent` DEFINED 2026-07-23 (were referenced 54× and defined nowhere)
 **✅ PUSHED 2026-08-14 — `origin/master` = `d337418`** (session 1 of 3 on Jake's screenshot feedback; deploy green, `checks.sh` 56 passed / 0 flaky on the push)
 
@@ -921,6 +921,49 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 ---
 
 ## Continuity block
+
+### `escapeAttr` ROUND-TRIPS CLEANLY through a handler — the danger is the render site (2026-08-19)
+Verified empirically, not reasoned: `escapeAttr(x)` inside `onclick="fn('${…}')"` survives the browser's
+attribute un-escaping and JS's string-literal un-escaping, so the RUNTIME value is the ORIGINAL string —
+no backslash. That makes the source call CORRECT, and means any ctx value it produced is raw
+attacker-controlled text by the time something renders it.
+
+`_ctx.backLabel` and `_ctx.clientName` were rendered RAW into innerHTML on that basis
+(`app-workouts.js:1205`/`:1207`) — a live stored-XSS sink, 5th instance of the client→coach pattern
+CRITICAL.md tracks. **Do not "fix" the source `escapeAttr` calls; escape at the RENDER site.**
+
+`FREE_TEXT` in check-escaping.mjs matches `\.name\b`, which does NOT match `.clientName` — that naming is
+why no checker saw it.
+
+### A class guard is only closed once proven against EVERY syntax the codebase uses (2026-08-19)
+The escapeAttr rule shipped 2026-08-16 matched only the INTERPOLATED shape, exited 0, and nine
+CONCATENATED sites (`value="' + escapeAttr(x) + '"`, built inside `mini()`/`gmini()`) stayed live for
+three days while the class was reported closed. **Grep how the construct is actually written** — the 14
+characters before every call — rather than assuming a second form. A test now plants one of each shape.
+
+**A rule that flags correct code is worse than no rule.** An indirection check (`const x = escapeAttr(…)`)
+was written and removed within the hour when its only live hit turned out to be correct; the comment
+explaining why is in the file so nobody re-adds it. Indirection is a full-file-review job, not a regex one.
+
+### Reorder propagation permutes SLOTS, never positions (2026-08-19)
+A sibling copy legitimately holds a different set of exercises, so copying `order_index` values across
+would collide with, or displace, exercises the target has and the source does not.
+`_propagateReorderToTemplates` permutes only the SHARED names into the source's relative order, **reusing
+the slots they already occupy** — the set of order_index values in play never changes, so a collision is
+impossible by construction rather than by care.
+
+### A guard must sit ABOVE the code that dereferences state it does not need (2026-08-19)
+`startIntervalPhaseTimer`'s zero-length refusal is placed before `stopIntervalTimer()`, which dereferences
+`_runner`. `_runner` is `let`-declared in `app-workouts.js:3041`, so a top-level `let` in a classic script
+creates NO window property and **no test can set it**. Refusing first is both better code and the only
+reason the guard is testable without driving a whole workout.
+
+### The runner labels per-side; the prescription formatter does too (2026-08-19)
+`_fmtSetDetail` gained "per side" on 2026-08-14; `_buildTargetCols` did not, so the athlete entering L/R
+had nothing saying the target was per side. Now carried on the reps LABEL ("8–10 REPS/SIDE") rather than a
+fifth column — the target bar is horizontal on a 390px screen. AMRAP + unilateral keeps both as
+"AMRAP/SIDE".
+
 
 ### A policy-refused write returns `{ data: [], error: null }` (2026-08-18)
 No error, ZERO rows. **Checking only `error` reports a refusal as a success.** Every write that a user is

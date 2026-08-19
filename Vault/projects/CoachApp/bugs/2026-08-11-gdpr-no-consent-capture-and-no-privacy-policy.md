@@ -1,9 +1,9 @@
 ---
 id: 2026-08-11-gdpr-no-consent-capture-and-no-privacy-policy
-status: open
+status: deferred
 priority: critical
 reported: 2026-08-11
-status_detail: "Blocks inviting any NEW user. Does not block deploys. Found by /deploy-check step 5c."
+status_detail: "DEFERRED by Jake 2026-08-19. NOTE: the premise was partly wrong — /privacy-policy.html EXISTS and is LIVE (200, complete 11-section UK GDPR policy, in repo since 2026-06-29). What is actually missing is the consent checkbox and the LINK, both removed by 57a188a (2026-07-24) along with the public signup form they sat on. So this is not blocked on Jake writing anything."
 ---
 
 # GDPR — no consent capture and no privacy policy, with a live beta tester already onboarded

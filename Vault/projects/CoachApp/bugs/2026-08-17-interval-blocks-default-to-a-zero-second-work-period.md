@@ -1,9 +1,9 @@
 ---
 id: 2026-08-17-interval-blocks-default-to-a-zero-second-work-period
-status: open
+status: fixed-awaiting-jake
 priority: medium
 reported: 2026-08-17
-status_detail: "Weekly full-file review. Spread order confirmed by reading app-workouts.js:1530-1533."
+status_detail: "FIXED commit 9510af2, live 2026-08-19 (app-workouts v72 / app-runner v73). Spread order corrected, plus startIntervalPhaseTimer now refuses a non-positive length — placed ABOVE stopIntervalTimer() so the path is reachable without a live runner (_runner is let-declared and unreachable from a test). 4 red-before tests. Awaiting Jake: edit a saved exercise into Intervals, confirm Work reads 0:30."
 ---
 
 # Editing a saved exercise into Intervals gives a 0-second work block — 'Start timer' ends the workout instantly

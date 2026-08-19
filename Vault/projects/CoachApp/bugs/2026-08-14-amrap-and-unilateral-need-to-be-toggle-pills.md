@@ -39,3 +39,18 @@ Gated once at the allowlist rather than three times at the render sites.
 
 **Closes when:** Jake toggles both pills on a real exercise, sees "per side" in his plan, and sees AMRAP in
 the runner's target bar during a session.
+
+---
+
+**PARTIAL — the runner half was still missing, fixed 2026-08-19 (`0d1d80b`).** Jake re-reported this as
+*"the unilateral pill does not exist ... it didnt appear in the runner"*. Investigation showed the PILL was
+fine all along — it renders in both the builder and runner add-exercise modals, proven by driving each — and
+that this row's OTHER half, "unilateral L/R in the runner", shipped too. What never existed was any
+**per-side indicator in the runner**: `_fmtSetDetail` gained "per side" on 2026-08-14, `_buildTargetCols`
+did not, and AMRAP got its runner badge in that same change while unilateral did not.
+
+Recorded here rather than closing this row: it is still `fixed — awaiting Jake` on Jake's own confirmation,
+and the re-report is its own file (`2026-08-19-unilateral-pill-does-not-exist`).
+
+**Lesson worth keeping:** I "verified" the pill twice, on the wrong screen both times, because this row
+bundles two features under one heading. A bundled row invites a partial verification that reads as complete.

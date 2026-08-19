@@ -53,5 +53,15 @@ Deliberately left `open` rather than restatused: the closure condition below is 
 happened. Recorded here so the next session does not re-derive cause 1 from scratch — that near-miss is why
 this note exists.
 
+**CAUSE 2 CLOSED 2026-08-19 (`7f66634`).** Reordering now captures a `reorder` change and hands off to
+`_afterTemplateExerciseSave`, so the prompt fires. The hard part was not the wiring but the permutation: a
+sibling copy legitimately holds a DIFFERENT SET of exercises, so copying order_index values across would
+collide with, or displace, exercises the target has and the source does not.
+`_propagateReorderToTemplates` permutes only the SHARED names, into the source's relative order, reusing the
+slots they already occupy — so a collision is impossible by construction. 7 red-before tests.
+
+**Still open: causes 3 and 4.** Periodization clones defeating the name matcher, and editing from Library
+dropping programme context. Neither re-checked. Row stays `open`.
+
 **Closes when:** Jake renames a session in a periodized phase and is offered — and takes — the propagation
 prompt, plus a red→green test per change shape (rename, reorder, exercise edit).

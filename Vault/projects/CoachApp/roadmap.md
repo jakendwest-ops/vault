@@ -8,6 +8,42 @@ caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
 
 ---
 
+## 🐛 Session backlog — 2026-08-19 (Jake's live re-report, then 3 of the 5-bug plan; live `28258aa`)
+
+**Jake re-reported a shipped item and was right.** *"the unilateral pill does not exist"* → *"it didnt
+appear in the runner"*. I verified the pill twice, on the wrong screen both times, because the 2026-08-14
+row bundles two features under one heading. **A bundled ledger row invites a partial verification that
+reads as complete** — worth remembering when writing them.
+
+**Shipped + live** — every fix red→green verified by reverting it:
+- ✅ **Runner says PER SIDE** (`0d1d80b`, runner v72). `_fmtSetDetail` got "per side" on 2026-08-14;
+  `_buildTargetCols` never did, and AMRAP got its runner badge in that same change while unilateral did
+  not. Carried on the reps label ("8–10 REPS/SIDE"), not a fifth column.
+- ✅ **Reorder now offers the propagation prompt** (`7f66634`, workouts v71) — cause 2 of the 2026-08-14
+  report, the last one open after the rename half. The permutation reuses existing slots, so a collision
+  is impossible by construction.
+- ✅ **Interval 0-second work period** (`9510af2`, workouts v72 / runner v73) — "Start timer" no longer
+  ends the workout instantly.
+- ✅ **escapeAttr checker fixed, then its 9 sites** (`28258aa`, workouts v73) — in that order, deliberately.
+
+**🔴 A LIVE STORED-XSS WAS FOUND AND FIXED**, incidentally, while closing the escapeAttr class:
+`_ctx.backLabel` / `_ctx.clientName` rendered RAW into innerHTML. Proven in-browser: a client named
+`<img src=x onerror=…>` creates a real element in the COACH's session. **5th instance** of the
+client→coach pattern CRITICAL.md tracks, and the 5th found incidentally rather than by a sweep.
+
+**GDPR moved to `deferred` by Jake — and its premise was wrong.** `/privacy-policy.html` EXISTS and is
+LIVE (complete 11-section UK GDPR policy, 200, in repo since 2026-06-29). What is missing is the consent
+checkbox and the LINK, both removed by `57a188a` (2026-07-24) along with the public signup form they sat
+on. **It is not blocked on Jake writing anything** — worth knowing when it comes back off the shelf.
+
+**🗓 Next:**
+1. Two Progress renders missing guards every sibling has (bug 5 of the plan; one crashes, one introduced
+   2026-08-17).
+2. Close the 77 self-found ledger rows on their test evidence — they were never Jake's reports, most
+   cannot be confirmed by using the app, and the rule already permits it. Takes 104 → ~27.
+3. Causes 3 and 4 of the 2026-08-14 propagation row (periodization clones defeat the name matcher;
+   editing from Library drops programme context).
+
 ## 🐛 Session backlog — 2026-08-16 → 08-18 (sessions 2 + 3 of the screenshot arc, then the weekly review; live `53071cf`)
 
 **Sessions 2 and 3 of the 2026-08-14 arc are DONE** — the two 🗓 markers below are ticked here rather than

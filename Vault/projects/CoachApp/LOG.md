@@ -1,3 +1,53 @@
+## 2026-08-19 — A re-report I twice "verified" wrongly, 3 bug-plan items, and a live XSS found sideways (workouts v70→73 · runner v71→73)
+
+**Done:**
+- **Runner PER SIDE** (`0d1d80b`, runner v72) — `_buildTargetCols` gained a per-side label.
+- **Reorder propagation** (`7f66634`, workouts v71) — `_propagateReorderToTemplates` + the wiring in
+  `moveTemplateExercise`, plus op-aware prompt wording.
+- **Interval defaults** (`9510af2`, workouts v72 / runner v73) — spread order, plus a zero-length refusal
+  in `startIntervalPhaseTimer` placed above `stopIntervalTimer()`.
+- **escapeAttr checker + its 9 sites** (`28258aa`, workouts v73) — checker first, then the sites.
+- 4 new specs, 19 tests, all red-before verified.
+
+**Bugs found + fixed:**
+- **The runner never said "per side".** Jake: *"the unilateral pill does not exist"*. The pill was fine —
+  I proved it renders in both the builder and runner add-exercise modals, twice, before realising I was
+  checking the wrong screen. `_fmtSetDetail` gained "per side" on 2026-08-14, `_buildTargetCols` did not,
+  and AMRAP got its runner badge in the same change while unilateral did not. That asymmetry was the bug.
+- **Reordering never offered the propagation prompt** — cause 2 of his 2026-08-14 report.
+- **Interval blocks defaulted to 0 seconds** — `...b` spread LAST, so a present-but-null key overrode its
+  own default, and that is the NORMAL case because `_cleanTemplateSets` writes every interval key as
+  `?? null` on every save. "Start timer" then ended the workout on its first tick.
+- **🔴 A live stored-XSS.** `_ctx.backLabel` / `_ctx.clientName` rendered RAW into innerHTML. I first
+  assumed `escapeAttr` had left visible backslashes; tested it in the browser instead of reasoning further
+  and was WRONG — it round-trips cleanly through a handler, so the value arriving at the render site is
+  the original attacker-controlled text. The same probe confirmed an `<img>` element is actually created.
+  5th instance of the client→coach pattern, 5th found incidentally.
+
+**UNVERIFIED (banked):**
+- All four commits. Jake has confirmed none of the ~16 deploys since 2026-08-14.
+- Specifically: the runner target bar reading `REPS/SIDE`; the reorder prompt appearing; Intervals
+  defaulting to `0:30`; and the client-name banner if any client's name has an apostrophe or bracket.
+
+**Decided:**
+- **GDPR deferred by Jake** — and its ledger premise was wrong. The privacy policy EXISTS and is LIVE;
+  what is missing is the consent checkbox and the link, removed with the signup form on 2026-07-24. Not
+  blocked on him writing anything.
+- **A rule that flags correct code is worse than no rule.** An indirection check was written and removed
+  within the hour. Indirection is a full-file-review job, not a regex one.
+- **Fix a class guard BEFORE its instances**, and prove it against every syntax the codebase actually uses
+  — established by grepping, not assuming.
+- **Do not close the 2026-08-14 rows** on my own investigation. Cause 2 is fixed and recorded as such;
+  causes 3 and 4 are unchecked and the rows stay open.
+
+**Why:**
+- The re-report is the lesson: **a bundled ledger row invites a partial verification that reads as
+  complete.** "AMRAP and Unilateral as toggle pills, and unilateral L/R in the runner" is two features;
+  I checked the first, twice, and reported the whole row as working.
+- Two of my own tests were too weak and the red-before caught both: the reorder collision test asserted
+  the WRITES were distinct rather than the resulting table, and the guard-ordering test matched a comment
+  rather than the call. Neither would have failed against a broken implementation.
+
 ## 2026-08-16 → 08-18 — Per program, PB consolidation, password reset, and a weekly review that found 9 (core v11→13 · dashboard v11→12 · clients v11→12 · calendar-goals v13→14 · workouts v66→70 · runner v69→71 · progress v43→48)
 
 **Done:**
