@@ -1,6 +1,7 @@
 ---
 id: 2026-08-17-the-bodyweight-toggle-could-never-be-switched-on
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — bodyweight-toggle-2026-08-17.spec.js (4 tests) GREEN 2026-08-20, plus ledger-fixes-2026-08-02.spec.js:294 rewritten and empirically red-before verified (reverted app-workouts.js:1669 to the pre-fix 's.bodyweight ?' expression, test went RED, source restored via git). The 2026-08-02 declutter conflict this fix created is now resolved in Jake's favour, 2026-08-20: BW renders unconditionally, still gated by _BW_TYPES. Closed on test evidence, NOT on a Jake confirmation."
 priority: high
 reported: 2026-08-17
 status_detail: "Fixed in commit 6fc7c50, live 2026-08-17 (app-workouts v68). Red-before verified by restoring the original expression. Awaiting Jake confirming a NEW template exercise can be marked BW on live."

@@ -1,6 +1,7 @@
 ---
 id: 2026-08-17-a-policy-refused-write-reports-success-6-sites
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — silent-refusal-2026-08-18.spec.js ran GREEN 2026-08-20 in a serialized 192-test run; red-before is recorded in this file's body. Closed on test evidence, NOT on a Jake confirmation."
 priority: high
 reported: 2026-08-17
 status_detail: "FIXED commit ad83591, live 2026-08-18 (app-runner v71 / app-workouts v69 / app-progress v48). 7 red-before tests in tests/silent-refusal-2026-08-18.spec.js. Awaiting Jake: no live confirmation. Review caught the clone-reap being itself an unchecked unanchored write; fixed in the same commit."

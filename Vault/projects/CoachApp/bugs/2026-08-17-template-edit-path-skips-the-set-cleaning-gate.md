@@ -1,6 +1,7 @@
 ---
 id: 2026-08-17-template-edit-path-skips-the-set-cleaning-gate
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — stale-set-fields-2026-08-18.spec.js ran GREEN 2026-08-20 in a serialized 192-test run; red-before is recorded in this file's body. Closed on test evidence, NOT on a Jake confirmation."
 priority: high
 reported: 2026-08-17
 status_detail: "FIXED commit 53071cf, live 2026-08-18 (app-workouts v70). 7 red-before tests in tests/stale-set-fields-2026-08-18.spec.js. Gating is PER KEY, not per jump-family — review found the family-wide version still mis-rendered a jump_distance row as a height. NOTE: pre-existing bad rows are NOT repaired passively — see 2026-08-18-stale-jump-targets-may-exist-in-saved-rows."

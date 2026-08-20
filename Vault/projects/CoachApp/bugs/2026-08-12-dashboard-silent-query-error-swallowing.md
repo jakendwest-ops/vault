@@ -1,6 +1,7 @@
 ---
 id: 2026-08-12-dashboard-silent-query-error-swallowing
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — dashboard-fetch-failures-2026-08-12.spec.js ran GREEN 2026-08-20 in a serialized 192-test run; red-before is recorded in this file's body. Closed on test evidence, NOT on a Jake confirmation."
 priority: high
 reported: 2026-08-12
 status_detail: "found by the full-codebase architecture audit; first-page-every-login render path"

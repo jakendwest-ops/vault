@@ -1,6 +1,7 @@
 ---
 id: 2026-08-01-stored-xss-cluster-in-the-runner-s-prescription-render-path-
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — full-file-review-2026-08-01.spec.js ran GREEN 2026-08-20 in a serialized 192-test run; red-before is recorded in this file's body. Closed on test evidence, NOT on a Jake confirmation."
 priority: high
 reported: 2026-08-01
 status_detail: "fixed — awaiting Jake"

@@ -1,6 +1,7 @@
 ---
 id: 2026-07-23-openworkoutlog-now-renders-ex-client-notes-per-exercise
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — ledger-fixes-2026-08-02.spec.js:43 ran GREEN 2026-08-20 in a serialized 192-test run; red-before is recorded in this file's body. Closed on test evidence, NOT on a Jake confirmation."
 priority: medium
 reported: 2026-07-23
 status_detail: "fixed — awaiting Jake"

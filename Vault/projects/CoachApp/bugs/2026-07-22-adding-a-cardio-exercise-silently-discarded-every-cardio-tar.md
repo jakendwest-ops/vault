@@ -1,6 +1,7 @@
 ---
 id: 2026-07-22-adding-a-cardio-exercise-silently-discarded-every-cardio-tar
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — cardio-distance-metres.spec.js ran GREEN 2026-08-20 in a serialized 192-test run; red-before is recorded in this file's body. Closed on test evidence, NOT on a Jake confirmation."
 priority: high
 reported: 2026-07-22
 status_detail: "fixed — awaiting Jake"

@@ -1,6 +1,7 @@
 ---
 id: 2026-07-29-2nd-root-cause-found-fixed-2026-07-30
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b) — ledger-fixes-2026-07-29.spec.js + ledger-fixes-2026-07-30.spec.js ran GREEN 2026-08-20 in a serialized 192-test run; red-before is recorded in this file's body. Closed on test evidence, NOT on a Jake confirmation."
 priority: medium
 reported: 2026-07-29
 reported_detail: re-reported 2026-07-30
