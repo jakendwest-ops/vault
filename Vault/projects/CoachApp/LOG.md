@@ -12,6 +12,10 @@
 - **standing-behaviours UserPromptSubmit hook** (`d02becd`) — first thing in this OS that runs DURING
   work rather than at a boundary.
 - 12 orphaned `[E2E] 1RM Check Squat` clone templates deleted from the live DB (test account only).
+- **multi-agent-review ran twice** (both diff mode, 3 angles + verifier). Run 1 took my pre-push gate
+  widening apart — the unmatched-glob claim in my own code comment was false, and Agent C proved it with
+  `--list` while Agent A merely asserted it was fine. Run 2 found I had fixed 2 of 7 sites in a sweep
+  whose comment said "fix the class, not the instance", and root-caused the clone race.
 
 **Bugs found + fixed:**
 - **A spec sat RED for 3 days across ~4 deploys.** `ledger-fixes-2026-08-02.spec.js:305` pinned the
