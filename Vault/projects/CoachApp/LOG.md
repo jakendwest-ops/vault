@@ -1,3 +1,62 @@
+## 2026-08-21 — The OS audited itself: 19 ledger rows closed on test evidence, a leak class fixed at 7 sites, and os-lint's own decorative checks found (no app code changed)
+
+**Done:**
+- **19 ledger rows closed under clause (b)** — a named spec plus a recorded red-before, then actually
+  running it. 18 specs, 192 tests, serialized: 192 passed / 1 failed / 1 skipped. Each closed row carries
+  a `closed_by:` key naming the spec and run, and stating it is NOT a Jake confirmation.
+  Ledger 108 -> 89 awaiting, 15 -> 34 confirmed.
+- **Test-cleanup leak class fixed at all 7 sites** (`f786f6c`) — `test.skip()` between fixture creation
+  and the `try/finally`. Three restructured; the other four get ONE shared name-scoped `afterEach` sweep.
+- **The clone race fixed** — real barrier + name-anchored backstop in `programs.spec.js`.
+- **os-lint: 14 checks -> 17, all 17 now provably bite** (`0146334`, `590d33e`, `04ad807`).
+- **standing-behaviours UserPromptSubmit hook** (`d02becd`) — first thing in this OS that runs DURING
+  work rather than at a boundary.
+- 12 orphaned `[E2E] 1RM Check Squat` clone templates deleted from the live DB (test account only).
+
+**Bugs found + fixed:**
+- **A spec sat RED for 3 days across ~4 deploys.** `ledger-fixes-2026-08-02.spec.js:305` pinned the
+  2026-08-02 BW declutter; the 2026-08-17 bodyweight-deadlock fix reversed it. Both changes correct on
+  their own day. Nothing noticed, because the pre-push gate is 57 of 523 tests and that file is outside it.
+- **The clone race, root-caused (Agent A).** `app-programs.js:758` removes the assign modal, `:763` THEN
+  awaits the clone, and `_cloneProgramForClient` batches its `client_program_workouts` inserts at `:473`.
+  The test's only barrier was modal-detach, so its `finally` read zero cpw rows, deleted nothing, then
+  deleted the parent — killing the in-flight insert on an FK violation. One orphan per lost race, 12 runs.
+  **The app is correct; the test keyed on the wrong signal.**
+- **`checkDeadTools` had the disease it was built to detect** — nine hard-coded `preview_*` names, so
+  `TodoWrite` walked past the checker whose whole purpose is "a skill references a nonexistent tool".
+- **`gates-fired` could not fail** — tested patterns against all 3,054 lines of LOG history, so one hit in
+  July kept it green forever. The only check that looks at behaviour, and it was decorative.
+- **`hello-claude` AND `save` Step 0 mandated `TodoWrite`, which does not exist here** — so both rituals'
+  anti-drop safeguards had never once run. The `save` one was found BY the new check, not by me.
+- **A memory entry was factually false** — claimed plugins only work in the standalone CLI. Superpowers is
+  installed, listed, and injected at SessionStart. Corrected.
+- **26 dangling memory wikilinks**; 17 were a `_` vs `-` collision between filenames and `name:` fields.
+
+**UNVERIFIED (banked):**
+- Nothing app-facing: **no `js/` changed this session**, so nothing new is live to confirm.
+- `gates-fired` reports `feature-audit`, `mobile-check`, `deploy-check` decaying — newly visible, unaddressed.
+
+**Decided:**
+- **The pre-push gate stays at 57 tests.** Widening was built, reviewed, and REVERTED. Three reasons: an
+  unmatched glob in playwright's args exits 0 and silently runs fewer tests; `ledger-fixes-*` selected an
+  era not a category (missing the spec pinning the very fix that motivated it); and the cross-tenant probes
+  are not cleanup-safe at push frequency. Traps written into `hello-claude` so the next attempt starts ahead.
+- **Clause (b) applies to Jake-reported rows too.** Provenance never gated closing — test evidence does.
+- **BW renders unconditionally** (Jake's call) — the 2026-08-17 deadlock fix stands; the 2026-08-02
+  declutter assertion was obsolete.
+- **Every os-lint input is now env-overridable.** A check without a fixture override is untestable, which
+  is how a check quietly becomes decorative.
+
+**Why:**
+- Every problem found today was ONE failure class: **reports success while doing nothing.** A tool mandate
+  that cannot resolve, a check that cannot fail, a memory "verified" by absence, a hook path nothing
+  validates, a test outside the gate. os-lint was good at detecting wrong VALUES and blind to absent
+  EXECUTION, because every check reads an artifact and an artifact cannot tell you whether anything acted.
+- The OS kept re-learning its lessons in prose. The two things that actually stopped their failure classes
+  recurring — `checks.sh`, `os-lint` — are the two where a lesson got compiled into code.
+- Where I had a fast local check the work held; where I did not, it did not. Four reversals today (severity,
+  root cause, all-clear, delete predicate) all happened against the database, which had no feedback loop.
+
 ## 2026-08-19 — A re-report I twice "verified" wrongly, 3 bug-plan items, and a live XSS found sideways (workouts v70→73 · runner v71→73)
 
 **Done:**

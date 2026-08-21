@@ -8,6 +8,36 @@ caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
 
 ---
 
+## 🛠 Session backlog — 2026-08-20/21 — OS + test hygiene; **no app code changed**
+
+Two days, zero `js/` changes. The work was the machinery, the ledger, and the test suite.
+
+**Shipped:**
+1. ✅ **19 ledger rows closed on clause (b)** — named spec + recorded red-before, then actually run.
+   192 tests, serialized. Ledger 108 → 89 awaiting, 15 → 34 confirmed. (`9a6be75` Vault)
+2. ✅ **Test-cleanup leak class fixed at all 7 sites** — `test.skip()` firing between fixture creation
+   and the `try/finally`. Three restructured; four covered by ONE shared `afterEach` sweep. (`f786f6c`)
+3. ✅ **Clone race fixed** — barrier + name-anchored backstop; 12 orphans cleaned from the live DB.
+4. ✅ **os-lint 14 → 17 checks, all 17 provably bite** — `--self-test`, corpus guard, hook-wiring check,
+   allowlist-based dead-tool detection, windowed `gates-fired`. (`0146334`, `590d33e`, `04ad807`)
+5. ✅ **standing-behaviours UserPromptSubmit hook** — the first thing in this OS that runs DURING work
+   rather than at a session boundary. (`d02becd`)
+
+**Reverted, deliberately:**
+- 🔁 **Pre-push gate widening (57 → 126 tests).** Built, reviewed, reverted. The glob silently no-ops;
+  `ledger-fixes-*` selects an era not a category; the cross-tenant probes are not cleanup-safe at push
+  frequency. **The gate stays at 57 of 523.** Traps recorded in `hello-claude`.
+
+**New, open:**
+- 🐛 **`gates-fired` reports 3 decaying gates** — `feature-audit`, `mobile-check`, `deploy-check` have not
+  fired in the last 5 sessions. Newly visible (the check could not fail before). Run them or delete them.
+- 🐛 **`bugs/2026-08-20-client-plan-clone-cleanup-silently-leaks`** — fixed-awaiting-jake; NOT closed, no
+  test yet asserts the cleanup left nothing behind.
+- 🐛 **`bugs/2026-08-20-cross-tenant-probes-not-cleanup-safe`** — latent; blocks any future gate widening.
+- 🗓 **os-lint next**: memory-system checks (44 auto-memory files, `lessons.jsonl`, `beliefs.jsonl` are
+  watched by nothing — a false memory and 26 dangling links were found there by hand), and extending
+  `retired-terms`/`dead-file-refs` beyond `skills/` to the Vault docs.
+
 ## 🐛 Session backlog — 2026-08-19 (Jake's live re-report, then 3 of the 5-bug plan; live `28258aa`)
 
 **Jake re-reported a shipped item and was right.** *"the unilateral pill does not exist"* → *"it didnt

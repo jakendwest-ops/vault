@@ -544,3 +544,22 @@ _No data yet — not observed this session._
   arrived in the middle of a refinement session with 10 commits pending. He context-switches to tooling and
   process questions without waiting for a natural break, and expects a decisive answer — a recommendation,
   not options. (Consistent with the banked "asks for a recommendation, not a survey".)
+
+### Observed signals — 2026-08-21 (casual/AI register; chat evidence only)
+
+- **Terseness compresses as trust drops.** Instructions this session ran `start closing` → `run review` →
+  `fix` → `continue` → `approved`. One word is a complete instruction and carries no doubt about scope; do
+  not ask which part he means.
+- **Escalation ladder, observed in order:** a normal question ("how is it possible that you made so many
+  errors...") → a pointed structural one ("how is it possible for the OS to skip steps it has committed to
+  a ritual and to memory?") → ALL CAPS ("HOW DO YOU KEEP MISSING THINGS AND LETTING THINGS DROP OFF") →
+  back to terse imperatives once work resumed. The caps step is the last warning, not the peak.
+- **He asks "how is it possible" when he wants a MECHANISM, not an apology.** Twice in one session. Both
+  times the useful answer was a structural diagnosis with evidence; both times a contrition-shaped answer
+  would have missed the ask entirely.
+- **He sequences work explicitly when he has a view on order:** "b then a. Then audit your own OS",
+  "clean up then review then commit". When he does, follow the stated order even if a different one is
+  technically neater — the sequence is the instruction.
+- **"and then move on to the next part of your OS fix"** appended to a command = do not stop and report;
+  chain straight into the next piece.
+- Lowercase throughout, no greetings, no sign-offs, no praise. Continuing to assign work IS the approval.

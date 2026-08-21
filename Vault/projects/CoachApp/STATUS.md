@@ -922,6 +922,32 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 
 ## Continuity block
 
+### A check that cannot FAIL is worse than no check (2026-08-21)
+`gates-fired` tested its patterns against the whole of LOG.md, so one occurrence in July kept it GREEN
+forever. It was the only os-lint check that looks at behaviour rather than artifacts, and it was
+structurally incapable of failing. Found only because Jake asked a question that forced someone to read
+the source — not a repeatable discovery process. `os-lint --self-test` now points every check at a
+fixture built to trip it and names any that stay green as DECORATIVE. **Never add an os-lint check
+without an env override for its input** — an untestable check cannot be distinguished from a dead one.
+
+### A green verdict over ZERO items is a switched-off checker (2026-08-21)
+`loadSkills()` returns `[]` when the skills dir is missing; six checks then loop zero times and each
+report success ("all **0** skills have name: + description:"). Rename `~/.claude/skills` and os-lint goes
+almost entirely green while inspecting nothing. Anything reporting "all N ..." must assert N non-zero.
+
+### The pre-push gate is 57 of 523 tests, and widening it is harder than it looks (2026-08-21)
+Attempted and reverted. **A glob in playwright's positional args silently no-ops** — args are OR-ed filter
+regexes, so `test a.spec.js b.spec.js missing-*.spec.js` exits 0 and just runs a+b. Verify any gate change
+with `--list` and confirm the file COUNT, never the exit code. Selecting specs by filename prefix selects
+an ERA, not a category. And the cross-tenant probes take their cleanup id from the offending session's own
+`.insert().select()`, so they cannot clean up in exactly the regression case they detect — harden those
+before any future widening.
+
+### The assign modal closes BEFORE the clone work is awaited (2026-08-21)
+`app-programs.js:758` removes `#apc-modal`; `:763` then awaits `_cloneProgramForClient`, which batches its
+`client_program_workouts` inserts once at `:473`. **Modal-detach is not a barrier on the clone.** Any test
+that treats it as one races the batch insert. The app is correct — this is a test-synchronisation trap.
+
 ### `escapeAttr` ROUND-TRIPS CLEANLY through a handler — the danger is the render site (2026-08-19)
 Verified empirically, not reasoned: `escapeAttr(x)` inside `onclick="fn('${…}')"` survives the browser's
 attribute un-escaping and JS's string-literal un-escaping, so the RUNTIME value is the ORIGINAL string —
