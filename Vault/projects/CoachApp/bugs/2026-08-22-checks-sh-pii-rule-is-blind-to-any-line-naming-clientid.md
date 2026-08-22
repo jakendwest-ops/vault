@@ -1,8 +1,9 @@
 ---
 id: 2026-08-22-checks-sh-pii-rule-is-blind-to-any-line-naming-clientid
-status: open
+status: confirmed
 priority: medium
 reported: 2026-08-22
+closed_by: "clause (b) 2026-08-22. Rule 9a moved out of inline grep into scripts/check-pii-logs.mjs, matching PER KEY inside each individual log call rather than per line — the same move, for the same reason, as rule 9d/check-escaping.mjs. RED-BEFORE: planted weight_kg alongside clientId in a real log call in app-clients.js (the exact shape the old rule exempted) and checks.sh FAILED with the finding; restored, gate green. Also proven on an 8-case probe: catches full_name/email/weight_kg beside an id and a whole-row spread, stays silent on clientId/date/goalId/exercise_name. Clean across all 9 modules, so it does not cry wolf. Full checks.sh green."
 status_detail: "Found by multi-agent-review Agent A 2026-08-22 and reproduced independently. The PII gate cannot fail on the single commonest log shape in this codebase. No PII has actually shipped — the gap is that the gate guaranteeing that is decorative for this shape."
 ---
 
