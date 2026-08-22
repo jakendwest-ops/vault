@@ -1,8 +1,9 @@
 ---
 id: 2026-08-22-client-1rms-write-class-still-has-two-unguarded-siblings
-status: open
+status: confirmed
 priority: medium
 reported: 2026-08-22
+closed_by: "clause (b) 2026-08-22. saveOneRMGrid (app-progress.js) and _saveMissingOneRMEntries (app-programs.js) now route through _verifyClientAccess. The app-core inventory comment corrected from TEN to TWELVE, now names all four modules, records that the old count was borrowed from a ledger row rather than grepped, and tells the next reader to grep it themselves and stamp the date. _saveMissingOneRMEntries returns silently because it runs AFTER the assignment has already succeeded - a refusal there must not imply the assign failed. 75 affected-spec tests pass; checks.sh green."
 status_detail: "Found by multi-agent-review (Agent B) 2026-08-22, immediately after I declared this write class closed in commit 8d389e7. The class has 12 members; I guarded 10 and the code comment says the inventory is complete. Not a solo break — these are simply still unguarded."
 ---
 

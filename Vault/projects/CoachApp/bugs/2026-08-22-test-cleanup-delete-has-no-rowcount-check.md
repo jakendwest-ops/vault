@@ -1,8 +1,9 @@
 ---
 id: 2026-08-22-test-cleanup-delete-has-no-rowcount-check
-status: open
+status: confirmed
 priority: low
 reported: 2026-08-22
+closed_by: "clause (b) 2026-08-22. The cleanup now does .select('id') and the test asserts reaped === landed, so a policy-refused delete fails the test instead of silently leaking a row onto a real fixture client. 3/3 in that spec; checks.sh green. The sweepProgramFixtures workers:1 coupling noted in the body is NOT fixed - filed as a separate note, not closed here."
 status_detail: "Found by multi-agent-review (Agent C) 2026-08-22. In a NEW spec added the same day, in the commit immediately after the one that fixed this exact class. Unpushed."
 ---
 

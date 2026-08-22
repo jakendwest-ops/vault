@@ -1,8 +1,9 @@
 ---
 id: 2026-08-22-ownership-guard-breaks-view-as-impersonation
-status: open
+status: confirmed
 priority: high
 reported: 2026-08-22
+closed_by: "clause (b) 2026-08-22. _verifyOwnClientId DELETED; the three writes route through _verifyClientAccess, which allows a coach via coach_id===me (exactly what sudo is). The misleading comment is replaced with one naming all six render sites and why grepping the onclick could not find the sixth. New sudo happy-path test in tests/own-client-writes-2026-08-21.spec.js reproduces the sudo STATE (sudoAsClient is email-gated so the E2E PT cannot call it). Red-before: removing the coach_id branch from _verifyClientAccess makes that test fail with the literal symptom \"Save failed - permission denied.\" while the other two stay green. 75 affected-spec tests pass; checks.sh green."
 status_detail: "REGRESSION I INTRODUCED in commit 89eb93f, caught by multi-agent-review BEFORE push. Found independently by TWO agents. The commit is held back unpushed — master is unaffected. Fix is identified but NOT yet applied: the session hit its usage limit mid-fix."
 ---
 
