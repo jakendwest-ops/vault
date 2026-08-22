@@ -162,5 +162,29 @@ prefix, still owner-anchored on `coach_id`.
   with two `clients` rows (Agent B). Pre-existing in app-workouts, untouched by this diff.
 - **Stale-tier race in `savePeriodizationConfig`** (Agent A) — requires two rapid modal opens; narrow.
 
-**Closes when:** Jake confirms the builder still behaves — create/rename a phase, duplicate and delete
-a week, assign a workout to a day slot, assign and unassign a program — as coach AND in Personal view.
+## The manual checklist was replaced by a test, 2026-08-22
+
+The closure condition here originally asked Jake to click through fourteen builder flows in two roles.
+He pushed back — *"cant you run those tests e2e"* — and he was right: the closure rule has **two** arms,
+and arm (b) was available the whole time. Asking a human to do what a test can do was the lazier half
+of the rule.
+
+`tests/builder-happy-path-2026-08-22.spec.js` (`0770102`), 14 tests. Each drives a gated entry point
+with the caller's OWN legitimate ids and asserts the write **actually landed** — reading the row back,
+because a silently-refusing gate returns no error and "it didn't throw" would prove nothing. Covers
+`saveProgram`, `savePhase` (both branches), `_quickAssignPhaseWorkout`, `removePhaseWorkout`,
+`duplicatePhaseWeek`, `deletePhaseWeek`, `savePeriodizationConfig`, `deletePhase` and `deleteProgram`
+as coach, and the same flows again in **Personal view** — solo exercised rather than argued, because
+"solo is fine here" is exactly the kind of reasoning that has been wrong four times in this project.
+
+**RED-BEFORE PROVEN:** with `_verifyProgramOwnership` neutered to refuse everyone, all 14 fail;
+restored, all 14 pass. 53 tests green across programs / personal-programs / program-blocks /
+ownership-anchors / this file run together.
+
+**What this settles and what it does not.** It settles the FALSE-REFUSAL half — the risk that these
+gates lock the rightful user out — for every gated entry point, in both roles. It does **not** touch
+the other caveat: 2 of 45 write sites carry a refusal test and the other 43 rest on a coverage argument
+plus the suite not regressing. That is an argument, not proof, and it stays stated.
+
+**Closes when:** Jake confirms, or the remaining 43 sites get refusal coverage. The false-refusal risk
+no longer needs him.
