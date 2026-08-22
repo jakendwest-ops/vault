@@ -1,3 +1,53 @@
+## 2026-08-22 — Four ownership-anchor rows closed, then the pre-push review found a regression in my own fix (core v14 / clients v13 / calendar-goals v15 / workouts v74 / runner v74 / progress v49 — ALL HELD BACK, NOT PUSHED)
+
+**Done:**
+- **Four of the five ownership-anchor rows closed on clause (b)** — app-workouts (2 sites),
+  app-clients (3), goals/milestones (4), client-scoped writes (10). Each with a shared helper, not
+  per-site patches, and each with red-before proven by neutering the helper.
+- **Cross-tenant probes hardened** (`a4725d4`) — all 4 now delete `[plantedId, ...strays]`. Proven on
+  the SAME fixture in both directions: pre-fix the planted row SURVIVED, post-fix it was REAPED.
+- 5 new spec files, ~20 guard sites, 6 module versions bumped (verified 1:1 against the diff).
+
+**Bugs found + fixed:**
+- The 4 cross-tenant probes took their cleanup id from the OFFENDING session's own
+  `.insert().select()` — so in the exact regression they detect (INSERT permissive, SELECT
+  restrictive) `plantedId` is null and the cleanup never runs.
+
+**🔴 REGRESSION I INTRODUCED — caught by the pre-push review, NOT pushed:**
+- **`_verifyOwnClientId` breaks "View as" (sudo).** `renderClientDashboard` renders all three guarded
+  forms with `clientId = window._sudoClientId` while `currentUser` stays the coach, so
+  `_getCurrentClientId()` returns null and every save answers "permission denied". **Found
+  independently by two agents.** Worse than the break: the comment I shipped with it asserts *"No
+  coach-for-a-client path renders these forms"* — I enumerated five call sites and missed the sixth.
+  Filed `2026-08-22-ownership-guard-breaks-view-as-impersonation`.
+- **The write class I declared closed has 12 members, not 10.** `saveOneRMGrid` (app-progress.js:37,
+  three lines from two sites I DID guard) and `_saveMissingOneRMEntries` (app-programs.js:615) are
+  unguarded, and app-programs.js is absent from the inventory comment entirely. Filed
+  `2026-08-22-client-1rms-write-class-still-has-two-unguarded-siblings`.
+- **A new test's cleanup delete has no rowcount check** — the same `{data:[], error:null}` class the
+  commit immediately before it fixed. Filed `2026-08-22-test-cleanup-delete-has-no-rowcount-check`.
+
+**UNVERIFIED (banked):**
+- **All 7 commits are UNPUSHED.** Master is untouched; nothing above is live.
+- Agent A (security angle) never completed — API error, then the session usage limit. **The security
+  angle of this review has NOT run.** Re-run it before pushing.
+
+**Decided:**
+- **Do not push on a red review.** Jake said "push then save"; the review found a blocking regression
+  first, so the push is held. The gate exists for exactly this.
+- **One helper per concept.** `_verifyOwnClientId` was a second helper doing `_verifyClientAccess`'s
+  job, and the duplicate is the one with the bug. Fix is to delete it, not patch it.
+- **app-programs ownership anchors stay out of scope** (~20+ sites, 87 db.from calls) — its own row
+  says it deserves a dedicated session, and it is right.
+
+**Why:**
+- Two "fix the class" failures in one day, from the same root: I took the enumeration from a ledger
+  row instead of grepping the codebase myself, then wrote a comment asserting the class was closed.
+  A borrowed count presented as a swept class is worse than no claim.
+- Every guard added this session is app-level hardening over RLS that already refuses — so the real
+  risk was never "a stranger gets in", it was "the legitimate user is now refused". That is exactly
+  what happened, to sudo. Happy-path tests caught nothing because I did not write one for sudo.
+
 ## 2026-08-21 — The OS audited itself: 19 ledger rows closed on test evidence, a leak class fixed at 7 sites, and os-lint's own decorative checks found (no app code changed)
 
 **Done:**

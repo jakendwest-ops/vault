@@ -922,6 +922,27 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 
 ## Continuity block
 
+### A second helper doing the first one's job is where the bug will be (2026-08-22)
+`_verifyOwnClientId` (app-clients) and `_verifyClientAccess` (app-core) both answer "may I write for
+this clientId?". The duplicate is the one that broke "View as": `_verifyClientAccess` allows a coach
+via `coach_id === me`, the strict-self copy does not. Before writing an ownership helper, grep for an
+existing one — this codebase now has FOUR (`_verifyTemplateOwnership`, `_verifyClientAccess`,
+`_verifyGoalAccess`, `_verifyMilestoneAccess`) and they must not multiply further.
+
+### "View as" (sudo) is a coach-for-a-client render path, and it is easy to miss (2026-08-22)
+`sudoAsClient` (app-dashboard.js:240) sets `window._sudoClientId` and forces
+`currentProfile.role = 'client'` while `currentUser` stays the COACH. `renderClientDashboard` then
+renders the weight / PB / check-in forms with the SUDO'D client's id. Any guard that assumes
+"role === client means the id is my own record" breaks it. `_getCurrentClientId()` returns null in
+sudo. Enumerating render sites by grepping the onclick is NOT enough — this one derives its id from a
+window global set by a different function.
+
+### An ownership guard's risk is refusing the LEGITIMATE user, not admitting a stranger (2026-08-22)
+Every guard added on 2026-08-21/22 sits over RLS that already refuses. So a refusal test cannot go red
+before the fix, and cannot detect the real failure either. **Every guard needs a happy-path test per
+ROLE that can reach it** — coach, client, solo, and sudo. The sudo break shipped into a commit because
+no sudo happy-path test existed.
+
 ### A check that cannot FAIL is worse than no check (2026-08-21)
 `gates-fired` tested its patterns against the whole of LOG.md, so one occurrence in July kept it GREEN
 forever. It was the only os-lint check that looks at behaviour rather than artifacts, and it was

@@ -1,8 +1,9 @@
 ---
 id: 2026-08-12-app-workouts-ownership-anchor-inconsistency
-status: open
+status: confirmed
 priority: medium
 reported: 2026-08-12
+closed_by: "clause (b) 2026-08-21. Both functions now call _verifyTemplateOwnership, matching the convention their own file documents at app-workouts.js:2907. app-workouts v73->v74. New tests/ownership-anchors-2026-08-21.spec.js drives the real shipped functions against a template owned by PT2 and asserts the APP-LEVEL refusal (RLS already refuses one layer down, so a cross-tenant probe could not have gone red before this fix). Red-before proven by neutering both guards - both tests failed; restored, both pass. Caught and fixed one real regression: silent-refusal-2026-08-18.spec.js:208 called moveTemplateExercise with a fabricated template id and stubbed only workout_template_exercises, so the new guard returned early; its fixture now satisfies the precondition, and the test was re-verified to still bite by neutering the toast it asserts on. checks.sh green."
 status_detail: "found by the full-codebase architecture audit; app-workouts.js's own comment names the intended convention explicitly, these are the exceptions to it"
 ---
 

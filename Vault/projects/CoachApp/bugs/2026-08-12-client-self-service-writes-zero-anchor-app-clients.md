@@ -1,8 +1,9 @@
 ---
 id: 2026-08-12-client-self-service-writes-zero-anchor-app-clients
-status: open
+status: confirmed
 priority: medium
 reported: 2026-08-12
+closed_by: "clause (b) 2026-08-21. ONE shared _verifyOwnClientId(fnName, clientId) helper in app-clients.js, called by all three writes; app-clients v12->v13. New tests/own-client-writes-2026-08-21.spec.js asserts the APP-LEVEL refusal (RLS already refuses, so a DB probe cannot go red before the fix) AND a happy-path test that a client CAN still write to their own record - a guard that refused everything would pass the refusal test and break every real save. Red-before proven by neutering the helper: refusal test failed, happy path still passed. Guard sits immediately before the write, deliberately not before input validation: pb-consolidation-2026-08-17.spec.js:79/:143 drive saveClientPB with a dummy id precisely to reach validation, and for a real caller the ordering changes nothing. checks.sh green; 46 affected-spec tests pass."
 status_detail: "RLS-backstopped (behaviourally verified 2026-08-12, see body) — was High. found by the full-codebase architecture audit; directly matches the 2026-07-12 storage-leak incident's table family"
 ---
 

@@ -8,6 +8,33 @@ caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
 
 ---
 
+## 🛠 Session backlog — 2026-08-22 — ownership anchors: 4 rows closed, 1 regression caught pre-push
+
+**Shipped (COMMITTED, NOT PUSHED — 7 commits held back):**
+1. ✅ **Cross-tenant probes hardened** (`a4725d4`) — cleanup no longer depends on the offending
+   session being able to read back its own insert. Row `confirmed`.
+2. ✅ **app-workouts anchors** (`ba3c21d`, v74) — the 2 template writes that skipped
+   `_verifyTemplateOwnership`. Row `confirmed`.
+3. ✅ **app-clients self-service** (`89eb93f`, v13) — ⚠️ **carries the sudo regression below.**
+4. ✅ **goals / milestones** (`8dcb052`, v15) — role-aware helper; coach owns via `created_by`,
+   client/solo via `client_id`. Row `confirmed`.
+5. ✅ **client-scoped writes** (`8d389e7`, core v14 / progress v49 / runner v74) — shared
+   `_verifyClientAccess`. Row `confirmed`, but see the missed-siblings row below.
+
+**🔴 Blocking, must clear before these 7 commits can be pushed:**
+- 🐛 **`2026-08-22-ownership-guard-breaks-view-as-impersonation`** (high) — my own regression in
+  `89eb93f`. Fix identified (delete `_verifyOwnClientId`, route through `_verifyClientAccess`) but
+  NOT applied; the session hit its usage limit mid-fix.
+- 🔁 **Re-run `multi-agent-review`** — Agent A (security angle) never completed. That angle has not
+  run against this diff at all.
+
+**New, open:**
+- 🐛 **`2026-08-22-client-1rms-write-class-still-has-two-unguarded-siblings`** (medium) —
+  `saveOneRMGrid` + `_saveMissingOneRMEntries`; the class has 12 members, not the 10 I claimed.
+- 🐛 **`2026-08-22-test-cleanup-delete-has-no-rowcount-check`** (low) — in a spec added the same day
+  as the commit that fixed that exact class.
+- 🗓 **app-programs ownership anchors** — unchanged, still deliberately its own session (~20+ sites).
+
 ## 🛠 Session backlog — 2026-08-20/21 — OS + test hygiene; **no app code changed**
 
 Two days, zero `js/` changes. The work was the machinery, the ledger, and the test suite.

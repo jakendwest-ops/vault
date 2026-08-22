@@ -1,8 +1,9 @@
 ---
 id: 2026-08-12-client-scoped-writes-no-ownership-anchor-progress-runner
-status: open
+status: confirmed
 priority: medium
 reported: 2026-08-12
+closed_by: "clause (b) 2026-08-21. ONE shared _verifyClientAccess(fnName, clientId) in app-core.js, used by all 9 caller-supplied-clientId writes (7 in app-progress, 2 in app-runner); the 10th, sendClientInvite invited_at, got a direct coach_id anchor instead since it runs after the Edge Function has already authorised. app-core v13->v14, app-progress v48->v49, app-runner v73->v74. Modelled on saveRunnerSession (app-runner.js:2345) which REFUSES on an invisible client row, NOT on _effectiveCoachIdForClient which ends || currentUser.id and is its own open bug. Accepts two shapes - coach_id===me or user_id===me - so solo (coach_id NULL by design) is not excluded. New tests/client-scoped-writes-2026-08-21.spec.js covers coach refusal, coach happy path, client own-record allowed, foreign refused, and null fails closed. Red-before proven by neutering the helper: both refusal tests failed, coach happy path still passed. One regression caught and fixed in a fixture (silent-refusal-2026-08-18.spec.js:74 drove delete1RM with a fabricated clientId). checks.sh green; 43 affected-spec tests pass."
 status_detail: "RLS-backstopped (behaviourally verified 2026-08-12, see body) — was High. found by the full-codebase architecture audit; app-level code review only, RLS not independently verified"
 ---
 

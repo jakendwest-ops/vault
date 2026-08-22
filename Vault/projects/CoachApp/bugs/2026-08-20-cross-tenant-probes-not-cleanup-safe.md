@@ -1,8 +1,9 @@
 ---
 id: 2026-08-20-cross-tenant-probes-not-cleanup-safe
-status: open
+status: confirmed
 priority: medium
 reported: 2026-08-20
+closed_by: "clause (b), red-before/green-after on the SAME fixture 2026-08-21. Planted a weight_kg=999 row as the OWNER (so PT2's insert is still refused and plantedId stays null - the exact INSERT-permissive/SELECT-restrictive shape). Pre-fix code (HEAD): probe went red AND the row SURVIVED (PREFIX_ROW_SURVIVED 1). Post-fix: probe went red and the row was REAPED (0). Full spec 23/23. Fixed at all 4 sites; the other 8 cross-tenant probe files were swept and are already safe (name-anchored deletes or owner-created fixtures)."
 status_detail: "Found by multi-agent-review (Agent A) 2026-08-20 while reviewing an attempt to widen the pre-push gate. Latent — a live sweep confirmed ZERO rows currently stranded by these four sites. Blocks putting these specs in the push gate."
 ---
 

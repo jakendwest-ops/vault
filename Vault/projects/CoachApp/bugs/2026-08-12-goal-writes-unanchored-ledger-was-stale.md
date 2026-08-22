@@ -1,9 +1,10 @@
 ---
 id: 2026-08-12-goal-writes-unanchored-ledger-was-stale
-status: open
+status: confirmed
 priority: high
 reported: 2026-08-02
 reported_detail: refiled 2026-08-12 by the full-codebase architecture audit
+closed_by: "clause (b) 2026-08-21. ONE role-aware helper pair (_verifyGoalAccess / _verifyMilestoneAccess) in app-calendar-goals.js, used by all 4 sites: toggleMilestone, toggleClientMilestone, saveGoalProgress, saveCheckIn. app-calendar-goals v14->v15. saveEditGoal left alone - already anchored. Goal ownership is ROLE-DEPENDENT: coach owns via created_by, client/solo owns via client_id, so copying saveEditGoal's created_by anchor to the self-service paths would have refused every client their own progress save. New tests/goal-ownership-2026-08-21.spec.js covers BOTH happy paths (client saves own progress; coach toggles own milestone) and both refusals. Red-before proven per-branch. NOT RLS-verified: unlike the other rows in this audit family no probe exists for goals/goal_milestones, and events - same file, same table family - is where a real exploitable write-policy gap was found live 2026-08-02, so the database half is unconfirmed. checks.sh green; 25 affected-spec tests pass incl. the solo milestone toggle."
 status_detail: "originally noted in STATUS.md prose 2026-08-02 ('added to the ledger') but never actually got a bugs/*.md row — refiled by the full-codebase audit with corrected, current findings"
 ---
 
