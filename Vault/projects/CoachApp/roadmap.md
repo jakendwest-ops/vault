@@ -8,9 +8,49 @@ caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
 
 ---
 
+## 🛠 Session backlog — 2026-08-22 (part 2) — app-programs anchors shipped, then the OS itself was rebuilt
+
+**Shipped and pushed:**
+1. ✅ **`_resolveEditableTemplateId` ownership gate** (`8d7dbfb`, workouts v76) — it cloned a template
+   and repointed a slot BEFORE any caller verified ownership. Gate placed inside the helper; the row
+   claimed 4 call sites, a grep found **6**.
+2. ✅ **app-programs ownership anchors** (`c603184`, programs v44) — the largest ownership gap in the
+   repo. 45 writes across 23 functions, nearly all `.eq('id', X)`-only. Four helpers at 14 entry
+   points. The row said "~20+ call sites" and named four. Closes
+   `2026-08-12-app-programs-phase-writes-no-ownership-anchor`.
+3. ✅ **Three verification rules enforced by hooks** (`53156e7`) — review moved to **pre-commit** for
+   ownership/RLS work; piped-runner exit codes and unverified counts refused mechanically.
+4. ✅ **Falsy-zero ratchet + PostToolUse hook** (`7894837`).
+5. ✅ **Three missed cache-busts** (`42acf65`, clients v14 / calendar-goals v16 / progress v50) —
+   found by `/save` Step 2, not by any gate.
+
+**Process work (the bulk of the session, at Jake's direction):**
+- **RULE 0 adopted** — an incident produces a CHECK, or it produces nothing. Enforced by `os-lint`'s
+  new `rule-0` check, proven able to go RED.
+- Six prose rules converted to checks; two measured as genuinely NOT mechanisable and recorded as
+  `enforced_by: none` with the measurement.
+- Five memory families merged, one deleted (41 → 40).
+
+**New rows filed:**
+- 🐛 **`2026-08-22-checks-sh-cache-bust-rule-cannot-detect-a-missed-bump`** (high) — rule 3 asserts a
+  `?v=` EXISTS, never that a CHANGED module's went up. Three ownership-guard modules shipped stale.
+- 🐛 **`2026-08-22-error-rate-and-the-rule-corpus`** (high) — Jake's process report. The remedies
+  shipped; the measurement that decides whether they worked has not been taken.
+- 🐛 **`2026-08-22-no-delete-in-the-programs-family-is-rowcount-checked`** (medium).
+- 🐛 **`2026-08-22-resolvetemplateownercoachid-single-is-ambiguous-for-a-master-account`** (low).
+
+**Decided:**
+- **Do not trim the rule corpus as a fix.** Measured: all six of the day's error classes already had
+  a rule, so rule availability was never the constraint. Merging reduced files 41→35 but imperatives
+  only 129→125 — the prediction that trimming would help was **wrong**, and is recorded as wrong.
+- **`app-programs` ownership anchor work is DONE**; the remaining programs-family gap is rowcount
+  checks on DELETEs, which is its own row and its own session.
+
+---
+
 ## 🛠 Session backlog — 2026-08-22 — ownership anchors: 4 rows closed, 1 regression caught pre-push
 
-**Shipped (COMMITTED, NOT PUSHED — 7 commits held back):**
+**Shipped — ALL PUSHED later the same day** *(this line said "COMMITTED, NOT PUSHED — 7 commits held back"; corrected at /save, everything below is live as of `42acf65`)*:
 1. ✅ **Cross-tenant probes hardened** (`a4725d4`) — cleanup no longer depends on the offending
    session being able to read back its own insert. Row `confirmed`.
 2. ✅ **app-workouts anchors** (`ba3c21d`, v74) — the 2 template writes that skipped

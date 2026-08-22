@@ -1,4 +1,67 @@
-## 2026-08-22 — Four ownership-anchor rows closed, then the pre-push review found a regression in my own fix (core v14 / clients v13 / calendar-goals v15 / workouts v74 / runner v74 / progress v49 — ALL HELD BACK, NOT PUSHED)
+## 2026-08-22 (part 2) — app-programs ownership anchors shipped; then the rule system itself was rebuilt (core v15 / clients v14 / calendar-goals v16 / programs v44 / workouts v76 / progress v50)
+
+**Done:**
+- **`_resolveEditableTemplateId` ownership gate** (`8d7dbfb`, workouts v76). It cloned a template and
+  repointed a `program_phase_workouts` row BEFORE any caller verified ownership, so a refused edit
+  still left an orphan. Gate placed inside the helper — the ledger row claimed four call sites, a
+  grep found six.
+- **app-programs ownership anchors** (`c603184`, programs v44) — the largest ownership gap in the
+  repo: 45 writes across 23 functions on `programs`/`program_phases`/`program_phase_workouts`/
+  `client_programs`, nearly all `.eq('id', X)`-only. Four helpers applied at 14 entry points, plus a
+  template check at `_quickAssignPhaseWorkout`. New spec `program-ownership-anchors-2026-08-22.spec.js`
+  (3 tests, red-before proven for each).
+- **Three verification rules enforced by hooks** (`53156e7`) — `hooks/guardrails.mjs` (PreToolUse) and
+  `hooks/claim-check.mjs` (Stop). Review moved from pre-push to **pre-commit** for ownership/RLS work.
+- **Falsy-zero ratchet in checks.sh + PostToolUse registration** (`7894837`).
+- **Three missed cache-busts** (`42acf65`) — clients v14, calendar-goals v16, progress v50.
+- **RULE 0 adopted and enforced** — an incident produces a CHECK, or it produces nothing; `os-lint`
+  `rule-0` refuses a new memory with no `enforced_by:`. Six prose rules converted to checks. Five
+  memory families merged, one deleted (41 → 40).
+
+**Bugs found + fixed:**
+- **Cache-bust missed on three modules.** `3abe2b7` and `f5e0f8e` changed app-clients, app-calendar-goals
+  and app-progress without touching `index.html`, so the **ownership guards added that day shipped
+  behind a stale cache** — a returning browser would run the unguarded code. Found by `/save` Step 2.
+  `checks.sh` rule 3 is structurally incapable of catching it (asserts a `?v=` EXISTS, not that a
+  CHANGED module's rose). Fixed `42acf65`; the class is filed as its own row.
+- **The ownership gate asked the wrong question.** `_verifyProgramOwnership` resolved its anchor via a
+  role-aware helper, which for `role='client'` returns THE CLIENT'S COACH — so it approved that
+  coach's entire program set for a master account in Client view. Now anchored on `currentUser.id`.
+  Caught by review.
+- **`deleteProgram`'s gate was not first** — a `_removeAssignmentAndClones` loop deleting client
+  workout copies ran above it, under a comment claiming it was "BEFORE the cascade".
+- **`checks.sh` rule 2b shipped DEAD** — its character class was malformed in POSIX ERE (a backslash
+  is not an escape inside a bracket expression), so it matched nothing and passed silently. Caught
+  only by neutering a real file and watching it NOT fire.
+- **A decorative assertion in my own anti-decorative spec** — the fixture had `program_id` and
+  `generated_from_phase_id` both NULL, so the template could never have been a deletion candidate.
+- **Six false refusals from the new guards**, none on real work. Three shared one cause: the guard
+  examining a wider span than the rule covers (whole diff vs added lines; whole command vs one
+  pipeline segment; the CoachApp repo vs the repo being committed to). Each is now a self-test case.
+
+**Decided:**
+- **Trimming the rule corpus is NOT the fix, and the prediction that it was is recorded as wrong.**
+  Measured: all six of the day's error classes already had a rule, so rule availability was never the
+  binding constraint. Merging cut files 41→35 but imperatives only 129→125.
+- **Review runs pre-commit for ownership/RLS work**, pre-push for everything else — enforced, not stated.
+- **Deletions of Jake's preference memories were declined** even though approved: a technical lesson is
+  re-derivable from evidence, a preference is only re-learnable by annoying him again. One of four
+  deletions was executed.
+
+**Why:**
+- Jake reported the error rate directly ("you have gotten numerous things wrong over the last 24 hours")
+  and asked whether the rules themselves were the cause. The investigation found one live contradiction
+  — created that same hour, by me — but the mechanism is that rules are stated as things to KNOW while
+  the failures are failures to ENUMERATE. Where an enumeration actually ran (45 sites, 23 functions) the
+  work was right first time.
+
+**UNVERIFIED (banked):**
+- Every ownership guard shipped today is app-level defence over RLS and has **not** been exercised by
+  Jake in the browser. `2026-08-12-app-programs-phase-writes-no-ownership-anchor` is
+  `fixed-awaiting-jake` for exactly this reason: 2 of 45 sites carry a red-before test; the other 43
+  rest on a coverage argument plus the suite not regressing.
+
+## 2026-08-22 — Four ownership-anchor rows closed, then the pre-push review found a regression in my own fix (core v14 / clients v13 / calendar-goals v15 / workouts v74 / runner v74 / progress v49 — ALL PUSHED later the same day, see the entry above)
 
 **Done:**
 - **Four of the five ownership-anchor rows closed on clause (b)** — app-workouts (2 sites),

@@ -563,3 +563,24 @@ _No data yet — not observed this session._
 - **"and then move on to the next part of your OS fix"** appended to a command = do not stop and report;
   chain straight into the next piece.
 - Lowercase throughout, no greetings, no sign-offs, no praise. Continuing to assign work IS the approval.
+
+<!-- register: casual/AI — chat-to-Vision only. Do NOT leak into the public/formal slice. -->
+### Observed signals — 2026-08-22 (CoachApp)
+
+- **He escalates by naming the PATTERN, not the instance.** "Claude you have gotten numerous things
+  wrong over the last 24 hours" — not "you broke X". He aggregates reliability across a *time window*
+  and reports the aggregate. Practical consequence: when he raises something like this, an apology for
+  the most recent bug misses the point entirely; he wants the rate addressed, and he wants it counted.
+- **He offers a hypothesis without insisting on it.** "Do you have too many rules that contradict.
+  Please investigate and explain" — a named theory, then an explicit request to *investigate*, not to
+  agree. Testing his hypothesis and reporting it partly wrong was accepted without friction; agreeing
+  with it unexamined would have been the failure.
+- **He asks for a position when given menus.** "what is your suggestion from your investigation" came
+  after two turns of buckets and options. Signal: analysis-then-options is fine once; twice reads as
+  evasion. Lead with the recommendation, rank it, and say what you would drop.
+- **"fix all in the best order"** — he delegates sequencing completely but expects an order to *exist*
+  and to be justified. "In the best order" is an instruction to think about dependencies, not filler.
+- Decision words stayed one-word throughout ("approved" ×4, "push", "continue") even across a
+  substantial architectural change. Consistent with what is already banked at line 20 — brevity of
+  assent does not indicate low stakes here, and must not be read as low engagement.
+

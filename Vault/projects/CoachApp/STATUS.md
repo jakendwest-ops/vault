@@ -712,7 +712,8 @@ app-runner v33→v34, app-progress v25→v26. Previous: 2026-07-24 (3rd save) �
 
 ## Live state
 
-**App version:** app-core v=13 · app-dashboard v=12 · app-clients v=12 · app-programs v=42 · app-calendar-goals v=14 · app-workouts v=73 · app-runner v=73 · app-progress v=48 · starter-content v=5 — **all pushed and live as of 2026-08-19 (`28258aa`).**
+**App version:** app-core v=15 · app-dashboard v=12 · app-clients v=14 · app-programs v=44 · app-calendar-goals v=16 · app-workouts v=76 · app-runner v=74 · app-progress v=50 · starter-content v=5 — **all pushed and live as of 2026-08-22 (`42acf65`).**
+> ⚠️ clients v=14, calendar-goals v=16 and progress v=50 were bumped LATE, by `/save` Step 2 on 2026-08-22 (`42acf65`) — commits `3abe2b7` and `f5e0f8e` shipped their ownership guards with NO cache-bust, so a cached browser would have run the unguarded code. `checks.sh` rule 3 cannot detect this (it asserts a `?v=` EXISTS, never that a CHANGED module's number went up) — see `bugs/2026-08-22-checks-sh-cache-bust-rule-cannot-detect-a-missed-bump.md`.
 **CSS version:** v=9 (main.css) — `.ts-grid`/`.ts-cell` added 2026-08-05 for the builder set-editor. `--surface-2`/`--bg-accent`/`--text-accent` DEFINED 2026-07-23 (were referenced 54× and defined nowhere)
 **✅ PUSHED 2026-08-14 — `origin/master` = `d337418`** (session 1 of 3 on Jake's screenshot feedback; deploy green, `checks.sh` 56 passed / 0 flaky on the push)
 
