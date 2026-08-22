@@ -8,6 +8,37 @@ caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
 
 ---
 
+## 🎨 Design system — scoped 2026-08-22, not started
+
+Jake, 2026-08-22: *"we also need to scope the platform for consistency in regards to font, font size,
+field size etc, as soon we will need to think about branding."* Full audit in
+`design-system-scope-2026-08-22.md` — every figure re-runnable from the appendix there.
+
+**The finding: branding is a token swap, but only where tokens exist.** Colour has them (801 `var()`
+vs 176 stray hex). Typography and spacing have **none** — 25 distinct font sizes including 10.5/11.5/
+12.5/13.5px, which are nudges rather than decisions.
+
+**Already healthy, leave alone:** font-family (ONE declaration app-wide), and form fields — 97 of 142
+`<input>` use `.field-input`. "Field size" is the best-behaved part of the platform, not the worst.
+
+**Drifting:** 1,317 inline `style=` vs 1,176 `class=`, concentrated in app-runner (4.1:1), app-progress
+and app-dashboard. Radius drifts to 8 distinct values *despite* `--radius` existing — proof that
+adding tokens without a ratchet does not hold. 12 explicit `44px` touch targets in a phone-first gym app.
+
+- 🗓 **Stage 1 — define the vocabulary** (type/space/control tokens in `main.css`). Additive, no visual
+  change, near-zero risk.
+- 🗓 **Stage 2 — ratchet it** (`checks.sh` rule refusing NEW off-scale font-size/radius, grandfathering
+  existing sites). Without this, stage 3 rots back; the radius tokens are the evidence.
+- 🗓 **Stage 3 — convert module by module, worst first** (runner → progress → dashboard), one commit and
+  one cache-bust each. Explicitly NOT a big-bang restyle.
+- 🗓 **Stage 4 — brand**, once the vocabulary exists.
+
+**Needs Jake before stage 1:** is Inter the brand typeface or a placeholder; how dense should the runner
+be (its inline-style outlier status may be correct for a gym screen); and is there a brand direction to
+set token values against, or do they get neutral values now?
+
+---
+
 ## 🛠 Session backlog — 2026-08-22 (part 2) — app-programs anchors shipped, then the OS itself was rebuilt
 
 **Shipped and pushed:**
