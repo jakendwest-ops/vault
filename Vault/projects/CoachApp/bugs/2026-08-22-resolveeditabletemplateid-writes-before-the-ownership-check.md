@@ -1,8 +1,9 @@
 ---
 id: 2026-08-22-resolveeditabletemplateid-writes-before-the-ownership-check
-status: open
+status: confirmed
 priority: medium
 reported: 2026-08-22
+closed_by: "clause (b) 2026-08-22. Gate placed INSIDE _resolveEditableTemplateId, immediately after tmpl is fetched and before any write — not at the call sites. The row said four callers; a grep found SIX (moveTemplateExercise, showAddExerciseToTemplateModal, saveExerciseToTemplate, saveEditTemplateExercise, deleteTemplateExercise, saveEditTemplate), which is itself why the guard belongs in the helper: six call sites is six chances to miss one. Free — tmpl is already fetched, so it is a field comparison, not a round-trip. app-workouts v75->v76. NEW TEST: ownership-anchors-2026-08-21.spec.js '_resolveEditableTemplateId refuses to fork a template owned by another coach', asserting the clone is never ATTEMPTED (a refusal that still clones has prevented nothing — the orphan is the damage). Red-before proven by neutering the gate. Legitimate forking verified intact: programs.spec.js 'editing a workout assigned to two slots forks a copy' still passes. One fixture updated — silent-refusal-2026-08-18.spec.js:160 stubbed coach_id 'COACH-1', which the new gate refuses, so the repoint path became unreachable; stub and its assertion both moved to currentUser.id together, keeping the ownership-anchor assertion intact. 45 affected-spec tests pass; checks.sh green."
 status_detail: "Found by multi-agent-review (Agent C, then Agent A independently) 2026-08-22. PRE-EXISTING convention across all four sibling call sites, not introduced by the 2026-08-21/22 guards — but those guards are what now documents the ordering as 'verified', which is the part that makes it worth fixing."
 ---
 
