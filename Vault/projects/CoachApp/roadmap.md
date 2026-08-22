@@ -22,7 +22,7 @@ vs 176 stray hex). Typography and spacing have **none** — 25 distinct font siz
 `<input>` use `.field-input`. "Field size" is the best-behaved part of the platform, not the worst.
 
 **Drifting:** 1,317 inline `style=` vs 1,176 `class=`, concentrated in app-runner (4.1:1), app-progress
-and app-dashboard. Radius drifts to 8 distinct values *despite* `--radius` existing — proof that
+and app-dashboard. Radius drifts to 18 distinct values *despite* `--radius` existing — proof that
 adding tokens without a ratchet does not hold. 12 explicit `44px` touch targets in a phone-first gym app.
 
 - 🗓 **Stage 1 — define the vocabulary** (type/space/control tokens in `main.css`). Additive, no visual

@@ -58,9 +58,17 @@ they are someone nudging one label until it fit. Three sizes carry most of the a
 `app-runner` is the outlier by a distance, and it is also the screen used in a gym on a phone.
 
 ### 3. Radius drifts DESPITE having tokens
-`--radius` and `--radius-lg` exist, and yet **8 distinct literal values** are in use: 4, 6, 7, 8, 10,
-12, 20, 99px. A `7px` radius is not a decision anyone made twice. This is the useful proof that
-*adding tokens is not enough on its own* — colour has tokens and still has a 176-site tail.
+`--radius` and `--radius-lg` exist, and yet **18 distinct literal values** are in use: 2, 3, 4, 5, 6,
+7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 99, 100, 999px. A `7px` radius is not a decision anyone made
+twice, and `99px` / `100px` / `999px` are three spellings of "fully round".
+
+> **Corrected 2026-08-22.** This first said **8** distinct values. That number came from a command
+> ending in `head -8` — a truncation reported as a total. Caught when the claim-check hook forced the
+> figure to be re-counted. The drift is worse than first reported, which strengthens rather than
+> weakens the case below.
+
+This is the useful proof that *adding tokens is not enough on its own* — colour has tokens and still
+has a 176-site tail.
 
 ### 4. Stray colours mostly RE-HARDCODE existing tokens
 The top offenders are not exotic: `#ef4444` (46 uses) is `--danger`, `#f59e0b` (15) is `--warning`,
@@ -118,8 +126,10 @@ grep -oE '^\s*--[a-z-]+:' css/main.css | sort -u | wc -l
 grep -ohE 'style="' js/*.js | wc -l ; grep -ohE 'class="' js/*.js | wc -l
 # distinct font sizes
 grep -ohE 'font-size:\s*[0-9.]+px' js/*.js css/main.css | sed 's/.*:\s*//;s/px//' | sort -n -u
-# radius drift
-grep -ohE 'border-radius:\s*[0-9]+px' js/*.js css/main.css | sort | uniq -c | sort -rn
+# radius drift -- note the sed: without normalising whitespace, "border-radius: 8px" and
+# "border-radius:8px" count as different values. And NO `head`: truncating this listing is
+# exactly how this document first reported 8 distinct values instead of 18.
+grep -ohE 'border-radius:\s*[0-9]+px' js/*.js css/main.css | sed -E 's/border-radius:\s*//' | sort -u
 # input discipline
 grep -ohE '<input[^>]*class="[^"]*field-input' js/*.js | wc -l ; grep -ohE '<input' js/*.js | wc -l
 # stray colour
