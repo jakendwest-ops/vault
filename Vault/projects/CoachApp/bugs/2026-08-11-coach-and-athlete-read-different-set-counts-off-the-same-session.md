@@ -1,6 +1,7 @@
 ---
 id: 2026-08-11-coach-and-athlete-read-different-set-counts-off-the-same-session
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b), 2026-08-22 sweep. tests/set-count-agreement-2026-08-11.spec.js drives the real _countableSets. RED-BEFORE RE-PROVEN TODAY: stubbing it to return 0 turned 3 tests red; restored, green."
 priority: high
 reported: 2026-08-11
 ---

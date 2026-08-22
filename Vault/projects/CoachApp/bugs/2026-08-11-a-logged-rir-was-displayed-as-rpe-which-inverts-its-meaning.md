@@ -1,6 +1,7 @@
 ---
 id: 2026-08-11-a-logged-rir-was-displayed-as-rpe-which-inverts-its-meaning
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b), 2026-08-22 sweep. tests/effort-scale-rir-2026-08-11.spec.js calls the shipped openWorkoutLog and reads the RENDERED html for the effort column header - the exact thing Jake would have been looking at. RED-BEFORE RE-PROVEN TODAY: forcing the label map to always emit 'RPE' turned 2 of 4 red; restored, 4 pass."
 priority: high
 reported: 2026-08-11
 ---

@@ -1,6 +1,7 @@
 ---
 id: 2026-08-02-box-jump-height-was-not-recorded-live-on-a-real-gym-session-
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "SUPERSEDED, not verified - 2026-08-22 sweep. The 2026-08-02 fix added a jump_height branch to the WIZARD's logRunnerSet. That code no longer exists: logRunnerSet now handles `ex.type === 'cardio'` ONLY, and tests/ledger-fixes-2026-08-02.spec.js itself asserts 'the wizard render markup is gone from the shipped module'. Jumps route to the fast table, which was always correct on this path and is covered by tests/runner-fast-table-metrics.spec.js (jump_height round-trips height_cm + reps; 8 tests green). Closing as superseded rather than pretending the original branch was re-verified - there is nothing left to verify in it."
 priority: high
 reported: 2026-08-02
 status_detail: "fixed — awaiting Jake"

@@ -1,6 +1,7 @@
 ---
 id: 2026-08-19-unilateral-pill-does-not-exist
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b), 2026-08-22 sweep. tests/unilateral-runner-2026-08-19.spec.js drives the REAL _buildTargetCols (not re-typed logic) and asserts the exact string Jake was asked to eyeball: REPS/SIDE. RED-BEFORE RE-PROVEN TODAY, not just when written - neutering app-runner.js's `perSide` to '' turned 2 of 5 red; restored, 5 pass. The other 3 cover bilateral / AMRAP+unilateral / jumps and correctly stay green under that neuter."
 priority: high
 reported: 2026-08-19
 status_detail: "FIXED commit 0d1d80b, live 2026-08-19 (app-runner v72). The PILL was never the problem — it renders correctly in both the builder and runner add-exercise modals, verified by driving each. What never existed was any PER-SIDE indicator in the runner itself. 5 red-before tests in tests/unilateral-runner-2026-08-19.spec.js. Awaiting Jake: start a workout with a unilateral exercise and confirm the target bar reads REPS/SIDE."

@@ -1,6 +1,7 @@
 ---
 id: 2026-08-11-captured-hr-watts-pace-discarded-when-an-interval-had-a-cool-down
-status: fixed-awaiting-jake
+status: confirmed
+closed_by: "clause (b), 2026-08-22 sweep. tests/cardio-capture-cooldown-2026-08-11.spec.js drives the real _applyCardioCapture. RED-BEFORE RE-PROVEN TODAY: making it a no-op turned 4 tests red; restored, green."
 priority: high
 reported: 2026-08-11
 ---
