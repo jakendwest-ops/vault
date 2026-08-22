@@ -1,8 +1,9 @@
 ---
 id: 2026-07-13-critical-live-crash-a-phase-with-zero-sessions-kills-the-coa
-status: fixed-awaiting-jake
+status: confirmed
 priority: critical
 reported: 2026-07-13
+closed_by: "clause (b) ESTABLISHED 2026-08-22, 40 days after the fix shipped. The row recorded no red-before, so passing was not evidence. Neutered the zero-guard at app-programs.js:140 (renderClientPrograms - the path the test actually renders) and regression-2026-07-13.spec.js 'a phase with zero sessions renders an empty-state, not a crash' FAILED; restored, passes. NOTE: my first attempt neutered the SIBLING copy at app-workouts.js:747, the test still passed, and I nearly reported the test as decorative - wrong code path, not a dead test. Closed on test evidence, NOT on a Jake confirmation."
 status_detail: "fixed — awaiting Jake"
 ---
 
