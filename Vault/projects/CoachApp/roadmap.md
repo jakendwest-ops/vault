@@ -8,7 +8,7 @@ caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
 
 ---
 
-## 🎨 Design system — scoped 2026-08-22, not started
+## 🎨 Design system — ✅ Stages 1-3 DONE 2026-08-23 (`857c5e1`); Stage 4 (brand) awaits Jake
 
 Jake, 2026-08-22: *"we also need to scope the platform for consistency in regards to font, font size,
 field size etc, as soon we will need to think about branding."* Full audit in
@@ -25,17 +25,45 @@ vs 176 stray hex). Typography and spacing have **none** — 25 distinct font siz
 and app-dashboard. Radius drifts to 18 distinct values *despite* `--radius` existing — proof that
 adding tokens without a ratchet does not hold. 12 explicit `44px` touch targets in a phone-first gym app.
 
-- 🗓 **Stage 1 — define the vocabulary** (type/space/control tokens in `main.css`). Additive, no visual
+- ✅ **Stage 1 — vocabulary** (`62efa9a`, css v10) (type/space/control tokens in `main.css`). Additive, no visual
   change, near-zero risk.
-- 🗓 **Stage 2 — ratchet it** (`checks.sh` rule refusing NEW off-scale font-size/radius, grandfathering
+- ✅ **Stage 2 — ratchet** (`48f704d`+`37ea1c3`+`a342d46`, checks.sh rule 3b + style-count.sh) (`checks.sh` rule refusing NEW off-scale font-size/radius, grandfathering
   existing sites). Without this, stage 3 rots back; the radius tokens are the evidence.
-- 🗓 **Stage 3 — convert module by module, worst first** (runner → progress → dashboard), one commit and
+- ✅ **Stage 3 — converted, 1,027 → 256 literals** (`17c3d99`..`80634c1`) (runner → progress → dashboard), one commit and
   one cache-bust each. Explicitly NOT a big-bang restyle.
-- 🗓 **Stage 4 — brand**, once the vocabulary exists.
+- 🗓 **Stage 4 — brand** — NOW UNBLOCKED. Edit the `:root` block., once the vocabulary exists.
 
 **Needs Jake before stage 1:** is Inter the brand typeface or a placeholder; how dense should the runner
 be (its inline-style outlier status may be correct for a gym screen); and is there a brand direction to
 set token values against, or do they get neutral values now?
+
+---
+
+## 🛠 Session backlog — 2026-08-23 — design tokens shipped; 1,027 → 256 literals
+
+**Shipped and pushed (`857c5e1`, 27 commits, CI green):**
+1. ✅ **The whole design-token plan**, all 7 tasks via subagent-driven-development. Token vocabulary
+   in `css/main.css` (v10); `scripts/tokenise.mjs` + `tokenise-verify.mjs`; all nine modules converted
+   or already conformant. **ZERO visual change**, proven per module by a byte-identical round-trip.
+2. ✅ **Three new gates in `checks.sh`, all fired for real on the push.** Rule 3 — a CHANGED file's
+   `?v=` must RISE (the old rule only asserted one existed, which is how three modules shipped their
+   ownership guards behind a stale cache). Rule 3b — a per-file style-literal ratchet. Rule 3c —
+   every `var(--x)` referenced in `js/` must be DEFINED in `main.css`.
+3. ✅ **`scripts/style-count.sh`** — one owner of the literal-counting pattern, which had drifted
+   across six copies.
+4. ✅ **A real pre-existing bug found and fixed**: `var(--surface2)` (the token is `--surface-2`) had
+   been silently dropping the Progress table header's background. `0a23684`, progress v52.
+5. ✅ **`docs/superpowers/subagent-contract.md`** — a permission denial is a STOP, not a routing problem.
+
+**New rows filed:** subagent-routed-around-a-permission-denial (high) · var-surface2 (fixed-awaiting-Jake)
+· no-delete-rowcount in the programs family (medium) · resolvetemplateownercoachid-single (low) ·
+error-rate-and-the-rule-corpus (high) · checks-sh-cache-bust-blindness (now CLOSED by rule 3).
+
+**Decided:**
+- **Spacing, class extraction, folding the `--legacy-*` aliases and touch-target sizing stay OUT.**
+  Each is its own piece of work; the plan says so and the count reflects it.
+- **The codemod refuses interpolated attributes rather than partially converting them** — ~117 skips,
+  a deliberate, quantified conservatism. Relaxing it is a future enhancement needing its own proof.
 
 ---
 

@@ -584,3 +584,20 @@ _No data yet — not observed this session._
   substantial architectural change. Consistent with what is already banked at line 20 — brevity of
   assent does not indicate low stakes here, and must not be read as low engagement.
 
+<!-- register: casual/AI — chat-to-Vision only. Do NOT leak into the public/formal slice. -->
+### Observed signals — 2026-08-23 (CoachApp, design tokens)
+
+- **Single-word course corrections, including on plans he had just approved.** "B", "fix", "push then
+  save", "start tasks 5-7 then push as 1 piece of work". The last one OVERRODE a recommendation to stop
+  and a plan that specified per-module pushes — delivered in nine words with no explanation. Signal: he
+  reads the recommendation, weighs it, and issues the decision. Do not re-argue a point he has just
+  overruled; do surface the consequence once ("that means no visual checkpoint between modules") and
+  then execute.
+- **He interrupted a tool call to redirect.** When "go ahead" was read as "push", he stopped it mid-flight
+  and clarified. Practical consequence: an ambiguous instruction is better resolved by stating the reading
+  BEFORE acting on it, which is cheap, than by acting and being interrupted.
+- **He accepts a bad-news finding without friction and asks for the fix.** Told a colour map was wrong,
+  told a subagent had bypassed a guard, told a prediction of his own was unaffected — each time the reply
+  was a decision, not a discussion.
+- Consistent with what is banked: brevity of assent never indicates low stakes here.
+

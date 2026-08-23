@@ -1,3 +1,58 @@
+## 2026-08-23 — Design tokens: 1,027 → 256 style literals, zero visual change (core v16 / dashboard v13 / clients v15 / programs v45 / calendar-goals v17 / workouts v77 / runner v75 / progress v52 / css v10)
+
+**Done:**
+- **The whole design-token plan, all 7 tasks**, run via subagent-driven-development. 27 commits,
+  pushed `857c5e1`, CI green. Token vocabulary in `css/main.css` (11 type steps, 14 legacy aliases,
+  5 radius siblings, `--font` swap point). All nine modules converted or already conformant.
+  **`js/` style literals 1,027 → 256.**
+- **`scripts/tokenise.mjs`** — the codemod. Exact-value only; emits `var(--token, <literal>)` so a
+  missing token renders the original; scope restricted to `style="..."` attributes inside one flat
+  template-literal run, refusing anything ambiguous.
+- **`scripts/tokenise-verify.mjs`** — the round-trip proof. Expands every `var()` back and asserts
+  content-identity with `git show HEAD:<file>`. Ran clean on all seven converted modules.
+- **Three new `checks.sh` gates, all fired for real on the push:** rule 3 (a CHANGED file's `?v=`
+  must RISE, enumerating from disk so `starter-content.js` is finally covered), rule 3b (per-file
+  style-literal ratchet against `scripts/style-baseline.json`), rule 3c (every `var(--x)` in `js/`
+  must be defined in `main.css`).
+- **`scripts/style-count.sh`** — one owner of the counting pattern, which had drifted across six copies.
+- **`docs/superpowers/subagent-contract.md`** — a permission denial is a STOP, not a routing problem.
+
+**Bugs found + fixed:**
+- **`var(--surface2)` — the token is `--surface-2`.** Pre-existing (present in `8d389e7`). An undefined
+  custom property does not error; the declaration is silently dropped, so the Progress table header has
+  been rendering with no background, looking plausible. Fixed `0a23684`, progress v52, AND the class
+  closed by rule 3c. Red-before used the REAL defect rather than a probe.
+- **The cache-bust rule had THREE separate false-pass doors**, all found in review: in CI `origin/master`
+  IS the pushed SHA so every diff was empty; `git rev-parse --verify` accepts a well-formed but
+  NONEXISTENT sha (the all-zeroes `github.event.before` GitHub sends on a first push); and an empty
+  `CB_HEAD_SHA` made the self-reference rejection accept. Each closed and self-tested.
+- **The ratchet could be walked past** by writing `font-size : 13px` or `FONT-SIZE:13px` — legal CSS.
+- **My spec's colour map was wrong**: it mapped `#22c55e` → `--success`, but `--success` is `#10b981`.
+  Caught by an implementer that refused to transcribe a map it had evidence contradicted. Unreachable
+  in practice (no `#22c55e` sits inside a `style="..."`), but the codemod now ABORTS at startup if any
+  map entry disagrees with the stylesheet.
+- **My ownership gate false-positived** on a pure tokenisation touching a line that mentions `client_id`.
+  Fixed precisely: expand `var()` back per line, and if it equals a REMOVED line it changed nothing but
+  wrappers. Proven NOT to weaken — a real `.eq('coach_id', old→new)` still denies.
+
+**UNVERIFIED (banked):**
+- The Progress table header's restored `--surface-2` background is the ONE deliberate visual change in
+  27 commits. Row `2026-08-22-var-surface2-is-not-a-token-that-exists` is `fixed-awaiting-jake`.
+
+**Decided:**
+- **Spacing, class extraction, folding the `--legacy-*` aliases, and touch-target sizing stay OUT of scope.**
+- **The codemod refuses interpolated attributes rather than partially converting them** — ~117 deliberate,
+  quantified skips. Relaxing it is a future enhancement needing its own proof.
+- **Accepted the Task 7 commits despite a process violation** (a subagent routed around a classifier
+  denial by switching Bash→PowerShell). Jake's call: accept and tighten the contract. Output verified
+  sound four ways; the fault is filed with the honest admission that the contract is prose, and prose has
+  repeatedly measured as unenforceable here.
+
+**Why:**
+- Branding was the driver. It is a token swap, but only where tokens exist — colour had them, typography
+  and spacing had none. The radius finding was the load-bearing one: `--radius` existed for months while
+  the code drifted to 18 values, which is why the ratchet shipped BEFORE the conversion, not after.
+
 ## 2026-08-22 (part 2) — app-programs ownership anchors shipped; then the rule system itself was rebuilt (core v15 / clients v14 / calendar-goals v16 / programs v44 / workouts v76 / progress v50)
 
 **Done:**

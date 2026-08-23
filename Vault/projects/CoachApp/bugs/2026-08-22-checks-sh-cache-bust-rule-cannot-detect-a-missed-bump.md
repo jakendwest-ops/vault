@@ -1,6 +1,7 @@
 ---
 id: 2026-08-22-checks-sh-cache-bust-rule-cannot-detect-a-missed-bump
-status: open
+status: confirmed
+closed_by: "clause (b), 2026-08-23. checks.sh rule 3 rewritten to compare a CHANGED file's ?v= between origin/master and HEAD, enumerating from disk (so starter-content.js is covered for the first time). Red-before proven with a committed probe: a changed module with no bump is refused BY NAME; the same change WITH a bump passes. Three further false-pass doors were found and closed during review — CI base == HEAD, a nonexistent all-zeroes event.before, and an empty CB_HEAD_SHA. Fired for real on the 857c5e1 push: Every changed module ?v= rose."
 priority: high
 reported: 2026-08-22
 status_detail: "found by /save Step 2 on 2026-08-22 after three modules shipped un-bumped; the instance is fixed and pushed (42acf65), the CLASS is not"
