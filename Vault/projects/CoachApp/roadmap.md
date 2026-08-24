@@ -1,11 +1,10 @@
 # CoachApp Roadmap
+_Last updated: 2026-08-23._
 
-_Last updated: 2026-08-14 (end of session) — **PUSHED to origin/master** (`d337418`, deploy green).
-Session 1 of 3 responding to Jake's live screenshot feedback: calendar day-modal detail, AMRAP + Unilateral
-pills, and the 1RM grid. Two of his five items turned out to be **already-open ledger rows** now carrying a
-live reproduction; a third was not a bug at all (the "better" 1RM grid was the empty state). Pre-push review
-caught a blocking crash for lb-unit users. Full detail below and in STATUS.md._
-
+> Session narratives belong in `LOG.md`. This masthead carried a write-up of the 2026-08-14 session
+> until OS v3; that session has a `## 2026-08-14` entry in `LOG.md`, so it was removed rather than
+> kept in two places. `os-lint`'s `masthead-drift` check now fails if this date falls behind the
+> newest dated content in this file.
 ---
 
 ## 🎨 Design system — ✅ Stages 1-3 DONE 2026-08-23 (`857c5e1`); Stage 4 (brand) awaits Jake

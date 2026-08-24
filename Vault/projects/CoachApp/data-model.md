@@ -126,8 +126,55 @@ The dashed box is the 1RM system work planned for this session — not built yet
 
 ---
 
+## Schema changes 2026-07-12 → 2026-08-15 (reconciled 2026-08-23, OS v3)
+
+This file had not been written since 2026-06-30 while **16 migrations** landed, so it described
+a schema that no longer existed. Reconciled by reading `scripts/*.sql` directly.
+
+**`profiles`** — the account-shape columns, none of which existed above:
+
+| column | added | notes |
+|---|---|---|
+| `starter_seeded` | 2026-07-12 | bool, default false — gates the new-coach first-login seed |
+| `solo_only` | 2026-07-24 | bool, default false — locks an account to personal-only, no coach dashboard |
+| `weight_unit` | 2026-07-24 | `kg`/`lb`, default kg |
+| `jump_height_unit` | 2026-07-24 | `cm`/`in`, default cm |
+| `cardio_distance_unit` | 2026-07-24 | `km`/`mi`, default km |
+| `profiles_role_chk` | 2026-08-01 | CHECK constraint pinning the role enum (solo migration) |
+
+> **Unit preference is a DATA DIMENSION, not a display detail.** These three columns are per-metric
+> and account-wide. Canonical storage stays kg/cm/km; only render converts. See
+> `feedback-unit-preference-is-a-test-dimension` — a whole suite running in kg made an lb-only crash
+> invisible to 428 tests.
+
+**`workout_log_sets`** — the cardio/interval metric columns:
+
+| column | added | notes |
+|---|---|---|
+| `avg_hr`, `max_hr` | 2026-07-18 | smallint |
+| `avg_watts` | 2026-07-22 | smallint |
+| `phase` | 2026-07-25 | text — interval phase label |
+| `pace_500m_secs` | 2026-08-08 | smallint + CHECK `wls_pace_500m_secs_chk` |
+| `stroke_rate_spm` | 2026-08-08 | smallint + CHECK `wls_stroke_rate_spm_chk` |
+
+**`metric_type`** — added 2026-07-18 to `workout_template_exercises` (text, not null, default
+`weight_reps`), with matching CHECK constraints on `exercises`, `workout_template_exercises` and
+`workout_log_exercises` (2026-07-25). Cardio was merged INTO interval on 2026-08-09
+(`merge-cardio-into-interval-2026-08-09.sql`, which kept a `_cardio_merge_backup_` table).
+
+**Other:**
+
+- `weight_logs.resting_hr` — smallint + CHECK, 2026-07-19.
+- `workout_templates.family_id` — uuid, 2026-08-14. Groups a template with its clones.
+- **Program blocks** — new table, 2026-08-15 (`add-program-blocks-2026-08-15.sql`).
+- RLS/policy migrations that changed no columns: `fix-storage-rls-2026-07-12.sql` (the
+  cross-tenant photo leak — see CRITICAL.md), `fix-workout-logs-insert-policy-2026-07-30.sql`.
+
+---
+
 ## How to keep this in sync
 
 - Any schema change (new table, new FK, renamed column) → update this file in the same session.
 - This file lives in the Vault, not the repo — it's the design reference, not enforced by code. The source of truth for actual constraints is Supabase itself (`information_schema`) and `CRITICAL.md`.
 - Don't duplicate this in Notion or any other tool — one file, versioned with the rest of the Vault.
+- **Enforced since 2026-08-23:** `os-lint`'s `doc-obligations` check goes RED when any `scripts/*.sql` is newer than this file. The rule above was prose for 54 days and was missed 16 times; it now has a trigger. RULE 0 for documents.
