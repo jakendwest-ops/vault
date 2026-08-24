@@ -350,31 +350,43 @@ lawful for a new data subject" (no). Do not conflate them.
 > picked it up** — so planning kept reading a weeks-long legal task that is really an afternoon of code.
 > **Nothing here is blocked on Jake writing a document.**
 
-**Still a real blocker:** consent capture genuinely does not exist, and a real outside beta tester was
-onboarded 2026-08-09 under exactly this gap — live, not hypothetical. `CRITICAL.md` classes this app as
-handling UK GDPR **special-category (health) data**.
+**Status 2026-08-24: BUILT, NOT YET DEPLOYED.** The migration is applied and verified in Supabase;
+the code is committed and unpushed. `CRITICAL.md` classes this app as handling UK GDPR
+**special-category (health) data**, and a real outside beta tester was onboarded 2026-08-09 under the
+gap — live, not hypothetical.
 
-Already in place, so this is a gap and not a rebuild: **the policy page itself**, the Settings "Data &
-privacy" card, `downloadMyData()` (full export bundle), `deleteAccount()` → `delete_current_user`,
-and EU storage.
+Already in place beforehand: **the policy page itself**, the Settings "Data & privacy" card,
+`downloadMyData()` (full export bundle), `deleteAccount()` → `delete_current_user`, and EU storage.
 
-In dependency order:
-
-1. ✅ **Write the privacy policy** — DONE, and has been since 2026-06-29 (`privacy-policy.html`).
+1. ✅ **Write the privacy policy** — DONE since 2026-06-29 (`privacy-policy.html`).
 2. ✅ **Host it** — DONE; served from the Pages site.
-3. 🗓 **Link it** — the actual first task. Today it is reachable only by typing the URL. Link it from
-   the Settings "Data & privacy" card AND from the invite form.
-4. 🗓 **Consent checkbox on `#invite-form`**, linking to the policy, blocking activation until ticked.
-   Persist `consented_at` **and the policy version**, so a later policy change is detectable rather than
-   silently assumed.
-5. 🗓 **Take consent retroactively from the existing beta tester.** Fix-forward does not apply — a consent
-   never taken is not repaired by taking it from the next person. **Needs Jake.**
-6. 🗓 **Verify `delete_current_user` exists in the DB** — the call site is there but it cannot be tested
-   without destroying a real account. SQL in the ledger file.
+3. ✅ **Link it** — SHIPPED 2026-08-24. Settings "Data & privacy" card + the invite form.
+   `grep -rn "privacy-policy" js/ index.html` went 0 → 8.
+4. ✅ **Consent checkbox on `#invite-form`** — SHIPPED, with a JS guard that refuses even when the
+   `required` attribute is stripped, and a write that asserts on the returned row (a policy-refused
+   upsert returns `{ data: [], error: null }`).
+5. ✅ **Retroactive consent — SOLVED BY MECHANISM, no longer a chase.** The pre-push review proved
+   the checkbox covered only ONE of three routes to an active account: `#new-password-form` (the
+   recovery link, which is how the 2026-08-09 tester was actually recovered) and directly-provisioned
+   coach accounts were both ungated, and nothing read `consented_at` back, so nobody was ever
+   prompted. A **read-side gate** in `showApp()` now blocks the app for ANY role whose consent is
+   missing or whose stored version is superseded. Every existing account — 4 real ones as of
+   2026-08-24, including Jake's — is prompted on next login. Nobody needs chasing.
+   Its consent read is a **separate query that fails open**: folding the columns into
+   `loadUserInfo`'s select would error pre-migration → null `currentProfile` → `showApp`'s fail-closed
+   branch → total lockout for every user. Two bypasses (browser Back via `navigate()`'s blanket
+   overlay clear; the "View as" switcher) were found by the same review and closed.
+6. 🗓 **Verify `delete_current_user` exists in the DB** — the only remaining item. The call site is
+   there but cannot be tested without destroying a real account. SQL in the ledger file. **Needs Jake.**
+
+**Migration applied 2026-08-24** (`scripts/add-consent-2026-08-24.sql`): two nullable columns on
+`profiles`, plus a stamp for the 3 E2E fixture accounts so the gate does not block the suite. Verified
+by SELECT — all 3 rows carry a timestamp and version `2026-06-29`. Real accounts deliberately NOT
+stamped. `profiles` RLS confirmed as two policies covering INSERT/UPDATE/SELECT on `id = auth.uid()`.
 
 Ledger: `bugs/2026-08-11-gdpr-no-consent-capture-and-no-privacy-policy.md` — priority `critical`,
-status **`deferred` by Jake 2026-08-19** (this file previously claimed `open`; the ledger is
-authoritative). Only step 5 now needs Jake and cannot be closed by a test.
+status **`deferred` by Jake 2026-08-19** (the ledger is authoritative; only Jake may change it).
+Worth revisiting now that 5 of its 6 steps are built.
 
 ## 🐛 Session backlog — 2026-08-11 (refinement: 10 commits pushed, zero new features)
 

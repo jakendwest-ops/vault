@@ -151,6 +151,20 @@ a schema that no longer existed. Reconciled by reading `scripts/*.sql` directly.
 > Written by the invite-acceptance handler in `js/app-progress.js`, which asserts on the returned row:
 > a policy-refused upsert comes back `{ data: [], error: null }`, and an activated account with no
 > consent row is the exact compliance gap the column exists to close.
+>
+> **Read-side gate (`showApp` in `js/app-core.js`).** The invite checkbox only covers one of three
+> routes to an active account; the gate blocks the app for ANY role whose `consented_at` is null or
+> whose stored version is not the current `PRIVACY_POLICY_VERSION`. Its consent read is a **separate
+> query that fails open** — folding these columns into `loadUserInfo`'s select would error before the
+> migration, null `currentProfile`, and trip `showApp`'s fail-closed branch, locking every user out.
+>
+> **The three E2E fixture accounts (`auth.users.email like 'coachapp.e2e%'`) carry a stamped consent**
+> (`2026-08-24`, version `2026-06-29`) so the suite is not blocked by the gate. They are fixtures, not
+> data subjects. Applied 2026-08-24 and verified by SELECT — all three rows present with timestamps.
+> Real accounts are never stamped; as of that date 4 of the 7 auth users are real and all 4 will meet
+> the gate on their next login. `profiles` RLS is two policies — "Own profile" (`ALL`, qual
+> `auth.uid() = id`, `with_check` NULL) and "User updates own profile" (`UPDATE`) — so the ALL policy's
+> qual is reused for writes. Safe here **only because that qual has no `OR`**; see sql-safety §8.
 
 > **Unit preference is a DATA DIMENSION, not a display detail.** These three columns are per-metric
 > and account-wide. Canonical storage stays kg/cm/km; only render converts. See

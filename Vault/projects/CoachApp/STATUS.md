@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-08-23._
+_Last updated: 2026-08-24._
 
 > **Session history lives in `LOG.md`, not here.** Until OS v3 this masthead carried a 710-line
 > `Previous: … Previous: …` chain going back to 2026-07-19 — every session of it already written up
@@ -229,6 +229,21 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 ---
 
 ## Continuity block
+
+### The consent gate's read MUST stay a separate, fail-open query (2026-08-24)
+`_loadConsentState()` in `js/app-core.js` fetches `consented_at` / `consent_policy_version` on its own
+and returns `null` on ANY error; `_needsConsent(null)` is `false`. This looks like an obvious tidy-up
+— "why not just add those two columns to `loadUserInfo`'s select?" **Do not.** That select uses
+`.single()`; if the columns are ever absent (a fresh environment, a rolled-back migration) it ERRORS,
+which nulls `currentProfile`, which trips `showApp`'s fail-closed branch, which locks **every user out
+of the whole app, including the owner**. A gate whose failure mode is total lockout is worse than the
+gap it closes. `tests/consent-gate-2026-08-24.spec.js` pins the fail-open property directly; if you
+find yourself deleting that test to make a refactor pass, the refactor is the bug.
+
+Corollary: the gate is enforced inside `navigate()` rather than per-caller, because every route into
+the app funnels through it — and `switchView()` still needs its OWN guard because it calls
+`applyRoleUI()` before `navigate()`. Both bypasses (browser Back, "View as") were live and were found
+by review, not by testing.
 
 ### A second helper doing the first one's job is where the bug will be (2026-08-22)
 `_verifyOwnClientId` (app-clients) and `_verifyClientAccess` (app-core) both answer "may I write for
