@@ -126,7 +126,7 @@ The dashed box is the 1RM system work planned for this session — not built yet
 
 ---
 
-## Schema changes 2026-07-12 → 2026-08-15 (reconciled 2026-08-23, OS v3)
+## Schema changes 2026-07-12 → 2026-08-24 (reconciled 2026-08-23/24, OS v3)
 
 This file had not been written since 2026-06-30 while **16 migrations** landed, so it described
 a schema that no longer existed. Reconciled by reading `scripts/*.sql` directly.
@@ -141,6 +141,16 @@ a schema that no longer existed. Reconciled by reading `scripts/*.sql` directly.
 | `jump_height_unit` | 2026-07-24 | `cm`/`in`, default cm |
 | `cardio_distance_unit` | 2026-07-24 | `km`/`mi`, default km |
 | `profiles_role_chk` | 2026-08-01 | CHECK constraint pinning the role enum (solo migration) |
+| `consented_at` | 2026-08-24 | timestamptz, nullable. When this user affirmatively accepted the privacy policy. **NULL = no consent on record.** |
+| `consent_policy_version` | 2026-08-24 | text, nullable. Which `privacy-policy.html` version they accepted (its "Last updated" date). |
+
+> **Consent is two columns, not one, and never back-filled.** A timestamp alone cannot tell you WHAT
+> was agreed to: editing the policy would silently re-interpret an old consent as covering wording the
+> person never saw. The version must match `PRIVACY_POLICY_VERSION` in `js/app-core.js` and the
+> "Last updated" date in `privacy-policy.html` — bump all three together and expect to re-take consent.
+> Written by the invite-acceptance handler in `js/app-progress.js`, which asserts on the returned row:
+> a policy-refused upsert comes back `{ data: [], error: null }`, and an activated account with no
+> consent row is the exact compliance gap the column exists to close.
 
 > **Unit preference is a DATA DIMENSION, not a display detail.** These three columns are per-metric
 > and account-wide. Canonical storage stays kg/cm/km; only render converts. See

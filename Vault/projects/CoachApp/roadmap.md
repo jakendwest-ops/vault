@@ -1,5 +1,5 @@
 # CoachApp Roadmap
-_Last updated: 2026-08-23._
+_Last updated: 2026-08-24._
 
 > Session narratives belong in `LOG.md`. This masthead carried a write-up of the 2026-08-14 session
 > until OS v3; that session has a `## 2026-08-14` entry in `LOG.md`, so it was removed rather than
@@ -333,31 +333,48 @@ is live. This is why the two items above are listed as deliberate non-actions ra
 **Does not block deploying code.** Two different gates: "is this code safe to ship" (yes) and "are we
 lawful for a new data subject" (no). Do not conflate them.
 
-The app has **no consent capture anywhere** and **no privacy policy at all**. Signup is invite-only, but
-the invite form — where a beta tester actually activates their account — has no checkbox and nothing to
-link to. A real outside beta tester was onboarded 2026-08-09 under exactly this gap, so it is live, not
-hypothetical. `CRITICAL.md` classes this app as handling UK GDPR **special-category (health) data**.
+> ### ⚠️ THIS SECTION'S PREMISE WAS WRONG FOR 13 DAYS — corrected 2026-08-24 (OS v3)
+>
+> It said the app has *"no privacy policy at all"* and made *"write the privacy policy"* the long pole,
+> **Jake's to write or approve**. Verified false by direct check:
+>
+> - **`privacy-policy.html` EXISTS** — 7,679 bytes, in the repo since **2026-06-29**, served from the
+>   live Pages site. Read it: 11 sections (who we are · what data · legal basis · where stored · who we
+>   share with · how long · your UK GDPR rights · cookies · security · changes · contact), naming
+>   special-category data, `eu-west-1`, erasure and the controller.
+> - **It is linked from nowhere.** `grep -rn "privacy-policy" js/ index.html` returns **zero** hits.
+> - The checkbox and the link both existed once and were removed by **`57a188a` (2026-07-24)** along
+>   with the public signup form they sat on.
+>
+> The ledger row's `status_detail` recorded this correction on 2026-08-19 and **this document never
+> picked it up** — so planning kept reading a weeks-long legal task that is really an afternoon of code.
+> **Nothing here is blocked on Jake writing a document.**
 
-Already in place, so this is a gap and not a rebuild: the Settings "Data & privacy" card, `downloadMyData()`
-(full export bundle), `deleteAccount()` → `delete_current_user`, and EU storage.
+**Still a real blocker:** consent capture genuinely does not exist, and a real outside beta tester was
+onboarded 2026-08-09 under exactly this gap — live, not hypothetical. `CRITICAL.md` classes this app as
+handling UK GDPR **special-category (health) data**.
+
+Already in place, so this is a gap and not a rebuild: **the policy page itself**, the Settings "Data &
+privacy" card, `downloadMyData()` (full export bundle), `deleteAccount()` → `delete_current_user`,
+and EU storage.
 
 In dependency order:
 
-1. 🗓 **Write the privacy policy** — the long pole, and **Jake's to write or approve**; it is a document,
-   not code. What is collected (incl. health data and photos), why, lawful basis, storage location
-   (Supabase `eu-west-1`), retention, subject rights, contact.
-2. 🗓 **Host it** — a static page in the repo is enough; this is a Pages site.
-3. 🗓 **Consent checkbox on `#invite-form`**, linking to the policy, blocking activation until ticked.
+1. ✅ **Write the privacy policy** — DONE, and has been since 2026-06-29 (`privacy-policy.html`).
+2. ✅ **Host it** — DONE; served from the Pages site.
+3. 🗓 **Link it** — the actual first task. Today it is reachable only by typing the URL. Link it from
+   the Settings "Data & privacy" card AND from the invite form.
+4. 🗓 **Consent checkbox on `#invite-form`**, linking to the policy, blocking activation until ticked.
    Persist `consented_at` **and the policy version**, so a later policy change is detectable rather than
    silently assumed.
-4. 🗓 **Link the policy from the Settings card** too, not only the invite form.
 5. 🗓 **Take consent retroactively from the existing beta tester.** Fix-forward does not apply — a consent
-   never taken is not repaired by taking it from the next person.
+   never taken is not repaired by taking it from the next person. **Needs Jake.**
 6. 🗓 **Verify `delete_current_user` exists in the DB** — the call site is there but it cannot be tested
    without destroying a real account. SQL in the ledger file.
 
-Ledger: `bugs/2026-08-11-gdpr-no-consent-capture-and-no-privacy-policy.md` (status `open`, priority
-`critical`). Steps 1 and 5 need Jake and cannot be closed by a test.
+Ledger: `bugs/2026-08-11-gdpr-no-consent-capture-and-no-privacy-policy.md` — priority `critical`,
+status **`deferred` by Jake 2026-08-19** (this file previously claimed `open`; the ledger is
+authoritative). Only step 5 now needs Jake and cannot be closed by a test.
 
 ## 🐛 Session backlog — 2026-08-11 (refinement: 10 commits pushed, zero new features)
 
