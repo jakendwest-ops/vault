@@ -1,9 +1,9 @@
 ---
 id: 2026-08-25-roadmap-accumulates-session-history-like-status-did
-status: open
+status: fixed-awaiting-jake
 priority: medium
 reported: 2026-08-25
-status_detail: "context-budget went RED on the day it was tightened. NOT a false refusal — it is pointing at 31 session-backlog sections in roadmap.md, the same class just removed from STATUS.md."
+status_detail: "RESOLVED BY PRUNING (option 1), 2026-08-25, per Jake. 23 sections removed = 68,027 chars; roadmap 143,453 -> 75,283. context-budget GREEN and the ratchet auto-re-pinned 229,178 -> 167,461, so the saving is locked in. The ceiling was NOT raised."
 ---
 
 # roadmap.md carries 31 session backlogs — the same history duplication STATUS.md just shed

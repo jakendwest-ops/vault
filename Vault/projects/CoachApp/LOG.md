@@ -62,6 +62,23 @@ _Two of the three answers were **no**. Both nos survived measurement._
 - Nothing pushed. `multi-agent-review` could not run in its pinned 3-agent form (this session is configured
   without subagents) — recorded, not silently substituted.
 
+**Prune (post-save, Jake: “push then prune”):**
+- **Pushed `76fbeb7`** — rule 9e live. Pre-push gate: `checks.sh` all passed, Playwright smoke 56 passed.
+  Pushed by exception on the 3-agent review (no subagents this session); recorded in the commit message.
+- **roadmap.md 143,453 → 75,326 (−47%).** 23 session-backlog sections removed (2026-07-10 → 2026-08-20),
+  all 100% closed rows duplicating `LOG.md`. `context-budget` GREEN and the ratchet auto-re-pinned
+  **229,178 → 167,461** — the saving is locked in, and the ceiling was never raised.
+- **Two things the verification caught that a blind prune would have destroyed:**
+  (1) **six live cross-references** in the feature tables point into 2026-07-05 / 2026-07-08 by
+  “Area N #M” — both sections kept for that reason alone;
+  (2) a **dangling ref my own checker missed** — “see the 2026-07-29 session backlog above” puts the
+  date BEFORE “session backlog”, and my regex only matched the date AFTER it. Same shape as les-065
+  (a rule matching one syntactic form of a class and reporting clean on the other). Found by re-grepping
+  both word orders; repointed to `LOG.md`.
+- **Corrected a wrong count of my own:** I reported “11 open rows in the 2026-07-05 backlog”. That script
+  never reset its section pointer on a non-backlog heading, so 2026-07-05 had silently absorbed every row
+  of the main feature tables below it. All 25 backlog sections carried ZERO open rows.
+
 **Decided:**
 - **A ceiling set ABOVE current is a permit, not a ratchet.** The three baselines that HELD
   (`style-baseline.json`, `rule0-baseline.txt`, `predictions-baseline.txt`) are pinned at what was measured;
