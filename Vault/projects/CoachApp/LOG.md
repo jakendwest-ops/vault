@@ -20,6 +20,21 @@ _Two of the three answers were **no**. Both nos survived measurement._
 - Kanban: **Stage 4 BRAND moved to a standalone session** (Jake’s call).
 
 **Bugs found + fixed:**
+- **ADDENDUM (post-save): the purity assertion Jake asked for, and the defect its red-before found.**
+  RULE 0 close on the poisoning incident above — the fix existed, the CHECK did not. `runSelfTest` now
+  asserts a `--self-test` run leaves `size-baseline.json` byte-identical, covering the 38-spec loop
+  itself and not just two targeted probes. **v1 of that assertion was itself wrong**: it snapshotted
+  AFTER the spec loop, so on a broken build it captured the already-poisoned value, restored to it,
+  and printed “State was restored” over a baseline still reading 120 — a false success claim inside the
+  assertion whose job is catching false success claims. Invisible to the green run by construction
+  (with the guard intact nothing writes, so early and late snapshots are identical). Fixed three ways:
+  snapshot before the first fixture, cover every fixture path, and VERIFY the restore rather than claim
+  it. Proven both directions on full 38-spec runs — intact: 38/38, purity clean, exit 0, baseline
+  unchanged; neutered: 3 leaks, restore VERIFIED, exit 1, baseline unchanged. `les-086`.
+- `--self-test` now exits 1 on a decorative check or a leak (was always 0 — it could decline to stamp
+  its own freshness marker and report success three lines apart). Deliberately differs from `--report`,
+  which is advisory and exits 0 by design; reasoning documented inline. Zero automated consumers.
+  Pushed `3ba8131` to claude-config.
 - **STATUS.md’s masthead claimed a cleanup that had not happened.** It said the `Previous: …` chain “was
   deleted 2026-08-23 after verifying each session had a `## <date>` entry”. 38,171 chars of it survived on ONE
   line, plus a second stale chain above it. `masthead-drift` cannot see this — it only compares
