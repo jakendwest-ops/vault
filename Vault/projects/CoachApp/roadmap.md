@@ -1,5 +1,5 @@
 # CoachApp Roadmap
-_Last updated: 2026-08-24._
+_Last updated: 2026-08-25._
 
 > Session narratives belong in `LOG.md`. This masthead carried a write-up of the 2026-08-14 session
 > until OS v3; that session has a `## 2026-08-14` entry in `LOG.md`, so it was removed rather than
@@ -37,6 +37,47 @@ be (its inline-style outlier status may be correct for a gym screen); and is the
 set token values against, or do they get neutral values now?
 
 ---
+
+## 🛠 Session backlog — 2026-08-25 — OS v3 finished: the top bug class can finally block a push
+
+**Shipped and pushed** — coachapp `d361f87`, claude-config `b0b029a`. Full suite **566 passed / 1
+skipped / 0 failed**; deploy verified live.
+
+1. ✅ **R1 — `checks.sh` rule 2 is now BLOCKING**, replaced by `scripts/check-query-scope.mjs`.
+   Measuring before flipping is the whole story: the `clients` sub-check was **vacuous** (it required
+   that no `clients` query anywhere carried `coach_id` within 5 lines — 40 do), and the other two were
+   single-LINE greps against a codebase that writes the anchor on the next line, flagging 4 correct
+   queries. Flipping them as written would have refused every push. New rule: 0 findings on the real
+   tree, **13/13 self-test cases**, catches an injected leak in a real module, and treats the
+   solo-safe `.or()` form as a first-class anchor so it cannot manufacture the solo bug.
+   Ledger: `bugs/2026-08-25-checks-sh-rule-2-clients-sub-check-was-vacuous.md`.
+2. ✅ **Rules 5a/5b blocking too.** 5a (UUIDs) was at zero — a pure ratchet. 5b (emails) had **3 real
+   violations**: the owner email pasted at three call sites in public source. Fixed the class first
+   (one `OWNER_EMAIL` + `_isOwnerAccount()` in app-core), then flipped. Both proven to fire on an
+   injected violation. Residual (value still shipped) → `bugs/2026-08-25-owner-email-is-still-in-public-client-side-source.md`.
+3. ✅ **R6 — guardrails RULE 6**: no new prediction may be appended while past-due ones are ungraded.
+   10 self-test cases including both escape doors; the 63 already past due are grandfathered
+   (`state/predictions-baseline.txt`) so the rule could not wall its owner on day one. A **live-path**
+   case earned its place — all 7 fixture cases passed while the real `git show` was failing, because
+   the Vault sits inside a repo rooted one level up. It would have been decorative in real use.
+4. ✅ **R4 — `os-lint closure-candidates`**: surfaces ageing ledger rows whose subject a spec already
+   names, so clause (b) stops being a door nobody uses. It never closes anything. First version
+   matched the *reported date* and returned 103 of 177 rows — noise; matching the slug returns 15.
+5. ✅ **R8 — `enforced_by` coverage 9 → 35 of 41** memory files.
+6. ✅ **Vault `projects/CoachApp/CLAUDE.md`** no longer instructs future sessions to run `graphify`
+   (no such tool, no such directory — verified). Deletion is still blocked by the permission
+   classifier, so the content was replaced rather than routed around. **Deleting it is Jake's call.**
+
+**Deliberately NOT done, and why:**
+- **The two backlogs themselves** — 22 stale bug rows, 63 ungraded predictions. The valve is closed;
+  the drain is not done. Grading predictions to clear a gate is the one thing the rule forbids.
+- **`feature-audit` / `mobile-check` triggers** — still prose. Three gates were added today and the
+  standing agreement was to stop adding checks; a bad check is worse than a missing one.
+- **The weekly full-file review is DUE** — marker reads 2026-08-17, and `os-lint` goes RED above 7 days.
+
+**Process note:** `multi-agent-review` ran **inline** (three angles + verifier by one agent), because
+this session forbids subagents. That is a weaker review than the pinned 3-agent form. Recorded, not
+hidden — the pinned prompt exists precisely to stop rigor drifting silently.
 
 ## 🛠 Session backlog — 2026-08-23 — design tokens shipped; 1,027 → 256 literals
 
@@ -350,8 +391,8 @@ lawful for a new data subject" (no). Do not conflate them.
 > picked it up** — so planning kept reading a weeks-long legal task that is really an afternoon of code.
 > **Nothing here is blocked on Jake writing a document.**
 
-**Status 2026-08-24: BUILT, NOT YET DEPLOYED.** The migration is applied and verified in Supabase;
-the code is committed and unpushed. `CRITICAL.md` classes this app as handling UK GDPR
+**Status 2026-08-25: SHIPPED AND LIVE** (`a6af110`, verified on the Pages URL: core v18 carried the
+gate, `privacy-policy.html` returns 200). The migration is applied and verified in Supabase. `CRITICAL.md` classes this app as handling UK GDPR
 **special-category (health) data**, and a real outside beta tester was onboarded 2026-08-09 under the
 gap — live, not hypothetical.
 

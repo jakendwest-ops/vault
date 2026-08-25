@@ -601,3 +601,25 @@ _No data yet — not observed this session._
   was a decision, not a discussion.
 - Consistent with what is banked: brevity of assent never indicates low stakes here.
 
+
+### Observed signals — 2026-08-25 (CoachApp, OS v3 completion; casual/AI register)
+
+- **He now opens sessions by AUDITING the last one, not by requesting new work.** Third consecutive
+  instance: 2026-08-22 *"Claude you have gotten numerous things wrong over the last 24 hours"*,
+  2026-08-24 *"why are things failing, literally hours after you have done a SWOT"*, and today
+  *"following on from yesterday, is version 3 now ready (for rituals and OS). Are you satisfied that
+  they have been efficiently cleaned up, optimised, and there are no regressions"*. This is a stable
+  pattern, not a mood. **Open with the honest state of the previous session's claims, measured, before
+  proposing anything new** — and expect the answer to be checked.
+- **"Are you satisfied that…" is a demand for self-assessment against named criteria**, not a
+  yes/no. Today it carried three: efficiently cleaned up, optimised, no regressions. Answer each one
+  separately and say *no* where the answer is no — the honest "no, four recommendations were never
+  built" was accepted immediately and turned straight into "fix it". A hedged yes would have cost trust.
+- **"fix it"** — two words, no scope, no priorities. Consistent with the long-banked minimal-word
+  delegation pattern; it means the whole list just enumerated, not the first item. He does not re-scope
+  after a clear honest report; he authorises it wholesale.
+- **He does not soften a denial or a blocker.** Told that git writes were blocked by the permission
+  classifier, the reply was `push and then save` — no discussion, just authorisation. Report a block
+  plainly and once; do not editorialise about it.
+
+_No new public/formal register evidence this session — chat only._

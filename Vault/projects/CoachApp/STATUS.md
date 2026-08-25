@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-08-24._
+_Last updated: 2026-08-25._
 
 > **Session history lives in `LOG.md`, not here.** Until OS v3 this masthead carried a 710-line
 > `Previous: … Previous: …` chain going back to 2026-07-19 — every session of it already written up
@@ -12,7 +12,7 @@ _Last updated: 2026-08-24._
 
 ## Live state
 
-**App version:** app-core v=16 · app-dashboard v=13 · app-clients v=15 · app-programs v=45 · app-calendar-goals v=17 · app-workouts v=77 · app-runner v=75 · app-progress v=52 · starter-content v=5 · main.css v=10 — **all pushed and live as of 2026-08-23 (`857c5e1`).**
+**App version:** app-core v=19 · app-dashboard v=14 · app-clients v=16 · app-programs v=45 · app-calendar-goals v=17 · app-workouts v=77 · app-runner v=75 · app-progress v=54 · starter-content v=5 · main.css v=10 — **all pushed and live as of 2026-08-25 (`d361f87`), verified on the live Pages URL.**
 > **DESIGN TOKENS LANDED 2026-08-23.** `js/` style literals **1,027 → 256**. Every remaining
 > literal is a deliberate exclusion, not a miss: JS-string colours that reach Chart.js on a
 > canvas (where `var()` cannot resolve), values with no exactly-matching token, and attributes
@@ -229,6 +229,23 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 ---
 
 ## Continuity block
+
+### Measure a gate BEFORE giving it teeth — and `_isOwnerAccount` is not `_masterAccount` (2026-08-25)
+Two invariants from flipping `checks.sh` rule 2 to blocking.
+
+**1. Never flip a warn to a fail without first counting what it flags on a clean tree.** Rule 2's
+`clients` sub-check was VACUOUS — it required that no `clients` query anywhere carried `coach_id`
+within 5 lines, and 40 do, so it could never fire. The other two were single-LINE greps against a
+codebase that writes the anchor on the NEXT line; they flagged 4 correct queries. Flipping them as
+written would have refused every push. The rule is now `scripts/check-query-scope.mjs`, and
+`checks.sh` runs its self-test FIRST and fails on that — a checker nothing verifies is the decorative
+shape being replaced. **`.or('coach_id.eq.<uid>,user_id.eq.<uid>')` is a first-class anchor there, not
+a fallback**; a rule accepting only `.eq('coach_id')` would manufacture the solo bug it exists to stop.
+
+**2. `_isOwnerAccount()` and `window._masterAccount` are DIFFERENT predicates.** The first means "is
+the owner"; the second means only "holds both a coached and a solo `clients` row". They look
+interchangeable. Collapsing them would hand impersonation (`sudoAsClient`) to any dual-row user.
+`_isOwnerAccount` is a UI-affordance gate only — RLS is the boundary, same category as `is_personal`.
 
 ### The consent gate's read MUST stay a separate, fail-open query (2026-08-24)
 `_loadConsentState()` in `js/app-core.js` fetches `consented_at` / `consent_policy_version` on its own

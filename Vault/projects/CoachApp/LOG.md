@@ -1,3 +1,115 @@
+## 2026-08-25 — OS v3 finished: the top bug class can finally block a push (core v19 / dashboard v14 / clients v16 / progress v54)
+
+**Done:**
+- **R1 — `checks.sh` rule 2 is BLOCKING**, via the new `scripts/check-query-scope.mjs`. It covers this
+  project's most-shipped bug class (four solo/`coach_id` scoping bugs) and had been warn-only for months.
+- **Rules 5a (UUIDs) and 5b (emails) also blocking.** 5a was measured at zero — a pure ratchet. 5b had 3
+  real violations, fixed first (one `OWNER_EMAIL` + `_isOwnerAccount()` in app-core replacing the literal
+  at three call sites), then flipped. Both proven to fire on an injected violation.
+- **R6 — guardrails RULE 6**: a new prediction cannot be appended while past-due ones sit ungraded.
+  10 self-test cases. The 63 already past due are grandfathered via `state/predictions-baseline.txt`.
+- **R4 — `os-lint closure-candidates`**: surfaces ageing ledger rows whose subject a spec already names,
+  so clause (b) of the closure rule stops being a door nobody uses. It surfaces; it never closes.
+- **R8 — `enforced_by` 9 → 35 of 41** memory files. Every feedback memory names an enforcer or an
+  explicit "none — why not". The 6 remaining are `project_`/`reference_` state files.
+- **Vault `projects/CoachApp/CLAUDE.md`** no longer tells future sessions to run `graphify`.
+- Pushed: coachapp `a6af110..d361f87`, claude-config `ac7b21b..b0b029a`. Deploy verified live.
+
+**Bugs found + fixed:**
+- **`checks.sh` rule 2's `clients` sub-check was VACUOUS** — it required that NO `clients` query anywhere
+  in `js/` carried `coach_id` within 5 lines, and **40 do**, so the condition could never be satisfied.
+  It had never been able to fire and never would. The other two sub-checks were single-LINE greps against
+  a codebase that writes the anchor on the NEXT line, so they flagged **4 correct queries**. Flipping all
+  three to `fail` as the plan said would have blocked every push by refusing correct code — on the rule
+  most in need of teeth, and therefore the one most likely to then be switched off.
+  Root cause is the same as rules 9a and 9d: a rule whose subject spans more than one line cannot live in
+  a line-oriented grep. Third instance of this exact class in `checks.sh`.
+- **Two defects in my own replacement checker**, both found by RUNNING it rather than reading it:
+  inserts anchor in the payload not in a filter (11 false findings), and chains resume after comment
+  lines (1 more). Neither was visible by inspection.
+- **`closure-candidates` v1 matched the reported DATE** and returned 103 of 177 rows at ~7 specs each —
+  a noise generator, because 79 of 83 specs carry some 2026 date. Matching the slug returns 15.
+  Caught by running it against the real corpus; a fixture would have passed either way.
+- **RULE 6's real `git show` path was wrong** — the Vault sits at `Claude/Vault/` inside a repo rooted at
+  `Claude/`, so the repo-relative path is not the cwd-relative one. All seven fixture cases passed while
+  the rule could never have fired in actual use. Fixed with the `./` form plus a live-path test case.
+- **Three throwaway probe files** (`zz-label-probe2.cjs`, `tests/zz-probe-popstate.spec.js`,
+  `tests/zz-unipill.spec.js`) were still in the tree from previous sessions. `guardrails` RULE 1c caught
+  one at commit time; the other two were found by grepping for siblings. All three deleted.
+
+**Decided:**
+- **Measure a gate before giving it teeth.** Counting what a rule flags on a clean tree is now the
+  precondition for flipping any warn to a fail. This is the invariant added to the continuity block.
+- **The `.or('coach_id.eq.uid,user_id.eq.uid')` form is a first-class anchor**, never a fallback. A
+  scoping rule that accepted only `.eq('coach_id')` would push new code straight into the solo bug it
+  exists to prevent — the gate would manufacture its own bug class.
+- **`_isOwnerAccount()` is NOT `window._masterAccount`.** The second means only "holds both a coached and
+  a solo `clients` row". Collapsing them would hand impersonation to any dual-row user. Not done.
+- **Grandfather rather than wall.** RULE 6 would have blocked the very next `/save`, so the existing 63
+  are baselined — the same ratchet `rule-0` already uses. The valve closes; the drain is still owed.
+- **Stopped at three new gates.** `feature-audit` and `mobile-check` triggers were left as prose
+  deliberately: a bad check is more dangerous than a missing one, and v3's own SWOT named this as where
+  its risk lives.
+
+**UNVERIFIED (banked):**
+- The owner email is still shipped in `app-core.js` (one sanctioned constant, down from four copies).
+  Ledger row added; real remediation is a `profiles` flag, not a lint fix.
+
+**Why:**
+- Yesterday's answer to "is v3 ready" was **no** — four of the plan's recommendations were never built and
+  `enforced_by` coverage had gone *down* (the corpus grew faster than the pointers). This session built
+  them. The two REDs remain because they are backlogs, not machinery: the valves are now closed so they
+  cannot regrow while being drained.
+- **Process note, recorded not hidden:** `multi-agent-review` ran INLINE (three angles + verifier by one
+  agent) because this session forbids subagents. That is a weaker review than the pinned 3-agent form,
+  which exists precisely to stop rigor drifting silently.
+
+---
+
+## 2026-08-24 — GDPR consent gate: policy linked, activation gated, all three routes covered (core v18 / progress v53)
+
+_Written 2026-08-25 — that session ended without a `/save`, so it had no LOG entry at all. The same gap
+the save ritual's Step 0 checklist exists to make visible._
+
+**Done:**
+- **Linked `privacy-policy.html`**, live in the repo since 2026-06-29 and referenced from NOWHERE.
+  `grep -rn "privacy-policy" js/ index.html` went **0 → 8**.
+- **Consent checkbox on `#invite-form`** with a JS guard that refuses even when the `required` attribute
+  is stripped, and a write that asserts on the returned row.
+- **A read-side consent gate in `showApp()`** covering all three routes to an active account plus
+  re-consent after a policy edit — `PRIVACY_POLICY_VERSION` was documented but nothing implemented it.
+- **Migration applied** (`scripts/add-consent-2026-08-24.sql`): two nullable columns on `profiles`, plus
+  a stamp for the 3 E2E fixture accounts. Real accounts deliberately NOT stamped.
+- **OS v3 part 2**: `sql-safety` gained a mechanical trigger (guardrails RULE 5), rituals gained a size
+  budget, and `claim-check` learned that quoted text is data.
+- Pushed `a6af110`; `tests/consent-gate-2026-08-24.spec.js` (10 tests).
+
+**Bugs found + fixed:**
+- **The roadmap's #1 blocker was mis-scoped by an order of magnitude.** It claimed no privacy policy
+  existed and made writing one "the long pole, Jake's to write". The policy had been live and unlinked
+  for ~8 weeks. The correction sat in the ledger row's `status_detail` since 2026-08-19 and the roadmap
+  never picked it up.
+- **Two live bypasses of the consent gate**, both found by review, not testing: browser Back (via
+  `navigate()`'s blanket overlay clear) and the "View as" switcher (`switchView()` calls `applyRoleUI()`
+  before `navigate()`).
+- **Two decorative tests I wrote** — the Back-button test pushed only one history entry so `goBack()`
+  landed on a stateless one, and a neuter targeted `navigate()`'s guard but not the popstate block. Both
+  found by neutering and watching them still pass.
+- **A count written against an UPDATE**, which returns no rows on success. Cost three diagnostic
+  round-trips on a non-problem; produced `sql-safety` rule 9 (verify a write with a follow-up SELECT).
+- **Two of five planned skill deletions were wrong** — `run-coachapp` and `context-mode-cache-heal` are
+  live. Counting LOG mentions measures what I narrate; machinery invoked by machinery never appears.
+  Saved as `feedback-log-silence-is-not-disuse`.
+
+**Decided:**
+- **The consent read must stay a separate, fail-open query.** Folding the columns into `loadUserInfo`'s
+  `.single()` select would error pre-migration → null `currentProfile` → total lockout for every user
+  including the owner. A gate whose failure mode is total lockout is worse than the gap it closes.
+- **Never back-fill consent for a real account.** A consent never taken is not repaired by stamping a
+  date on it. E2E fixtures are exempt — they are not data subjects.
+
+---
+
 ## 2026-08-23 — Design tokens: 1,027 → 256 style literals, zero visual change (core v16 / dashboard v13 / clients v15 / programs v45 / calendar-goals v17 / workouts v77 / runner v75 / progress v52 / css v10)
 
 **Done:**
