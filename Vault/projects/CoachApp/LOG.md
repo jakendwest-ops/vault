@@ -1,3 +1,75 @@
+## 2026-08-25 (session 2) — the OS audit answered honestly; the ratchet class closed; NOTHING PUSHED (core v20 local only)
+
+_Jake asked whether the OS/MD files, the two rituals, and the SWOT were in a state I was satisfied with._
+_Two of the three answers were **no**. Both nos survived measurement._
+
+**Done:**
+- **`/deploy-check` in full — first run since 2026-07-12.** 9 items: cache bust ✅, Playwright **565 passed /
+  1 skipped / 0 failed / 0 flaky (33.5 min)**, RLS probes A/B/C **plus the SELF-TEST** ✅, both storage probes ✅,
+  Pages ✅. The one skip is a data-conditional solo test, NOT the known blind spot where 16 solo tests skip en
+  masse. Three items are Jake’s (redirect URLs, `delete_current_user`, live incognito smoke).
+- **STATUS.md 134,422 → 89,919 bytes (−33%)**; longest line 38,171 → 1,360. Verified safe BEFORE cutting:
+  40 SHAs referenced, 34 verbatim in LOG.md, the other 6 intermediate commits from 2026-07-12 (a date carrying
+  TWO full LOG entries covering both workstreams). No session lost.
+- **`context-budget` + `ritual-budget` now derive from a measured baseline** (`measuredCeiling()`,
+  `state/size-baseline.json`) that ratchets DOWN and never up. Ceilings 300,000 → 233,762 and 44,000 → 40,915.
+- **`checks.sh` rule 9e — consent policy version** (`scripts/check-policy-version.mjs` + 8-case self-test
+  including a live-plumbing case). app-core v19 → v20 (comment naming the enforcer).
+- **Prediction triage: 63 → 54 overdue.** 4 graded on evidence, 5 graded `expired`.
+  `prediction-triage-2026-08-25.md` groups the remaining 54 by what settles them.
+- Kanban: **Stage 4 BRAND moved to a standalone session** (Jake’s call).
+
+**Bugs found + fixed:**
+- **STATUS.md’s masthead claimed a cleanup that had not happened.** It said the `Previous: …` chain “was
+  deleted 2026-08-23 after verifying each session had a `## <date>` entry”. 38,171 chars of it survived on ONE
+  line, plus a second stale chain above it. `masthead-drift` cannot see this — it only compares
+  `_Last updated:` against body dates.
+- **Three conflicting last-push claims in one file** — `d361f87` (correct), `d337418` (11d stale),
+  `1a5cb72` (16d stale). One-fact-many-fields, three fields deep.
+- **`PRIVACY_POLICY_VERSION` coupling was unenforced** and the failure is silent: `_needsConsent()`
+  re-prompts only on a version mismatch, so a policy edit without a bump leaves every user consented to a text
+  they never saw, with no error and no symptom. Now blocking via rule 9e.
+- **🔴 MY OWN CHANGE HAD THE DEFECT IT EXISTS TO CATCH.** `--self-test` points `OSLINT_STATUS`/`OSLINT_ROADMAP`
+  at 120-byte fixtures but does NOT override `OSLINT_SIZE_BASELINE`. Auto-tighten saw 120 < 229,178, called it
+  an improvement, and **wrote 120 into the real state file** — the next real run reported “ceiling 122” against
+  a 235,631-char corpus. The self-test poisoned the thing it was testing. Fixed: `measuredCeiling()` takes the
+  input-override env names and refuses to persist when any is set. Proven — a fixture run now reports
+  “baseline NOT written” and the file is unchanged.
+- Dropped a kanban line (“Runner Phase 2”) by replacing instead of inserting; caught by the column-count check.
+- **Corrected a count I stated wrong mid-session:** `fixed-awaiting-jake` is **87**, not the 60 I first said
+  (verified two ways; distribution 87/54 confirmed/29 open/12 deferred/3 closed = 185).
+
+**UNVERIFIED (banked):**
+- **`context-budget` is RED** at 235,631 vs ceiling 233,762 — and it is RIGHT. It points at **31**
+  `Session backlog` sections in roadmap.md, the same history-duplication class just removed from STATUS.md.
+  Ledger row filed. **Deliberately not resolved by raising the ceiling** — that is the failure mode the check’s
+  own message warns about.
+- Nothing pushed. `multi-agent-review` could not run in its pinned 3-agent form (this session is configured
+  without subagents) — recorded, not silently substituted.
+
+**Decided:**
+- **A ceiling set ABOVE current is a permit, not a ratchet.** The three baselines that HELD
+  (`style-baseline.json`, `rule0-baseline.txt`, `predictions-baseline.txt`) are pinned at what was measured;
+  the two that did not (`RITUAL_BUDGET`, `CONTEXT_BUDGET`) were round numbers with slack. Measure, then set the
+  threshold AT it.
+- **A cleanup is done when the bytes are gone.** A sentence claiming it was done is not evidence.
+- **Grade `expired`, never guess.** 5 predictions were unsettleable by construction (void premise, or claiming
+  a PREVENTED event that nothing records). Forcing true/false onto those corrupts the calibration record, which
+  is the only reason to keep predictions.
+- **A prediction should name the evidence that will settle it.** All 63 had `verify_by`; none had
+  `verify_how`. That is the whole cause of the backlog. Proposed for RULE 6, **not built** — a new gate wants
+  measuring first.
+- **Dropped deliberately:** `dbq()` adoption (26 of 313; the audit traced the cause to app-core not using its
+  own wrapper — a rewrite dressed as a lint rule), and a general “two fields, one fact” detector (no unambiguous
+  source of truth).
+
+**Why:**
+- The honest answers to Jake’s three questions were: OS/MD files **qualified no** (STATUS.md was 28% content it
+  claimed to have deleted); rituals **no** (hello-claude −2 lines, save **+11** — 9 lines BIGGER after the
+  rebuild meant to trim them); SWOT **yes, with a confirmed caveat** (its own “alarm fatigue” threat is
+  materialising — the prediction backlog went 110 → 113 while its valve was being closed).
+
+---
 ## 2026-08-25 — OS v3 finished: the top bug class can finally block a push (core v19 / dashboard v14 / clients v16 / progress v54)
 
 **Done:**

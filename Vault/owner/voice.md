@@ -623,3 +623,27 @@ _No data yet — not observed this session._
   plainly and once; do not editorialise about it.
 
 _No new public/formal register evidence this session — chat only._
+
+<!-- register: casual/AI — chat-to-Vision only. Do NOT leak into the public/formal slice. -->
+### Observed signals — 2026-08-25 (CoachApp, session 2: OS audit)
+
+- **The audit-first opening is now four consecutive sessions.** Today: *"please verify that you are
+  satisfied with the most recent versions of: your OS and MD files / The hello-claude and save rituals /
+  the swot"* — note he **enumerated the artefacts himself**, as a numbered scope. This is a firmer version
+  of the pattern already banked: he is no longer asking "is it good", he is naming exactly what to audit
+  and expecting a verdict per item. Answer each named item separately; a merged answer reads as evasion.
+- **"advise on the grading" means give a position, not options.** Consistent with the banked "he asks for
+  a position when given menus", but note the verb: *advise*. When he uses it, the deliverable is a
+  recommendation with reasoning — a menu is a failure to answer.
+- **He packs multiple distinct verbs into one short line.** *"include the privacy, add branding as a
+  standalone session to the kanban, and advise on the grading"* — build / organise / advise, three
+  different kinds of work, one comma-separated sentence, no priorities given. Same minimal-word
+  delegation already banked for "fix it": execute all of it, and infer the order yourself.
+- **Approval stays maximally terse even for a plan with a rejected item.** *"go ahead with proposed plan"*
+  — he had read a plan that explicitly said what I would DROP (dbq adoption, self-test speedup) and
+  approved it wholesale without commenting on the drops. Consistent with: he reads the recommendation,
+  weighs it, issues the decision, and does not re-litigate what you declined.
+- **"run the triage"** — three words to authorise an hour of work he had just been offered as optional.
+  Reinforces that offering a scoped, costed choice gets a fast yes; offering an unscoped one does not.
+
+_No new public/formal register evidence this session — chat only._

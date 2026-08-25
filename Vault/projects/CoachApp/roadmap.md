@@ -38,6 +38,33 @@ set token values against, or do they get neutral values now?
 
 ---
 
+## 🛠 Session backlog — 2026-08-25 (session 2) — OS audit answered honestly; the ratchet class closed; **nothing pushed**
+
+Jake asked whether the OS/MD files, the two rituals, and the SWOT were in a state I was satisfied with.
+Two of the three answers were **no**, and the nos held up under measurement.
+
+| # | Item | Status | Detail |
+|---|---|---|---|
+| 1 | **`/deploy-check` run in full** — first since 2026-07-12 | ✅ Done | 9 items. Cache bust ✅, Playwright **565/1 skipped/0 failed**, RLS probes A/B/C **+ the SELF-TEST** ✅, storage ✅, Pages ✅. 3 items are Jake’s (redirect URLs, `delete_current_user`, live incognito smoke). Clears the `gates-fired` RED once logged. |
+| 2 | **The ratchet class — one mechanism, 4 sites** | ✅ Done | A ceiling set ABOVE current is a permit, not a ratchet. See STATUS continuity block. |
+| 2a | STATUS.md archive block deleted | ✅ Done | **134,422 → 89,919 bytes (−33%)**; longest line 38,171 → 1,360. Verified safe first: 40 SHAs referenced, 34 verbatim in LOG.md, the other 6 intermediate commits from 2026-07-12 (a date with TWO full LOG entries). |
+| 2b | `context-budget`/`ritual-budget` now measured | ✅ Done | `measuredCeiling()` + `state/size-baseline.json`; ratchets DOWN, refuses growth past 2%. Ceilings 300,000 → 233,762 and 44,000 → 40,915. Proven 3 ways (refuses, auto-tightens, old fixture still bites). |
+| 2c/2d | STATUS.md self-contradictions | ✅ Done | Three conflicting last-push claims (`d361f87` correct, `d337418` 11d stale, `1a5cb72` 16d stale) → one line. Stale `CSS version: v=9` removed. Masthead no longer claims a deletion that had not happened. |
+| 3 | **`checks.sh` rule 9e — consent policy version** | ✅ Done, **local only** | `scripts/check-policy-version.mjs` + 8-case self-test. app-core v19→v20 (comment naming the enforcer). See GDPR step 7 above. |
+| 4 | **Stage 4 BRAND → its own session** | 🗓 Planned | Jake’s call. Moved off the kanban shortlist into Up Next as a standalone session; blocked on his direction (typeface + colour, or explicit “neutral for now”). |
+| 5 | **Prediction triage** | ✅ Done | 63 → **54** overdue. 4 graded on evidence, 5 graded `expired` (void premise / no capture mechanism). `prediction-triage-2026-08-25.md` groups the 54 by what settles them. |
+| 6 | `os-lint --self-test` takes ~10 min | 🐛 Bug (open) | 38 specs × 15.8s. Honest (38/38 bite, 0 decorative, verified twice today) but likely to be skipped. Ledger row filed; deliberately NOT fixed — batching the specs changes the isolation that makes it trustworthy. |
+| 7 | `/deploy-check` 5c names a removed signup form | 🐛 Bug (open) | Self-signup removed 2026-07-24; the checkbox lives on `#invite-form`. Passed by correct reading, not correct text. |
+
+**Not done, and named:** `multi-agent-review` could not run in its pinned 3-agent form — this session is
+configured without subagents. Recorded rather than silently substituted. `/code-review ultra` is Jake’s to
+trigger. **No app behaviour changed this session** (the only `js/` edit is a comment), so the review debt
+is small — but it is debt, and the push is gated on it.
+
+**Dropped deliberately:** `dbq()` adoption (26 of 313 calls; the audit traced the cause to app-core not
+using its own wrapper — a rewrite dressed as a lint rule) and a general “two fields, one fact” detector
+(no unambiguous source of truth; a bad check is worse than none).
+
 ## 🛠 Session backlog — 2026-08-25 — OS v3 finished: the top bug class can finally block a push
 
 **Shipped and pushed** — coachapp `d361f87`, claude-config `b0b029a`. Full suite **566 passed / 1
@@ -419,6 +446,14 @@ Already in place beforehand: **the policy page itself**, the Settings "Data & pr
    overlay clear; the "View as" switcher) were found by the same review and closed.
 6. 🗓 **Verify `delete_current_user` exists in the DB** — the only remaining item. The call site is
    there but cannot be tested without destroying a real account. SQL in the ledger file. **Needs Jake.**
+7. ✅ **The version coupling is now ENFORCED — added 2026-08-25.** Steps 3-5 all hinge on
+   `PRIVACY_POLICY_VERSION` matching the date printed in `privacy-policy.html`: `_needsConsent()`
+   re-prompts ONLY on a mismatch. That invariant lived in a source COMMENT, so editing the policy text
+   without bumping the constant would have left every user consented to a document they never saw,
+   with no error and no user-visible symptom — the consent gate would simply stop firing.
+   `checks.sh` rule 9e (`scripts/check-policy-version.mjs`, 8-case self-test incl. a live-plumbing
+   case) now BLOCKS such a push. Measured first: zero violations on a clean tree, so it is a pure
+   ratchet. **Local only as of 2026-08-25 — not yet pushed.**
 
 **Migration applied 2026-08-24** (`scripts/add-consent-2026-08-24.sql`): two nullable columns on
 `profiles`, plus a stamp for the 3 E2E fixture accounts so the gate does not block the suite. Verified
