@@ -1,7 +1,8 @@
 ---
 id: 2026-08-14-session-edits-are-not-propagated-to-duplicated-sessions
-status: open
+status: fixed-awaiting-jake
 priority: high
+status_detail: "All 4 causes resolved. Clause (b) satisfied 2026-08-26 by an END-TO-END red-green test on the real path (real generator + real modal + real clicks). Jake’s live confirmation is now corroboration, not the only evidence."
 reported: 2026-08-14
 ---
 
@@ -63,5 +64,59 @@ slots they already occupy — so a collision is impossible by construction. 7 re
 **Still open: causes 3 and 4.** Periodization clones defeating the name matcher, and editing from Library
 dropping programme context. Neither re-checked. Row stays `open`.
 
+**CAUSES 3 AND 4 RE-CHECKED 2026-08-26 — both resolved. Row stays `open` for Jake only.**
+
+- **Cause 3 is FIXED.** `_checkSiblingPropagation` matches on `family_id`, not name — verified in the
+  QUERY, not just the comment claiming it: it selects `workout_templates(id, name, family_id)` and
+  filters `r.workout_templates?.family_id === fam`. `generatePhasePeriodization` carries
+  `family_id: tmpl.family_id ?? null` onto every week clone (`js/app-programs.js:1777`), so the
+  `— W2` rename can no longer break the link. Covered by `session-identity-2026-08-14.spec.js`:
+  *“generated week clones inherit the base session’s family_id”*, which asserts the clones ARE renamed
+  so identity provably cannot be coming from the name.
+
+- **Cause 4 was a FALSE PREMISE.** The Library list is filtered
+  `.is(‘client_id’,null).is(‘program_id’,null).is(‘generated_from_phase_id’,null)`
+  (`js/app-workouts.js:826`) and its own empty state reads *“No standalone templates”*. It shows only
+  templates that belong to NO programme, so there are no programme siblings to offer. Passing no ctx at
+  `:837` is correct behaviour, not a dropped context. Jake’s scope decision (“same programme only”) makes
+  the empty set the right answer here.
+
+- **All five change ops are wired AND handled:** `add`/`delete`/`update` (`js/app-workouts.js:2255-2263`),
+  `rename` (`:2603`), `reorder` (`:2604`).
+
+- **Every change shape named in the closure condition has a test, and all are GREEN today**
+  (34 passed, 2.7m, 2026-08-26): exercise edit — `programs.spec.js:594` + `:686`; rename —
+  `session-identity-2026-08-14.spec.js:52`; reorder — `reorder-propagation-2026-08-19.spec.js` (7).
+
+**TESTED END TO END 2026-08-26 — Jake: “you need to test this”. He was right.**
+
+I had verified the code and the two existing tests, then handed the actual verification to him. That was
+wrong twice over. **The two existing tests each cover only HALF of his scenario, and nothing joined them:**
+
+- `generated week clones inherit the base session’s family_id` runs the REAL generator — but never renames.
+- `renaming a session offers to rename its copies` renames — but **hand-sets `family_id` on its fixture**
+  and calls `saveEditTemplate()` against **stubbed DOM** (`mk(‘et-name’)`, `mk(‘edit-template-modal’)`).
+
+So “real generator produces the clones, THEN renaming the base offers the prompt” — literally what Jake
+does — was never asserted. Two green halves are not a green whole; that is the “adjacent flow” the closure
+rule explicitly refuses as evidence, and I was about to offer it as evidence.
+
+**New test:** `session-identity-2026-08-14.spec.js` → *“END TO END: real generated weeks, then a real
+rename click, offers the real prompt”*. No stubs — real `generatePhasePeriodization`, real `openTemplate`
+(the way `app-programs.js:2150` enters the editor, which is what sets `_templateCtx`), real
+`showEditTemplateModal` DOM, real Playwright clicks on the real Save and Apply buttons.
+
+**RED→GREEN, both directions run:**
+- GREEN as shipped: passes in 15.1s.
+- RED with `family_id: tmpl.family_id ?? null` neutered at the clone site: **fails on Jake’s exact
+  symptom** — `#propagate-modal` never appears (15s timeout), exit 1. Restore verified byte-identical.
+- The neuter matched **2 sites** (`app-programs.js:470` client clone, `:1777` periodization week), so the
+  identity is carried at both clone paths, not one.
+- Full set green afterwards: **35 passed** (session-identity + reorder-propagation + programs).
+
+**Status → `fixed-awaiting-jake`.** Clause (b) is now genuinely satisfied for the scenario, so Jake’s live
+check is corroboration rather than the only evidence. Still not `confirmed`: the row’s own closure
+condition names his live pass as well, and relaxing a condition I wrote because I met the easier half of
+it is precisely the goalpost-move the rule exists to stop.
 **Closes when:** Jake renames a session in a periodized phase and is offered — and takes — the propagation
 prompt, plus a red→green test per change shape (rename, reorder, exercise edit).
