@@ -647,3 +647,27 @@ _No new public/formal register evidence this session — chat only._
   Reinforces that offering a scoped, costed choice gets a fast yes; offering an unscoped one does not.
 
 _No new public/formal register evidence this session — chat only._
+
+<!-- register: casual/AI — chat-to-Vision only. Do NOT leak into the public/formal slice. -->
+### Observed signals — 2026-08-26/27 (CoachApp, three-picks session)
+
+- **"you need to test this" — four words, and the most valuable correction of the session.** I had
+  verified code + existing tests and handed him the live check. He did not argue the reasoning; he
+  named the deliverable. Signal: when he pushes back on a *handoff*, he is not asking for reassurance
+  that the code is right — he is saying the verification is my job. Do not re-explain; go test it.
+- **He offers a hypothesis he has just learned and explicitly does not insist on it.** *"Is this because
+  you need to refactor the codebase and database... I learned about database boyce codd normal form
+  today"* — consistent with the banked "offers a hypothesis without insisting". Testing it and
+  reporting it PARTLY right (right pattern, wrong remedy) was accepted immediately and turned into
+  scoped work. Agreeing with it unexamined would have been the failure, and so would dismissing it.
+- **He asks definitional questions mid-build without stopping the build** — *"whats the difference
+  between migration and refactoring"*. Answer it properly with examples from his own repo, then carry
+  on; he is not changing subject, he is calibrating the decision he is about to make.
+- **"fix" / "approved" / "push" / "start 3" / "ok"** — one word or two, throughout. Consistent with the
+  long-banked minimal-word delegation. Note "ok" appeared several times as pure acknowledgement while
+  a suite ran: it means "continue", not "I have reviewed that".
+- **"continue or advise where we left off"** — he opens a resumed session by asking for orientation
+  rather than issuing work. Give the honest state first (including anything owed, like a missed save),
+  then a ranked recommendation. Fourth-plus consecutive session opening with an audit-shaped question.
+
+_No new public/formal register evidence — chat only._

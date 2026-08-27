@@ -123,3 +123,26 @@ and failures must be CLASSIFIED (login-timeout vs product assertion), never just
 
 Practical consequence until this is fixed: prefer `checks.sh` (57 tests) as the trustworthy gate late in
 a session, and treat a full-suite flake count as a measure of the session, not of the code.
+
+## MEASURED 2026-08-26 — THREE files, and one proven non-deterministic
+
+Four full-suite runs in one evening, same machine:
+
+| run | code | progress-trend B4 | other |
+|---|---|---|---|
+| 1 | weight fix | **FAILED** | — |
+| 2 | **identical to run 1** | **PASSED** | — |
+| 3 | + Phase 1 | **FAILED** | ledger-fixes-2026-08-02 flaky (passed on retry) |
+| 4 | + review fixes | PASSED | solo-account:142 flaky (passed on retry) |
+
+**Runs 1 and 2 were byte-identical code with different outcomes** — non-determinism, not a regression.
+The row title says “two unrelated files”; it is now **three**: `progress-trend.spec.js:5` (B4),
+`ledger-fixes-2026-08-02.spec.js:6`, `solo-account.spec.js:142`.
+
+Each was checked against the session’s own new fixtures before being called flaky — e.g.
+`solo-account:142` asserts on the literal names `[E2E] PT-Only Lift` / `[E2E] Personal-Only Lift`,
+which the new timestamped tags cannot collide with. All three use short visibility timeouts.
+
+A plausible contributor is filed separately:
+[[2026-08-26-e2e-specs-leave-client-rows-in-the-live-database]] — stranded fixture rows accumulating
+on the real coach account.

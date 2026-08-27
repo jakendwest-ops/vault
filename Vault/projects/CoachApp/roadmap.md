@@ -1,5 +1,5 @@
 # CoachApp Roadmap
-_Last updated: 2026-08-25._
+_Last updated: 2026-08-27._
 
 > Session narratives belong in `LOG.md`. This masthead carried a write-up of the 2026-08-14 session
 > until OS v3; that session has a `## 2026-08-14` entry in `LOG.md`, so it was removed rather than
@@ -39,6 +39,12 @@ set token values against, or do they get neutral values now?
 ---
 
 > **🗄 23 session-backlog sections (2026-07-10 → 2026-08-20) were REMOVED on 2026-08-25.**
+>
+> **STANDING RULE from 2026-08-27: keep the 3 most recent dates, plus 2026-07-05 and
+> 2026-07-08** (six live cross-references in the feature tables point into those two by “Area N #M”).
+> Prune the rest as part of each `/save`. Measured: one save adds ~4.5k here, and `context-budget`’s
+> 2% tolerance is ~3.4k — so WITHOUT this rule the check goes red every single save, which is how a
+> useful gate gets switched off. Pruning the oldest at the same time keeps the file flat instead.
 > They were 68,027 chars — **47% of this file** — and every one was 100% closed rows duplicating
 > `LOG.md`, which carries a `## <date>` entry for each. Verified before deletion: every pruned date
 > resolves to a LOG entry, zero pruned section held an open/planned row, and no surviving
@@ -50,6 +56,25 @@ set token values against, or do they get neutral values now?
 >
 > **This file is a ROADMAP.** Session history belongs in `LOG.md`. `os-lint`’s `context-budget` now
 > ratchets down on what is left, so this saving cannot quietly regrow the way the last two did.
+
+## 🛠 Session backlog — 2026-08-26 — three of Jake’s picks: one already fixed, two real bugs shipped
+
+| # | Item | Status | Detail |
+|---|---|---|---|
+| 1 | **Propagation to duplicated sessions** (2026-08-14, high, 12d open) | ✅ Not a bug — already fixed | Causes 3 and 4 re-checked: cause 3 fixed via `family_id`; **cause 4 was a FALSE PREMISE** (the Library lists only templates in NO programme, so there are no siblings to offer). Jake pushed back on being handed the verification — rightly: the two existing tests each covered HALF the scenario and nothing joined them. New end-to-end test (`a4b8739`) drives the real generator, real modal, real clicks. Row → `fixed-awaiting-jake`. |
+| 2 | **Programs builder slowdown** (2026-08-07, high) | 🗓 Blocked on Jake | One question outstanding: was the cardio edit that did not save on the **programme slot preview** or the **template editor**? The row bundles two symptoms; guessing cost two wasted rounds on a similar row (les-069). |
+| 3 | **1RM 0.5kg shift** (2026-07-09, high, 48d) | 🐛 Still open — two OTHER bugs found and fixed | Live repro done as the row demanded. Both prior investigations traced the wrong writer (`save1RM`; there are five). Found + fixed a real lb display round-trip corruption (`d320220`) — but it is bounded at ~0.023 kg and **cannot** produce 199.5, so the row stays open. Only `step="0.5"` + a deliberate keypress yields exactly 0.5. |
+| 4 | **Phase 1 of the normalization work** | ✅ Done `52923dd` | Every `client_1rms` writer persists `exercise_id`. THREE offenders, not the two the ledger row claimed. Pure refactor — no migration. |
+| 5 | Weight round-trip class | ✅ Done `d320220` | 7 sites, one shared helper. Enumerated as 5; my own class guard caught the 2 I missed. |
+| 6 | E2E specs strand `[E2E]` rows on the live coach account | 🐛 Bug (open) | 14 client rows + 12 1RM rows. Cleanup EXISTS and outnumbers creation (23 deletes vs 16 creates) — so it is not running, not missing. |
+| 7 | Test flakiness | 🐛 Bug (open, worse than filed) | Now **three** files, not two. Runs 1 and 2 were byte-identical code with different outcomes. |
+
+**Decided:** the `exercise_name`/`exercise_id` pair is **not** a BCNF violation — exercises can be
+deleted, so the name is a historical snapshot. Phase 1 (write the id) is a pure refactor and shipped;
+the migration half (drop the name) is **explicitly not being done** and would destroy data.
+
+**Blocked on Jake:** one read-only SQL query would decide whether a backfill is even possible — how
+many `client_1rms` rows have a null `exercise_id` AND a name matching no `exercises` row.
 
 ## 🛠 Session backlog — 2026-08-25 (session 2) — OS audit answered honestly; the ratchet class closed; **nothing pushed**
 
@@ -146,73 +171,6 @@ error-rate-and-the-rule-corpus (high) · checks-sh-cache-bust-blindness (now CLO
   a deliberate, quantified conservatism. Relaxing it is a future enhancement needing its own proof.
 
 ---
-
-## 🛠 Session backlog — 2026-08-22 (part 2) — app-programs anchors shipped, then the OS itself was rebuilt
-
-**Shipped and pushed:**
-1. ✅ **`_resolveEditableTemplateId` ownership gate** (`8d7dbfb`, workouts v76) — it cloned a template
-   and repointed a slot BEFORE any caller verified ownership. Gate placed inside the helper; the row
-   claimed 4 call sites, a grep found **6**.
-2. ✅ **app-programs ownership anchors** (`c603184`, programs v44) — the largest ownership gap in the
-   repo. 45 writes across 23 functions, nearly all `.eq('id', X)`-only. Four helpers at 14 entry
-   points. The row said "~20+ call sites" and named four. Closes
-   `2026-08-12-app-programs-phase-writes-no-ownership-anchor`.
-3. ✅ **Three verification rules enforced by hooks** (`53156e7`) — review moved to **pre-commit** for
-   ownership/RLS work; piped-runner exit codes and unverified counts refused mechanically.
-4. ✅ **Falsy-zero ratchet + PostToolUse hook** (`7894837`).
-5. ✅ **Three missed cache-busts** (`42acf65`, clients v14 / calendar-goals v16 / progress v50) —
-   found by `/save` Step 2, not by any gate.
-
-**Process work (the bulk of the session, at Jake's direction):**
-- **RULE 0 adopted** — an incident produces a CHECK, or it produces nothing. Enforced by `os-lint`'s
-  new `rule-0` check, proven able to go RED.
-- Six prose rules converted to checks; two measured as genuinely NOT mechanisable and recorded as
-  `enforced_by: none` with the measurement.
-- Five memory families merged, one deleted (41 → 40).
-
-**New rows filed:**
-- 🐛 **`2026-08-22-checks-sh-cache-bust-rule-cannot-detect-a-missed-bump`** (high) — rule 3 asserts a
-  `?v=` EXISTS, never that a CHANGED module's went up. Three ownership-guard modules shipped stale.
-- 🐛 **`2026-08-22-error-rate-and-the-rule-corpus`** (high) — Jake's process report. The remedies
-  shipped; the measurement that decides whether they worked has not been taken.
-- 🐛 **`2026-08-22-no-delete-in-the-programs-family-is-rowcount-checked`** (medium).
-- 🐛 **`2026-08-22-resolvetemplateownercoachid-single-is-ambiguous-for-a-master-account`** (low).
-
-**Decided:**
-- **Do not trim the rule corpus as a fix.** Measured: all six of the day's error classes already had
-  a rule, so rule availability was never the constraint. Merging reduced files 41→35 but imperatives
-  only 129→125 — the prediction that trimming would help was **wrong**, and is recorded as wrong.
-- **`app-programs` ownership anchor work is DONE**; the remaining programs-family gap is rowcount
-  checks on DELETEs, which is its own row and its own session.
-
----
-
-## 🛠 Session backlog — 2026-08-22 — ownership anchors: 4 rows closed, 1 regression caught pre-push
-
-**Shipped — ALL PUSHED later the same day** *(this line said "COMMITTED, NOT PUSHED — 7 commits held back"; corrected at /save, everything below is live as of `42acf65`)*:
-1. ✅ **Cross-tenant probes hardened** (`a4725d4`) — cleanup no longer depends on the offending
-   session being able to read back its own insert. Row `confirmed`.
-2. ✅ **app-workouts anchors** (`ba3c21d`, v74) — the 2 template writes that skipped
-   `_verifyTemplateOwnership`. Row `confirmed`.
-3. ✅ **app-clients self-service** (`89eb93f`, v13) — ⚠️ **carries the sudo regression below.**
-4. ✅ **goals / milestones** (`8dcb052`, v15) — role-aware helper; coach owns via `created_by`,
-   client/solo via `client_id`. Row `confirmed`.
-5. ✅ **client-scoped writes** (`8d389e7`, core v14 / progress v49 / runner v74) — shared
-   `_verifyClientAccess`. Row `confirmed`, but see the missed-siblings row below.
-
-**🔴 Blocking, must clear before these 7 commits can be pushed:**
-- 🐛 **`2026-08-22-ownership-guard-breaks-view-as-impersonation`** (high) — my own regression in
-  `89eb93f`. Fix identified (delete `_verifyOwnClientId`, route through `_verifyClientAccess`) but
-  NOT applied; the session hit its usage limit mid-fix.
-- 🔁 **Re-run `multi-agent-review`** — Agent A (security angle) never completed. That angle has not
-  run against this diff at all.
-
-**New, open:**
-- 🐛 **`2026-08-22-client-1rms-write-class-still-has-two-unguarded-siblings`** (medium) —
-  `saveOneRMGrid` + `_saveMissingOneRMEntries`; the class has 12 members, not the 10 I claimed.
-- 🐛 **`2026-08-22-test-cleanup-delete-has-no-rowcount-check`** (low) — in a spec added the same day
-  as the commit that fixed that exact class.
-- 🗓 **app-programs ownership anchors** — unchanged, still deliberately its own session (~20+ sites).
 
 ## 🔴 GDPR — BLOCKS INVITING ANY NEW USER (found 2026-08-11 by /deploy-check)
 

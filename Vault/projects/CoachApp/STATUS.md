@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-08-25._
+_Last updated: 2026-08-27._
 
 > **Session history lives in `LOG.md`, not here.** This masthead used to carry a
 > `Previous: … Previous: …` chain going back to 2026-07-19 — every session of it already written
@@ -18,7 +18,7 @@ _Last updated: 2026-08-25._
 
 ## Live state
 
-**App version:** app-core v=20 · app-dashboard v=14 · app-clients v=16 · app-programs v=45 · app-calendar-goals v=17 · app-workouts v=77 · app-runner v=75 · app-progress v=54 · starter-content v=5 · main.css v=10 — **all live as of `d361f87` (2026-08-25) EXCEPT app-core v=20, which is LOCAL ONLY.** v=20 is a comment-only change naming checks.sh rule 9e as the enforcer of `PRIVACY_POLICY_VERSION`; what is live is still v=19. Nothing was pushed in 2026-08-25 session 2 — see `LOG.md`.
+**App version:** app-core v=21 · app-dashboard v=14 · app-clients v=16 · app-programs v=46 · app-calendar-goals v=17 · app-workouts v=78 · app-runner v=77 · app-progress v=55 · starter-content v=5 · main.css v=10 — **all pushed and live as of 2026-08-26 (`52923dd`), CI green.**
 > **DESIGN TOKENS LANDED 2026-08-23.** `js/` style literals **1,027 → 256**. Every remaining
 > literal is a deliberate exclusion, not a miss: JS-string colours that reach Chart.js on a
 > canvas (where `var()` cannot resolve), values with no exactly-matching token, and attributes
@@ -28,7 +28,7 @@ _Last updated: 2026-08-25._
 > `--surface-2` background, fixed from a `--surface2` typo — awaiting Jake's eyes.
 > Branding is now an edit to the `:root` block of `css/main.css`, not a hunt through nine files.
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp — deploy source switched 2026-07-03 from legacy branch-deploy to Actions-only (`build_type: workflow`); see CRITICAL.md timeline for why
-**Last push:** `d361f87` (2026-08-25) — local and `origin/master` in sync, CI green. Session detail lives in `LOG.md`; this line carries the SHA only, because a running commentary here is what grew the 38k chain that was removed.
+**Last push:** `52923dd` (2026-08-26) — local and `origin/master` in sync, CI green. Session detail lives in `LOG.md`; this line carries the SHA only, because a running commentary here is what grew the 38k chain that was removed.
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ### ✅ Progress overhaul (SHIPPED LIVE 2026-07-19 — pushed 95e8e8f; ④ coach parity remains)
@@ -174,6 +174,34 @@ Design: `docs/superpowers/specs/2026-07-18-progress-tracking-overhaul-design.md`
 ---
 
 ## Continuity block
+
+### The DISPLAY value is a lossy proxy for the stored one — never save it back blind (2026-08-26)
+Weight is stored canonically in kg and painted in the user’s unit. In lb that paint is lossy:
+`200 kg → weightToPref → "440.9" → weightFromPref → 199.99 kg`. Any save that re-reads an UNTOUCHED
+prefilled field therefore rewrites the row slightly wrong, and the next render rounds it again — so
+the screen keeps showing “200” while the database drifts. Bounded at ~0.023 kg, which is exactly why
+it survived two code reads: it does not look like a bug, it looks like data.
+
+`weightFromInput(el)` (app-core.js) is the ONE place that knows the difference between “the user typed
+a new number” and “the user left the number we painted”, via `data-shown`/`data-kg` stamped by
+`weightInputAttrs(kg)`. **A prefilled weight input that does not stamp both attributes silently
+rejoins the lossy path** — there is a guard test for that, and it caught an incomplete fix on the day
+it was written.
+
+### A NAME is not an identity — but it is also not always redundant (2026-08-26)
+Two halves, and they pull in opposite directions:
+
+- **`exercise_id` must always be written.** A `client_1rms` row without it survives only on the name
+  and breaks the moment the lift is renamed. Three of four writers omitted it; all three ALREADY HELD
+  the id and discarded it building an intermediate list. Fixed 52923dd, with a class guard.
+- **`exercise_name` must STAY.** Exercises can be deleted (`app-workouts.js:1083`), so the name is a
+  historical snapshot, not a redundant copy — dropping it would orphan every max recorded against a
+  since-deleted lift. **This is why it is not a BCNF violation:** the defect is the MISSING id, never
+  the present name. Normalising the name away would destroy data.
+
+The general form: store the FK for identity and the label for history. Ask whether the parent can be
+deleted — if it can, the label is a snapshot and belongs in the row.
+
 
 ### A ceiling set ABOVE current is a permit, not a ratchet (2026-08-25)
 The three baselines in this OS that HELD — `scripts/style-baseline.json`, `state/rule0-baseline.txt`,

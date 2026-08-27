@@ -1,0 +1,66 @@
+---
+id: 2026-08-26-e2e-specs-leave-client-rows-in-the-live-database
+status: open
+priority: medium
+reported: 2026-08-26
+status_detail: "Measured, not estimated: 14 [E2E] clients rows and 12 [E2E] client_1rms rows present on the live coach account. None from the specs written 2026-08-26 — those clean up correctly."
+---
+
+# Several E2E specs leave `clients` and `client_1rms` rows behind on the real coach account
+
+Found 2026-08-26 while discriminating a suspected regression from contamination (the `progress-trend`
+B4 failure). A leftover probe against the live DB returned:
+
+- **14 `clients` rows** whose `full_name` starts `[E2E]` — repeating names, so multiple runs each
+  stranded a row: `[E2E] event xss client` (×4), `[E2E] 1RM xss client` (×4), `[E2E] 1RM inline` (×4),
+  `[E2E] 1RM save client` (×2).
+- **12 `client_1rms` rows** with an `[E2E]` `exercise_name`.
+- 0 stray `weight_logs` — that fixture cleans up.
+
+**Not from the 2026-08-26 specs.** `session-identity` (END TO END), `weight-roundtrip` and the throwaway
+probes all delete their own rows in a `finally`; the leftover query found none of their tags
+(`[E2E] rt`, `[E2E] join`, `[E2E] probe`, `[E2E] snap`, `[E2E] wheel`). The offenders are older specs.
+
+## Why this matters beyond tidiness
+
+1. **It is on Jake's real coach account**, so these rows appear in his own client list. Same class as
+   the 12 orphaned clone rows cleaned on 2026-08-20 and the ~350 purged earlier.
+2. **It is a plausible contamination source for the flakiness already tracked** in
+   `2026-08-14-test-gate-flakiness-returned-across-two-unrelated-files`. A spec that resolves "the
+   coach's clients" and takes an index, or asserts a count, will drift as this pile grows — which is
+   exactly the shape of a test that passes alone and fails in a full run.
+3. It is the standing fixture-ownership rule being broken:
+   [[feedback_test_fixture_isolation]] — a test must own and destroy its own data.
+
+## CORRECTION — the cleanup is not MISSING, it is NOT RUNNING
+
+My first framing here (“give each spec a finally”) was wrong. Counted 2026-08-26:
+
+- **16** client fixtures created across **7** specs (`full_name: ‘[E2E]…’`):
+  `regression-2026-07-13` (8), `progress-session-detail-2026-08-15` (2),
+  `screenshot-feedback-2026-08-14` (2), and one each in `client-workout`, `gdpr-export`,
+  `intervals-redesign-2026-07-25`, `programs`.
+- **23** `from(‘clients’).delete` calls, and 18 `finally` blocks across those files.
+
+So deletes OUTNUMBER creates and the teardown is written. The rows are stranded anyway, which means
+the cleanup **does not execute or does not take**: a test failing before its `finally`, a delete
+refused by RLS and never rowcount-checked, or the id it keys on coming back null (the exact shape
+already documented for the cross-tenant probes, and the reason they were kept out of the push gate).
+
+That reframes the fix: **do not add more teardown — make the existing teardown prove it worked.**
+A delete whose rowcount is unchecked is the “reports success while doing nothing” class
+([[feedback_reports_success_doing_nothing]]), and there is already an open row for exactly this in the
+test suite: [[2026-08-22-cleanup-deletes-without-rowcount-across-four-probe-specs]].
+
+## What to do
+
+- Identify the specs producing each tag (grep the four names above), and give each a `finally` that
+  deletes what it created — the pattern the newer specs already use.
+- Then purge the existing 26 rows. **Read before deleting**: confirm every candidate really is an
+  `[E2E]` fixture and not a real client whose name happens to match, and delete `client_1rms` children
+  before the `clients` parents.
+- Do NOT write the cleanup as a one-off script Jake runs — see
+  [[feedback_privileged_ops_need_inapp_ui]]; if it needs doing repeatedly, it needs a real mechanism.
+
+**Closes when:** a leftover probe returns zero `[E2E]` rows immediately after a full suite run — i.e.
+the specs clean up, not just that someone purged once.

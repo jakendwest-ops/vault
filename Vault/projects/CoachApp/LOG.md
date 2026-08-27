@@ -1,4 +1,58 @@
-## 2026-08-25 (session 2) — the OS audit answered honestly; the ratchet class closed; NOTHING PUSHED (core v20 local only)
+## 2026-08-26 — three of Jake’s picks: one was already fixed, two real bugs shipped (core v21 / programs v46 / runner v77 / workouts v78 / progress v55)
+
+_Backfilled 2026-08-27. **This session ended without a `/save`** — four commits pushed, no LOG entry._
+_Caught by hello-claude Step 3’s date check (newest LOG 08-25 vs newest commit 08-26). Second time this_
+_exact failure has happened (2026-07-13 was the first), and the check that exists for it worked._
+
+**Done:**
+- **Propagation row (2026-08-14) → `fixed-awaiting-jake`.** Causes 3 and 4 had never been re-checked.
+  Cause 3 is fixed (`family_id` matching, verified in the QUERY not the comment claiming it). **Cause 4
+  was a FALSE PREMISE** — the Library lists only templates in no programme, so there are no siblings.
+- **`a4b8739` — end-to-end test joining both halves of Jake’s scenario.** Real `generatePhasePeriodization`,
+  real `openTemplate`, real modal DOM, real clicks on Save and Apply. Red-before proven by neutering
+  `family_id` propagation: `#propagate-modal` never appears, exit 1.
+- **`d320220` — the lb display round-trip corruption, 7 sites, one shared helper** (`weightFromInput` /
+  `weightInputAttrs` in app-core). Reproduced live first, as the 2026-07-09 row demanded.
+- **`52923dd` — Phase 1: every `client_1rms` writer persists `exercise_id`.** Pure refactor, no migration.
+- Pinned `multi-agent-review` ran (3 agents + verifier) before the ownership commit; marker written.
+
+**Bugs found + fixed:**
+- **Both prior investigations of the 1RM bug traced the wrong writer.** They followed `save1RM`; there
+  are FIVE `client_1rms` write paths. The grid is where “another exercise is already 200” happens.
+- **The display is a lossy proxy:** `200 kg → "440.9" lb → 199.99 kg`, then re-rounded to “200” on the
+  next render. Invisible from the UI, bounded at ~0.023 kg — which is why two code reads missed it.
+- **THREE `exercise_id` offenders, not the two the ledger row named.** It missed `_saveMissingOneRMEntries`,
+  whose own comment records that app-programs.js was absent from the app-core inventory — so it escaped
+  the 2026-08-21 sweep AND the row written to catch that sweep.
+- **A regression I introduced, caught by review:** `neededByName` used an unconditional `Map.set`, so a
+  duplicate exercise name whose later row carried a null id wiped the real one. Harmless before,
+  load-bearing after. Red-before proven (`Received: null`).
+- **My own class guard could pass over nothing** — no `res.ok` check, hardcoded 6-module list omitting
+  three modules. The same hardcoded-inventory mistake that let offender 3 escape, repeated INSIDE the
+  guard written to catch it.
+- **My tests could strand `[E2E]` rows** on a throw — `ids` was only assigned from the resolved evaluate.
+
+**UNVERIFIED (banked):**
+- The 1RM 0.5 shift is **still unexplained**. Two real bugs were found and fixed, but the lb drift is
+  bounded at ~0.023 kg and cannot produce 199.5. Row stays open with one question for Jake.
+- No solo-role test for the three `exercise_id` writers. Verified they contain ZERO role branches, so
+  the path is identical — a coverage gap, not a suspected bug.
+
+**Decided:**
+- **`exercise_name` alongside `exercise_id` is NOT a BCNF violation.** Exercises can be deleted
+  (`app-workouts.js:1083`), so the name is a historical snapshot. Phase 1 (write the id) is a pure
+  refactor and shipped; the migration half (drop the name) would destroy data and is not being done.
+- **Two green halves are not a green whole.** Jake pushed back on being handed the verification for the
+  propagation row; he was right, and the pushback found a real gap, not just a process one.
+- **Refactor vs migration:** the test is “if this is wrong, how do I get back?” `git revert` = refactor.
+  “Restore a backup” = migration, and it goes through Jake.
+
+---
+## 2026-08-25 (session 2) — the OS audit answered honestly; the ratchet class closed; PUSHED `76fbeb7` (core v20)
+
+_Headline corrected 2026-08-27: it said “NOTHING PUSHED” while this entry’s own “Prune” section below
+ records pushing `76fbeb7`. Jake said “push then prune” after the entry was written and the headline was
+ never updated — the same headline-contradicts-body class this session kept finding elsewhere._
 
 _Jake asked whether the OS/MD files, the two rituals, and the SWOT were in a state I was satisfied with._
 _Two of the three answers were **no**. Both nos survived measurement._
