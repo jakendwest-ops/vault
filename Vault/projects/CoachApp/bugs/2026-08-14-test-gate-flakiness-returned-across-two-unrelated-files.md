@@ -146,3 +146,26 @@ which the new timestamped tags cannot collide with. All three use short visibili
 A plausible contributor is filed separately:
 [[2026-08-26-e2e-specs-leave-client-rows-in-the-live-database]] — stranded fixture rows accumulating
 on the real coach account.
+
+## 2026-08-27 — a FOURTH intermittent test, and this one is inside the PUSH GATE
+
+`solo-account.spec.js:48` (“solo can reach the Library nav item and see Templates/Exercise Library
+tabs”) failed attempt 1 and passed on retry **during the pre-push smoke gate** for `bef71b0`. The gate
+reported 55 passed and went green on the retry.
+
+Checked before calling it flaky, not after:
+
+- The full suite passed **576 / 0 failed** on byte-identical code ~30 minutes earlier.
+- Run alone with `--retries=0`, three times: **3/3 passed**.
+- The commit touched `deleteExercise` (Exercise Library) so it was a plausible suspect — but the
+  assertion that failed is `toContainText` on the TAB LABELS, which that change does not touch.
+
+**Why this one matters more than the other three:** it is in the 57-test smoke gate. The other
+intermittents (`progress-trend:5`, `ledger-fixes-2026-08-02:6`, `solo-account:142`) sit outside it and
+only cost a re-run. This one can fail a PUSH — and, worse, it passes on retry, so the gate goes green
+and the flake is invisible unless someone reads the run output. I only saw it because the pass count
+was 55 instead of the usual 56.
+
+**Running tally: four intermittent tests across three files.** Every one has a short visibility
+timeout, and every one has been checked against the session fixtures before being attributed to
+non-determinism rather than contamination.
