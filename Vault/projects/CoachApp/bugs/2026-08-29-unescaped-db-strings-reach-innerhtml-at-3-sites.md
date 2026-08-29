@@ -3,7 +3,7 @@ id: 2026-08-29-unescaped-db-strings-reach-innerhtml-at-3-sites
 status: open
 priority: medium
 reported: 2026-08-29
-status_detail: "nextEx.name is escaped at app-runner.js:803 and :814 but raw at :607/:613 and :1685/:1703 - four renders of one field, two safe, two not. programName is raw at app-workouts.js:3071 while its sibling six lines below is escaped. Self-XSS today (names are coach-authored) but the 6th instance of a sink class CRITICAL.md tracks."
+status_detail: "nextEx.name is escaped at app-runner.js:803 and :814 but raw at :607/:613 and :1685/:1703 - four renders of one field, two safe, two not. programName is raw at app-workouts.js:3071 while its sibling six lines below is escaped. Self-XSS today (names are coach-authored) but the 7th instance of a sink class CRITICAL.md tracks (its timeline already counts to 6, at 2026-08-12)."
 ---
 
 # Unescaped DB strings reach `innerHTML` at 3 sites, each beside an escaped sibling
@@ -31,7 +31,7 @@ client tab, with the Supabase token in localStorage.
 **Honest severity: self-XSS today.** `exercise_name` and `programs.name` are coach-authored; a client
 cannot write them (`tests/template-exercise-write-rls-2026-08-10.spec.js:138` proves a client cannot
 write their own plan clone's exercises). So there is no cross-tenant path today. It is filed because it is
-the **6th instance** of the sink class `CRITICAL.md` tracks, and because a fix is one call per site.
+the **7th instance** of the sink class `CRITICAL.md` tracks, and because a fix is one call per site.
 
 **Fix:** `escapeHtml(nextEx.name)` at `:607` and `:1685`; `escapeHtml(programName)` at `:3071`.
 

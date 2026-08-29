@@ -58,3 +58,39 @@ convention and has produced 70% non-compliance — see
 **Closes when:** an os-lint check exists that refuses a new conditionless `open` row, has been shown to
 go RED on a planted one and GREEN when the line is added, and the 21 existing rows are either backfilled
 with a closing condition or explicitly grandfathered in a baseline file.
+
+---
+
+## Same-day refinement: a closing condition must be SATISFIABLE, and 2 of my first 4 were not
+
+Four rows filed this morning were closed this afternoon. **Two of their closing conditions could not be
+met as written**, and neither failure was about the fix — both were about my condition:
+
+| Row | Condition I wrote | What was wrong |
+|---|---|---|
+| `...unverified-slot-id` | *"a **cross-tenant** probe ... RED without the anchor"* | A cross-tenant probe **passes with the anchor deleted** — RLS already refuses a foreign write. It would have proved RLS works, not the anchor. The real test is single-tenant with my own mismatched ids. |
+| `...visibility-not-ownership` | *"a spec drives each with a client id the caller can READ but does not OWN"* | **No such id exists.** RLS refuses a foreign `clients` read, so there is nothing to pass. Written anyway, it would pass with the fix removed. |
+
+The other two conditions (the interval leak, the dead Save) were met exactly as written.
+
+**So the rule needs a second half.** "State what would close it" is necessary and not sufficient — a
+condition that cannot be satisfied is just a differently-shaped way for a row to sit open forever, and
+it is *worse* than none, because it looks like rigour.
+
+**The tell, both times:** I reached for a **cross-tenant** test where the defence being added is
+**app-level defence-in-depth over a database that already refuses**. That is
+[[feedback_guard_risk_is_refusing_the_legitimate_user]] from the other direction — there, a refusal test
+over RLS proves nothing; here, it is a closing condition that proves nothing. Same root: *asking the
+wrong layer for the evidence.*
+
+**How to apply when writing a closing condition:**
+1. Name the layer that would actually fail if the fix were absent. If that layer is the database, a
+   behavioural test cannot be the evidence — a **source class guard** is, and say so in the condition.
+2. Ask "could I write this test today?" before writing the condition, not after.
+3. If a condition turns out unsatisfiable, **amend it in the row and say why** — do not quietly declare
+   it met. Both amendments above are recorded in their rows.
+
+This does not weaken the original finding: 21 of 30 open rows still state no condition at all. It means
+the check proposed there should ideally assert a condition **names its evidence layer**, not merely that
+the words "closes when" appear — otherwise it measures prose, which is
+[[feedback_written_rules_dont_reduce_errors]] rebuilt as a linter.
