@@ -1,9 +1,10 @@
 ---
 id: 2026-08-29-a-dead-preview-server-is-reported-as-failing-tests
-status: open
+status: closed
 priority: medium
 reported: 2026-08-29
-status_detail: "Found by hitting it: a full-suite run produced 39 identical ERR_CONNECTION_REFUSED failures that read as a catastrophic regression. Playwright has no webServer block and checks.sh has no server precondition, so a dead :3001 is reported as 'Playwright smoke tests failed -- Fix tests before pushing.'"
+closed_by: "scripts/check-preview-server.selftest.mjs (4 states, GREEN=0 / neutered=1) + behavioural proof: server confirmed down via curl 000, then npx playwright test started it and ran 15 passed / 1 skipped exit 0"
+status_detail: "FIXED b12c479, verified both ways: server confirmed down (curl 000), Playwright then started it and ran 15 passed/1 skipped exit 0. Self-test GREEN=0, neutered=1. Found by hitting it: a full-suite run produced 39 identical ERR_CONNECTION_REFUSED failures that read as a catastrophic regression. Playwright has no webServer block and checks.sh has no server precondition, so a dead :3001 is reported as 'Playwright smoke tests failed -- Fix tests before pushing.'"
 ---
 
 # A dead preview server is reported as failing tests, not as a missing server
@@ -53,3 +54,43 @@ looking. See [[feedback_reports_success_doing_nothing]].
 
 **Closes when:** :3001 is deliberately stopped, and both `npm test` and `scripts/checks.sh` either start
 the server themselves or fail with a message naming the missing server rather than the tests.
+
+---
+
+## FIXED 2026-08-29 (`b12c479`) — closing evidence is behavioural, both directions
+
+**Closing condition from this row, restated:** *":3001 is deliberately stopped, and both `npm test` and
+`scripts/checks.sh` either start the server themselves or fail with a message naming the missing server
+rather than the tests."*
+
+**Met, and verified rather than reasoned:**
+- The preview server was killed and confirmed down (`curl` → `000`). `npx playwright test
+  tests/solo-account.spec.js` then **started it itself** and ran **15 passed / 1 skipped, exit 0**. The
+  same situation produced 39 `ERR_CONNECTION_REFUSED` failures a few hours earlier.
+- `scripts/checks.sh` inherits both the `webServer` block and the `globalSetup` automatically, since its
+  invocation at the Playwright step uses the same config.
+
+**The wrong-app case is covered too, and that is the half a status-code check misses.**
+`tests/global-setup.js` asserts `<title>CoachApp</title>`, not a 200 — because `run-coachapp` already
+warns a stale entry in `.claude/launch.json` can serve a different app on this port.
+
+**One source of truth for the command.** `playwright.config.js` READS the launch command out of
+`.claude/launch.json` rather than carrying its own copy — [[feedback_two_fields_one_fact]].
+
+## Two things found only by insisting the check be seen to fail
+
+1. **A UTF-8 BOM in `.claude/launch.json`.** `JSON.parse` rejects it outright. The first cold run failed
+   immediately with the config's own error message pointing at the file — the check working, on its
+   first use. Now stripped before parsing.
+2. **The self-test crashed instead of failing.** Neutering its wrong-app expectation exited **127**, not
+   1: `process.exit(1)` raced the http teardown and aborted libuv
+   (`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`). Non-zero, so the gate would still have
+   blocked — but 127 reads as "command not found", and the next person would hunt a missing binary
+   instead of a failed check. Changed to `process.exitCode = 1`; now GREEN→0, neutered→1.
+
+**Both of those were caught because the rule is "prove it can FAIL", not "watch it pass"** — see
+[[feedback_reports_success_doing_nothing]]. My first neuter attempt returned an ambiguous 127 and I
+nearly recorded it as proof; that is exactly [[feedback_name_the_spec_before_neutering]].
+
+**Left open deliberately:** nothing. Jake's confirmation is not required — this row was found by me, not
+reported by him, and the closing condition is behavioural and has been demonstrated in both directions.
