@@ -3,7 +3,7 @@ id: 2026-08-26-e2e-specs-leave-client-rows-in-the-live-database
 status: open
 priority: medium
 reported: 2026-08-26
-status_detail: "Measured, not estimated: 14 [E2E] clients rows and 12 [E2E] client_1rms rows present on the live coach account. None from the specs written 2026-08-26 — those clean up correctly."
+status_detail: "INTERMITTENT, reproduced twice 2026-08-28/29 — own-workout-fixture-2026-08-11.spec.js:61 went RED in a full-suite run with a surviving template, so the cleanup demonstrably does not run (not merely that rows are present). Measured, not estimated: 14 [E2E] clients rows and 12 [E2E] client_1rms rows present on the live coach account. None from the specs written 2026-08-26 — those clean up correctly."
 ---
 
 # Several E2E specs leave `clients` and `client_1rms` rows behind on the real coach account
@@ -64,3 +64,37 @@ test suite: [[2026-08-22-cleanup-deletes-without-rowcount-across-four-probe-spec
 
 **Closes when:** a leftover probe returns zero `[E2E]` rows immediately after a full suite run — i.e.
 the specs clean up, not just that someone purged once.
+
+---
+
+## 2026-08-28/29 — a test that ASSERTS the cleanup went RED in a full-suite run
+
+`own-workout-fixture-2026-08-11.spec.js:61` — *"leaves no [E2E] own templates or logs behind"* — failed
+in the full suite:
+
+```
+Error: the fixture must delete every template it created
+  expect(left.templates).toEqual([])
+  - Array []
+  + Array [ "[E2E] own 1787855650460-ab55x" ]
+```
+
+**CORRECTION (2026-08-29).** I first wrote this up as a reproduction. It is not — in the clean full
+suite it failed attempt 1 and PASSED on retry, so Playwright classes it **flaky**, not failed. The
+honest reading is weaker but still load-bearing: **the teardown failed its first attempt in two
+independent runs and succeeds on a re-run.** That upgrades the row from a measurement to an
+intermittent reproduction. Until now the evidence was a leftover
+probe finding rows *after the fact* — consistent with cleanup that never ran, but also with cleanup that
+ran and was refused. This failure is the fixture's own teardown asserting it deleted what it created,
+and finding a survivor. The mechanism is inside `ownWorkout`, not somewhere upstream — and because a retry clears it, it is a
+RACE (the delete issued before the row is visible, or against a session that has already gone), not a
+missing delete call.
+
+Verified this is NOT an artefact of the run being killed: the assertion failed at output line 362, and
+the first `ERR_CONNECTION_REFUSED` (the server going down when the run was terminated) is at line 537.
+The teardown failure precedes any server loss. The two `progress-trend.spec.js` failures in the same
+run ARE that artefact and should not be read as regressions.
+
+**Note the shape:** `expect(...).toEqual([])` is a cleanup assertion that can only be trusted if the
+fixture actually created something — an empty-vs-empty comparison would pass vacuously. Here it caught a
+real survivor, so it is a live check, not a decorative one. See [[feedback_reports_success_doing_nothing]].

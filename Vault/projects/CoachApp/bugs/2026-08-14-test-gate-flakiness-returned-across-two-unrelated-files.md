@@ -169,3 +169,52 @@ was 55 instead of the usual 56.
 **Running tally: four intermittent tests across three files.** Every one has a short visibility
 timeout, and every one has been checked against the session fixtures before being attributed to
 non-determinism rather than contamination.
+
+---
+
+## 2026-08-29 — a clean full-suite run, measured: **576 passed / 3 failed / 2 flaky / 1 skipped** (31.4m)
+
+First trustworthy full-suite number in a while — the server was verified serving `<title>CoachApp</title>`
+before the run, after an earlier attempt produced 39 identical `ERR_CONNECTION_REFUSED` failures against a
+dead :3001 (now its own row, `2026-08-29-a-dead-preview-server-is-reported-as-failing-tests`).
+
+**Hard failures (3), across 2 files:**
+- `ledger-fixes-2026-08-02.spec.js:646` and `:657` — mobile calendar grid.
+- `progress-trend.spec.js:5` — resting-HR trend (B4), the long-standing one on this row.
+
+**Flaky (2) — failed attempt 1, passed on retry:**
+- `client-workout.spec.js:225`
+- `own-workout-fixture-2026-08-11.spec.js:61` (see the `[E2E]` debris row).
+
+**So the count on this row's title is wrong: it is 5 tests across 4 files, not 2 files.**
+
+## The two calendar failures are a TIMING flake, not a markup regression — verified
+
+Both tests do `loginAsClient(page)`, click `[data-page="calendar"]`, then a **fixed
+`waitForTimeout(1500)`**, then:
+
+```js
+const html = await page.evaluate(() =>
+  document.querySelector('[style*="grid-template-columns:repeat(7"]')?.outerHTML || '')
+const dayCellStyleMatch = html.match(/<div onclick="showDayEvents\([^)]*\)" style="([^"]*)"/)
+expect(dayCellStyleMatch).not.toBeNull()
+```
+
+The `?.` + `|| ''` means an absent container yields `''`, and `''.match()` returns `null`. **The
+assertion that fires is therefore "the calendar had not rendered", not "the markup is wrong."** Confirmed
+by reading the source: `js/app-calendar-goals.js:126` still carries `grid-template-columns:repeat(7,1fr)`
+(so the selector is valid) and `:138` still carries the `onclick="showDayEvents(...)" style="` pair
+containing `min-width:0` and `overflow:hidden` (so the regex and both assertions would pass if it had
+rendered).
+
+**Not caused by the 2026-08-28 session:** `git show bef71b0 -- js/app-calendar-goals.js` grepped for
+`showDayEvents` and `grid-template` returns nothing — that commit added delete rowcount checks and did
+not touch the render path.
+
+`loginAsClient` is already on record for exactly this class — the glossary's *Race condition* entry cites
+it returning before the login had completed. **A fixed `waitForTimeout` is the shared defect across these
+tests, not a per-test accident**, which makes this a class fix (wait for the grid, don't wait for a
+number of milliseconds), not three separate repairs.
+
+**Both calendar tests sit OUTSIDE the 57-test push gate**, which is the documented way a spec stays RED
+across deploys without anyone noticing.

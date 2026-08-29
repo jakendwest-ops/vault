@@ -1,5 +1,5 @@
 # CoachApp Roadmap
-_Last updated: 2026-08-27._
+_Last updated: 2026-08-28._
 
 > Session narratives belong in `LOG.md`. This masthead carried a write-up of the 2026-08-14 session
 > until OS v3; that session has a `## 2026-08-14` entry in `LOG.md`, so it was removed rather than
@@ -56,6 +56,21 @@ set token values against, or do they get neutral values now?
 >
 > **This file is a ROADMAP.** Session history belongs in `LOG.md`. `os-lint`’s `context-budget` now
 > ratchets down on what is left, so this saving cannot quietly regrow the way the last two did.
+
+## 🛠 Session backlog — 2026-08-28 — live double-press bug fixed; STATUS cut 30%; the OS question answered honestly
+
+| # | Item | Status | Detail |
+|---|---|---|---|
+| 1 | **Adding a workout/exercise to a live program: slow, and double-press DUPLICATES** (Jake, live) | ✅ Shipped `66003ce` | 6 commits. `guardReentry` in app-core: one shared wrapper, one try/finally, registered on 8 write paths. All 3 bespoke `_*Pending` flags deleted. Picker now paints immediately (accepts a promise for coachId; two resolution queries parallelised). Proven both ways: guard removed → 2 rows, guard in place → 1. |
+| 2 | The criterion changed the member list BOTH ways | ✅ | ADDED `copyProgramToCoaching` (100-line deep copy, not confirm-gated) which the plan missed; EXCLUDED `generatePhasePeriodization` (its `confirm()` blocks the thread, so the dialog IS the barrier). |
+| 3 | **STATUS.md 93,955 → 65,999** | ✅ | "What's working (verified)" was 29,017 bytes of SHIPPED history in a file whose masthead says history belongs in LOG.md. Moved verbatim. Same violation as the 38,171-char `Previous:` chain removed 3 days earlier — **same file, second instance, missed by that cleanup**. |
+| 4 | `continuity-budget` ratchet added to os-lint | ✅ | Pinned at the measurement, refuses growth past 2%, fixture-safe. Deliberately NOT a semantic duplicate-detector: a trial fuzzy matcher produced weak pairings, and a check that flags correct entries gets switched off. os-lint self-test now **39/39 bite**. |
+| 5 | Continuity ↔ memory duplication | 🔧 In progress | 14 of 51 continuity entries also have a memory file; the top several are near-identical. ONE collapsed to a pointer today (the ratchet forced it — adding an entry means removing one). The other ~13 need a judgement pass. |
+| 6 | Two non-retrying `.count()` assertions | ✅ `91341e8` | One was a **vacuous pass** — `if (count === 0) return` with no settle-wait, so it returned having asserted nothing. Fixing it exposed a broken assertion underneath (`text=Exercises` matched 2 elements). |
+| 7 | Would refactoring the OS/MD files reduce errors? | ✅ Answered: **no** | Measured: ~185 written rules vs 51 things that can refuse. **9 of my 12 errors this week had a pre-existing rule**, one of them injected into the very turn I broke it. OS v2 already tried cutting rules (33→13) and errors continued. Do the OS work for token cost (~12k/session), not for error rate. |
+
+**Not done:** OS step 2 (make memory canonical for the remaining duplicated entries) — judgement-heavy,
+needs its own pass. Sprint/release trial and the targeted platform work are both still queued.
 
 ## 🛠 Session backlog — 2026-08-26 — three of Jake’s picks: one already fixed, two real bugs shipped
 
@@ -143,34 +158,6 @@ skipped / 0 failed**; deploy verified live.
 **Process note:** `multi-agent-review` ran **inline** (three angles + verifier by one agent), because
 this session forbids subagents. That is a weaker review than the pinned 3-agent form. Recorded, not
 hidden — the pinned prompt exists precisely to stop rigor drifting silently.
-
-## 🛠 Session backlog — 2026-08-23 — design tokens shipped; 1,027 → 256 literals
-
-**Shipped and pushed (`857c5e1`, 27 commits, CI green):**
-1. ✅ **The whole design-token plan**, all 7 tasks via subagent-driven-development. Token vocabulary
-   in `css/main.css` (v10); `scripts/tokenise.mjs` + `tokenise-verify.mjs`; all nine modules converted
-   or already conformant. **ZERO visual change**, proven per module by a byte-identical round-trip.
-2. ✅ **Three new gates in `checks.sh`, all fired for real on the push.** Rule 3 — a CHANGED file's
-   `?v=` must RISE (the old rule only asserted one existed, which is how three modules shipped their
-   ownership guards behind a stale cache). Rule 3b — a per-file style-literal ratchet. Rule 3c —
-   every `var(--x)` referenced in `js/` must be DEFINED in `main.css`.
-3. ✅ **`scripts/style-count.sh`** — one owner of the literal-counting pattern, which had drifted
-   across six copies.
-4. ✅ **A real pre-existing bug found and fixed**: `var(--surface2)` (the token is `--surface-2`) had
-   been silently dropping the Progress table header's background. `0a23684`, progress v52.
-5. ✅ **`docs/superpowers/subagent-contract.md`** — a permission denial is a STOP, not a routing problem.
-
-**New rows filed:** subagent-routed-around-a-permission-denial (high) · var-surface2 (fixed-awaiting-Jake)
-· no-delete-rowcount in the programs family (medium) · resolvetemplateownercoachid-single (low) ·
-error-rate-and-the-rule-corpus (high) · checks-sh-cache-bust-blindness (now CLOSED by rule 3).
-
-**Decided:**
-- **Spacing, class extraction, folding the `--legacy-*` aliases and touch-target sizing stay OUT.**
-  Each is its own piece of work; the plan says so and the count reflects it.
-- **The codemod refuses interpolated attributes rather than partially converting them** — ~117 skips,
-  a deliberate, quantified conservatism. Relaxing it is a future enhancement needing its own proof.
-
----
 
 ## 🔴 GDPR — BLOCKS INVITING ANY NEW USER (found 2026-08-11 by /deploy-check)
 

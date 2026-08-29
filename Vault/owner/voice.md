@@ -671,3 +671,33 @@ _No new public/formal register evidence this session — chat only._
   then a ranked recommendation. Fourth-plus consecutive session opening with an audit-shaped question.
 
 _No new public/formal register evidence — chat only._
+
+### Observed signals — 2026-08-28 (CoachApp, live double-press bug + the OS question)
+
+- **He challenges the REMEDY, not just the symptom — and expects me to grade my own proposal.**
+  *"even after the new OS rebuild from this week, you have just advised that things were missed and
+  you continued to write into 2 files and mistakes continued to be repeated (even after multiple fixes
+  and audits). Hows does this keep happening, and would a refactor of your MD file and OS reduce the
+  errors"*. Two parts, and the second is the real one. He had already approved that refactor; he was
+  asking whether it would actually work. **The right answer was a measured "no", against my own
+  proposal, and it was accepted immediately.** Signal: a question of the form "would X fix Y?" is a
+  request for evidence, not for enthusiasm — measure before answering, and be willing to unsell.
+  Extends the banked "he can tell when I am agreeing rather than assessing".
+- **"there is no job too large for us, claude"** — new phrasing, worth noting for two things: the
+  inclusive *us* (he frames the work as joint, not as tasking), and that it arrives attached to a
+  request for *preventive* work rather than a feature. It is permission to propose something big, not
+  an instruction to do something big. He still expected the scoped, narrow recommendation I gave.
+- **His live bug reports are situated, not abstract, and name real data.** *"When going into a live
+  program and trying to add a new workout for a day (example: adding a saturday workout to bigger,
+  leaner, stronger)... and if you press the button more than once it duplicates the exercise several
+  times"*. He gives the route in, a concrete example from his own account, and the symptom in that
+  order — and he reports several symptoms in one breath when they occurred together. Consistent with
+  the banked in-situ reporting; the addition is that **the parenthetical example is the reproduction
+  path** and should be used verbatim as the test fixture's shape, not paraphrased.
+- **Typos and lowercase are left uncorrected in fast mode** ("Hows", "coachapp", lowercase "claude",
+  lowercase programme names). Consistent with the banked casual register. Never mirror this back in
+  anything public/formal.
+- **"run save now"** — imperative + "now" when a ritual was owed and he noticed. Same shape as the
+  banked one-word delegation, with the "now" signalling he has been waiting on it.
+
+_No new public/formal register evidence — chat only._
