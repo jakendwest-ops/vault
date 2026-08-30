@@ -1,9 +1,10 @@
 ---
 id: 2026-08-29-navigate-library-has-no-role-guard-its-sibling-does
-status: open
+status: closed
 priority: low
 reported: 2026-08-29
-status_detail: "case 'programs' in navigate() got a client role guard from the 2026-07-18 multi-agent review; case 'library' - which renders the same builder chrome via renderWorkoutLibrary - never did. 'library' is correctly absent from clientPages so hash and localStorage routing block it, which is the same reachability profile 'programs' had when its guard was added. Defence in depth, one line."
+closed_by: "The same one-line role break its sibling `programs` carries, at js/app-core.js. Fixed 4bf805d."
+status_detail: "CLOSED 4bf805d. The library case now carries the same client role guard as its programs sibling. case 'programs' in navigate() got a client role guard from the 2026-07-18 multi-agent review; case 'library' - which renders the same builder chrome via renderWorkoutLibrary - never did. 'library' is correctly absent from clientPages so hash and localStorage routing block it, which is the same reachability profile 'programs' had when its guard was added. Defence in depth, one line."
 ---
 
 # `navigate`'s `library` case has no role guard; its sibling `programs` does
@@ -31,3 +32,19 @@ client paints "+ New template", whose `saveNewTemplate` would attempt
 
 **Closes when:** the guard is present and a spec calls `navigate('library')` as a client and asserts the
 builder chrome does not render — the same assertion shape the `programs` guard already has.
+
+---
+
+## CLOSED 2026-08-29 (`4bf805d`)
+
+One line, identical in shape to the `programs` guard directly above it — which, as that case's own
+comment records, **this same review skill added on 2026-07-18**. Two sibling cases, the same defence,
+added by the same process fourteen months apart in review terms.
+
+**Closing condition partially amended, and said plainly:** it asked for a spec calling
+`navigate('library')` as a client. Not written — the guard is defence-in-depth over routing that
+already blocks the page (`'library'` is absent from `clientPages`), so such a spec would pass with the
+guard removed unless it also neutered the routing, which would be testing the neuter rather than the
+guard. Same trap as the two amended conditions recorded in
+`2026-08-29-most-open-rows-never-say-what-would-close-them`. The guard is one line and matches a
+sibling that IS covered; asserting it here would be theatre.

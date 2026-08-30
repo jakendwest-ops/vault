@@ -1,9 +1,10 @@
 ---
 id: 2026-08-29-quick-prefs-popover-silently-reverts-a-unit-change
-status: open
+status: closed
 priority: medium
 reported: 2026-08-29
-status_detail: "_toggleQuickPrefsCapture re-renders the whole popover from window._unitPrefs, which is only updated after a successful DB write. Changing Weight to Pounds then tapping a capture chip snaps the select back to kg with no message, and Done saves kg. Its sibling _toggleCardioCaptureMetric snapshots live fields for exactly this reason; the app-core twin was written without it."
+closed_by: "tests/review-fixes-2026-08-29.spec.js 'toggling a capture chip does not revert an unsaved unit change' — RED without the prefill (Expected 'lb', Received 'kg'), GREEN with it. Fixed 4bf805d."
+status_detail: "CLOSED 4bf805d. The popover accepts a prefill and the chip toggle snapshots the live selects first. Red-before: Expected lb, Received kg. _toggleQuickPrefsCapture re-renders the whole popover from window._unitPrefs, which is only updated after a successful DB write. Changing Weight to Pounds then tapping a capture chip snaps the select back to kg with no message, and Done saves kg. Its sibling _toggleCardioCaptureMetric snapshots live fields for exactly this reason; the app-core twin was written without it."
 ---
 
 # Changing a unit then tapping a capture chip silently reverts the unit
@@ -34,3 +35,18 @@ the only thing that changed.
 
 **Closes when:** a spec sets weight to lb, toggles a capture chip, and asserts the select still reads lb
 and that Done persists lb — RED before the fix. It must run at the **lb** preference, not the kg default.
+
+---
+
+## CLOSED 2026-08-29 (`4bf805d`)
+
+`_openQuickPrefsPopover` now accepts a `prefill`, and `_toggleQuickPrefsCapture` snapshots the three
+live selects before re-rendering — exactly what its sibling `_toggleCardioCaptureMetric`
+(`app-runner.js:1780`) already did, and whose comment names this class.
+
+**The test runs at the `lb` preference, deliberately.** The whole suite runs at the `kg` default and
+nothing flips it, so a unit bug is invisible to all ~580 tests — which is precisely how an lb-only crash
+survived 428 of them on 2026-08-14. See
+[[feedback_unit_preference_is_a_test_dimension]]. Asserting kg here would have proved nothing.
+
+**Proven both ways:** neutering the prefill gives `Expected: "lb", Received: "kg"`.

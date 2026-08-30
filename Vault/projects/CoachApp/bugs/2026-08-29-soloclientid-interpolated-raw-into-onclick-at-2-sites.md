@@ -1,9 +1,10 @@
 ---
 id: 2026-08-29-soloclientid-interpolated-raw-into-onclick-at-2-sites
-status: open
+status: closed
 priority: medium
 reported: 2026-08-29
-status_detail: "window._soloClientId is initialised to null (app-core.js:167) and only set if a maybeSingle lookup succeeds, so null is a real state. Two sites interpolate it raw into an onclick string, producing startWorkoutRunner('null', id). app-dashboard.js:637 already carries the correct guard, so the fix pattern exists."
+closed_by: "tests/review-fixes-2026-08-29.spec.js 'a solo user with no client record gets no Start button instead of a broken one'. Fixed 4bf805d."
+status_detail: "CLOSED 4bf805d. Both sites guarded (app-workouts:1234, app-programs:813 — the second one the review missed). window._soloClientId is initialised to null (app-core.js:167) and only set if a maybeSingle lookup succeeds, so null is a real state. Two sites interpolate it raw into an onclick string, producing startWorkoutRunner('null', id). app-dashboard.js:637 already carries the correct guard, so the fix pattern exists."
 ---
 
 # `window._soloClientId` is interpolated raw into an onclick at 2 sites
@@ -36,3 +37,19 @@ when it is null, matching the guard `app-workouts.js:625-626` already uses. Same
 **Closes when:** both sites are guarded, and a spec renders each with `window._soloClientId = null` and
 asserts the affordance is absent rather than present-and-broken. The guarded sibling at
 `app-dashboard.js:637` is the model — [[feedback_fix_the_class_not_the_instance]].
+
+---
+
+## CLOSED 2026-08-29 (`4bf805d`)
+
+Both sites now guard. The condition asked for exactly this, and it was met as written.
+
+**The review reported ONE site and called it "the only consumer outside app-core". It was not.** The
+class is two unguarded sites, and `app-dashboard.js:637` already carried the correct guard and was the
+model to copy — [[feedback_fix_the_class_not_the_instance]].
+
+**Why the app-workouts one mattered most:** the button rendered as
+`startWorkoutRunner('null', id)`. Tapping it launched a runner bound to the **string** `"null"`, which
+looked completely normal — `.eq('client_id','null')` is an invalid uuid discarded silently because that
+call does not go through `dbq` — and only failed at `saveRunnerSession`, **after the entire session had
+been logged.** The worst possible place to fail.
