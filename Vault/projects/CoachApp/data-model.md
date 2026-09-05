@@ -190,6 +190,32 @@ a schema that no longer existed. Reconciled by reading `scripts/*.sql` directly.
 
 - `weight_logs.resting_hr` — smallint + CHECK, 2026-07-19.
 - `workout_templates.family_id` — uuid, 2026-08-14. Groups a template with its clones.
+- `workout_templates.updated_at` — timestamptz, 2026-09-04 (`add-template-updated-at-2026-09-04.sql`),
+  for the Library's "last used" ordering. Backfilled from `created_at`, **not** `now()`, so the new
+  ordering had a real spread on day one instead of every row sharing one instant.
+  Maintained by **two triggers plus a DEFAULT**, and the split matters:
+  - `DEFAULT now()` fills it on INSERT. Deliberately a default and **not** a BEFORE INSERT trigger:
+    the trigger function assigns unconditionally, so on INSERT it would also discard a value the
+    caller explicitly supplied — which is how the tests seed a known-old row. A DEFAULT fills the gap
+    and yields when a value is given. (An insert-time trigger *was* briefly live on production on
+    2026-09-04 and was replaced the same day; repo and database disagreed for about an hour.)
+  - `trg_touch_workout_template` — BEFORE UPDATE on the parent.
+  - `trg_touch_parent_workout_template` — AFTER INSERT/UPDATE/DELETE on
+    `workout_template_exercises`, `security definer`, bumping the parent. **This is the load-bearing
+    one.** Editing a session almost never touches the `workout_templates` row — adding an exercise,
+    reordering, changing sets all write to the child table (13 write paths across three modules), so
+    a parent-only trigger would report "edited 6 months ago" on a session changed this morning.
+    `security definer` is narrow (one column, one row, by primary key) and is there because without
+    it the bump runs as the caller and is subject to RLS: any path that can write a child row but not
+    update its parent would have the refusal fail the whole statement, and editing would break.
+  - Index `workout_templates_coach_updated_idx` on `(coach_id, updated_at desc)`.
+- `workout_logs.template_id` — pre-existing column, but as of 2026-09-04 it is finally written by
+  `saveRunnerSession` as well as `saveWorkoutSession`. Before that, a session trained through the
+  actual runner recorded no link to the template it came from, so "last used" could never reflect
+  real training. Historical rows cannot be backfilled — the link was never recorded and cannot be
+  derived. Note it is **not** ownership-checked by the INSERT/UPDATE policies; see the bug ledger row
+  `2026-09-05-workout-logs-template-id-is-not-ownership-checked` for why that is currently inert and
+  why fixing it is the riskier move.
 - **Program blocks** — new table, 2026-08-15 (`add-program-blocks-2026-08-15.sql`).
 - RLS/policy migrations that changed no columns: `fix-storage-rls-2026-07-12.sql` (the
   cross-tenant photo leak — see CRITICAL.md), `fix-workout-logs-insert-policy-2026-07-30.sql`.
