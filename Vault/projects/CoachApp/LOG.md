@@ -1,3 +1,49 @@
+## 2026-09-06 (later still) — the weekly full-file review ran, 8 days late, and found 8 issues
+
+_Scope: `app-programs.js` + `app-core.js`, 4,012 lines. Three pinned angles plus a verifier pass._
+
+**Scope deviated from strict churn order, deliberately.** The top three by 30-day churn are
+app-workouts (47), app-runner (33), app-progress (26) — but app-workouts and app-runner had a full-file
+pass 8 days ago and app-workouts had two more during the v2026.09.2 release. app-programs (25) and
+app-core (21) are the highest-churn modules with **no full-file pass in three weeks**, which is where
+latent bugs live. Stated rather than done silently, since the pinned skill exists to stop rigor
+narrowing unannounced.
+
+**The first attempt died.** All three agents were killed mid-read by a session rate limit. The marker
+was deliberately NOT updated and os-lint kept reporting RED — a gate marked green on a run that did not
+happen is the failure this OS exists to prevent. Re-run after the reset at reduced scope.
+
+**Every finding was verified at source before being filed.** Two were adjusted: Agent A's periodization
+finding was framed as the cross-tenant verify-one-id-write-another class; reading it shows both phases
+belong to the same user, so it is a data-integrity bug, not a tenancy breach. Agent C's toast finding
+was reduced from HIGH — the user is still told something failed, only less specifically.
+
+**Filed (5 rows):**
+- **HIGH** — `copy-to-coaching-creates-an-undeletable-orphan-for-a-solo-user`. Reachable today on
+  **4 of 9 live accounts**. The button is gated on `is_personal` alone while its mirror three lines
+  below checks that a Personal view actually exists — and that mirror's comment spells out this exact
+  argument, having been caught by review on 2026-07-13. Fixed inbound, never outbound.
+- **HIGH** — `periodization-reps-is-an-unescaped-stored-attribute-and-the-checker-is-blind`. 8th
+  instance. **The checker exits 0 over it**, which is the 2026-08-29 warning coming true on the very
+  next instance of the class it was written about.
+- **MEDIUM** ×3 — periodization writes on unverified slot ids from a stale-able global; `deletePhaseWeek`
+  is the 4th fan-out and the only one missing `_propagationTargets`; `saveAssignProgram` clobbers the
+  message its twin exists to preserve.
+
+**Classes counted, not sampled.** 45 `value="${…}"` sites with no escaper → exactly 1 exploitable, and
+the 2 look-alikes are named so they are not re-derived later. 4 `_propagationTargets` fan-outs → 3
+guarded, 1 not.
+
+**Clean with receipts:** no `getPublicUrl`; **no PII across 120 `log.*` sites**; no `auth.users` in SQL;
+`is_personal` never in a security decision across 27 sites; zero duplicate top-level names across all
+535 declarations in the 9 modules; no render recursion; no timer or chart leaks in scope.
+
+**Corroboration worth noting:** Agent B independently found the `app-core.js:777` role self-heal bug
+filed earlier the same day from the mechanical sweep — same line, different angle. Two independent
+paths to one defect is evidence it is real rather than a misreading.
+
+---
+
 ## 2026-09-06 (later) — os-lint remediation after the v2026.09.2 release: one RED closed, one LIVE exposure found
 
 _No code change. Ledger, docs and one live probe._
