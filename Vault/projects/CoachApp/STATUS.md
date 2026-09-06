@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-08-28._
+_Last updated: 2026-09-06._
 
 > **Session history lives in `LOG.md`, not here.** This masthead used to carry a
 > `Previous: … Previous: …` chain going back to 2026-07-19 — every session of it already written
@@ -18,7 +18,7 @@ _Last updated: 2026-08-28._
 
 ## Live state
 
-**App version:** app-core v=22 · app-dashboard v=14 · app-clients v=16 · app-programs v=47 · app-calendar-goals v=18 · app-workouts v=83 · app-runner v=77 · app-progress v=56 · starter-content v=5 · main.css v=11 — **all pushed and live as of 2026-08-28 (66003ce), CI green.**
+**App version:** app-core v=27 · app-dashboard v=18 · app-clients v=16 · app-programs v=53 · app-calendar-goals v=21 · app-workouts v=100 · app-runner v=85 · app-progress v=58 · starter-content v=5 · main.css v=12 — **all pushed and live as of 2026-09-06, released as tag `v2026.09.2` (67380b1) and verified live.** Deploy is now TAG-GATED: pushing master runs the checks but does NOT deploy; only a `v*` tag moves the site.
 > **DESIGN TOKENS LANDED 2026-08-23.** `js/` style literals **1,027 → 256**. Every remaining
 > literal is a deliberate exclusion, not a miss: JS-string colours that reach Chart.js on a
 > canvas (where `var()` cannot resolve), values with no exactly-matching token, and attributes
@@ -28,7 +28,7 @@ _Last updated: 2026-08-28._
 > `--surface-2` background, fixed from a `--surface2` typo — awaiting Jake's eyes.
 > Branding is now an edit to the `:root` block of `css/main.css`, not a hunt through nine files.
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp — deploy source switched 2026-07-03 from legacy branch-deploy to Actions-only (`build_type: workflow`); see CRITICAL.md timeline for why
-**Last push:** 66003ce (2026-08-28) — local and origin/master in sync. Session detail lives in LOG.md.
+**Last push:** 0a50d7d vault / `v2026.09.2` tag 67380b1 app (2026-09-06) — local and origin/master in sync. Session detail lives in LOG.md.
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ### ✅ Progress overhaul (SHIPPED LIVE 2026-07-19 — pushed 95e8e8f; ④ coach parity remains)

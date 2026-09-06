@@ -1,5 +1,5 @@
 # CoachApp Roadmap
-_Last updated: 2026-08-28._
+_Last updated: 2026-09-06._
 
 > Session narratives belong in `LOG.md`. This masthead carried a write-up of the 2026-08-14 session
 > until OS v3; that session has a `## 2026-08-14` entry in `LOG.md`, so it was removed rather than
@@ -56,6 +56,37 @@ set token values against, or do they get neutral values now?
 >
 > **This file is a ROADMAP.** Session history belongs in `LOG.md`. `os-lint`’s `context-budget` now
 > ratchets down on what is left, so this saving cannot quietly regrow the way the last two did.
+
+## 🛠 Session backlog — 2026-09-06 (session 2) — os-lint drained 5 RED to 2; a 44-day live security hole closed; weekly review ran
+
+**Shipped earlier the same day:** `v2026.09.2` (tag `67380b1`). **No app code changed in this second
+half of the session.**
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 1 | **Public self-signup was still ENABLED on live** | ✅ Closed 2026-09-06 | 44 days. The 2026-07-24 fix removed the form *because* `db.auth.signUp` is callable from devtools, and said a dashboard toggle was still needed — never flipped. Probed (`disable_signup:false`), Jake flipped it, re-probed `true`. Admin invite path proven unaffected end-to-end. |
+| 2 | **`os-lint`: 5 RED to 2 RED** | ✅ Done | `self-test` (39/39 checks bite, nothing decorative), `doc-obligations` (paid 3x — it re-fired correctly each time a tracked-class bug was filed), `full-file-review`. |
+| 3 | **Weekly full-file review** | ✅ Ran 2026-09-06, marker updated | Scope `app-programs.js` + `app-core.js` (4,012 lines), 3 pinned angles + verifier. First attempt killed mid-read by a rate limit; marker deliberately left RED until the re-run finished. |
+| 4 | 8th instance of the unescaped-render class | 🐛 Bug (open, high) | `app-programs.js:1744`. **`check-escaping.mjs` exits 0 over it** — the blind spot matters more than the site. Fix order: checker RED first, then escape. |
+| 5 | Solo users can create an undeletable orphan programme | 🐛 Bug (open, high) | Reachable today on 4 of 9 live accounts. The mirror gate already argues the case; only the inbound direction was ever fixed. |
+| 6 | 3 MEDIUM rows from the review | 🐛 Bugs (open) | Unverified slot ids from a stale-able global; 4th fan-out missing `_propagationTargets`; a toast clobbering the message its twin exists to preserve. |
+| 7 | 2 rows from the mechanical sweep | 🐛 Bugs (open) | GDPR export can ship an incomplete bundle silently; the role self-heal block is inert **and** would misclassify solo (measured unreachable — filed, deliberately not fixed). |
+
+**Measured, worth keeping:**
+- **`closure-candidates` converts leads to closures at ~1 in 18.** 17 of 18 were dismissals, and most
+  say "awaiting Jake" in their own text. It nonetheless earned its keep by routing attention to the
+  signup row. Keep at WARN; never give it teeth.
+- **45 `value=` interpolation sites with no escaper, exactly 1 exploitable.** The 2 look-alikes are
+  named in the bug row so they are not re-derived later.
+- **20 of 29 open rows state no closure condition**, exactly what
+  `2026-08-29-most-open-rows-never-say-what-would-close-them` predicted.
+
+**Deliberately NOT done:**
+- **The two backlogs.** 29 stale rows, 65 ungraded predictions — both need Jake.
+- **Fixing any of the 7 new bug rows.** Session was scoped to os-lint remediation and the review; the
+  escaping fix in particular has a required order that deserves a fresh run.
+
+---
 
 ## 🛠 Session backlog — 2026-08-28 — live double-press bug fixed; STATUS cut 30%; the OS question answered honestly
 

@@ -1,3 +1,41 @@
+## 2026-09-06 (save) — I truncated roadmap.md to zero bytes, and it silently poisoned an os-lint baseline
+
+_No app code involved. Recorded because the second-order damage was worse than the first, and invisible._
+
+**What happened.** Updating `roadmap.md` I used Python's `open(p, "w", encoding="utf-8")` and then
+wrote. The string held a lone surrogate escape (my own malformed emoji escape), so the write raised
+`UnicodeEncodeError` — **but opening in `"w"` had already truncated the file to zero.** 617 lines,
+74,610 bytes, gone. Fully recovered with `git checkout --`: the file was tracked and was not part of
+either commit that day.
+
+**The part that mattered more.** Between the truncation and the restore, an `os-lint --report` ran.
+`context-budget` measures `STATUS.md + roadmap.md` against a **self-tightening** ceiling: when the
+measured total falls below the recorded floor it rewrites the floor lower. It measured
+`STATUS.md 66,403 + roadmap.md 0` and wrote **`context: 66403`** into `state/size-baseline.json` — a
+floor that assumes roadmap.md is empty. **The corruption outlived the file.** Restoring roadmap.md left
+`context-budget` stuck RED at ~143k against a 67,731 ceiling, with nothing pointing at the cause.
+
+Restored the baseline to **141,013** — `STATUS.md 66,403 + roadmap.md 74,610`, the true measurement
+immediately before any edit this session. That is pinning AT the honest pre-session number, not raising
+a ceiling to make a check green, which this check's own message explicitly forbids. It now reads GREEN
+at 143,288 against 143,833 — deliberately tight, because the docs genuinely did grow.
+
+**This is [[feedback_threshold_at_current_not_above]] from the other direction.** That memory records a
+state-writing check poisoning its own baseline while reading FIXTURES. Same class, different trigger:
+**a state-writing check will faithfully record a transient, broken measurement of the REAL files.** An
+auto-tightening threshold cannot tell whether the dip it just saw was a cleanup or a catastrophe.
+
+**Two rules banked:**
+1. **Never open a file in write mode with content that has not been encoded yet.** Encode to bytes
+   first, assert the result is non-empty and at least as large as expected, then write the bytes. A
+   write that truncates before it can fail is a destructive operation wearing an edit's clothing.
+2. **After any accidental file damage, ask what MEASURED the file while it was broken** — not just
+   whether the file came back. Git restored the content in one command; the poisoned baseline would
+   have sat there indefinitely, and the check it broke would have been read as a genuine finding about
+   document bloat.
+
+---
+
 ## 2026-09-06 (later still) — the weekly full-file review ran, 8 days late, and found 8 issues
 
 _Scope: `app-programs.js` + `app-core.js`, 4,012 lines. Three pinned angles plus a verifier pass._
