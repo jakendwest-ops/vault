@@ -1,3 +1,51 @@
+## 2026-09-06 (later) — os-lint remediation after the v2026.09.2 release: one RED closed, one LIVE exposure found
+
+_No code change. Ledger, docs and one live probe._
+
+**`doc-obligations` RED → GREEN.** `CRITICAL.md`'s Timeline had gone 7 days without an append while a
+newer `bugs/` file matching a class it tracks sat unrecorded. The append was owed and real, not
+box-ticking: the Timeline's 2026-08-29 entry ends *"One site remains: `_effectiveCoachIdForClient` …
+still open"*, and that site was fixed on 2026-09-04. The document was asserting something untrue.
+Two entries appended — the fix itself (PGRST116 on `.single()` is the denial signal; the `|| user_id`
+clause stays because solo's `coach_id` is legitimately NULL), and the part worth more: **the class was
+enumerated at 9 sites and 5 were deliberately NOT changed, with the reasoning written down.** All five
+resolve an id the user is already working with, and `_resolveTemplateOwnerCoachId` has nine callers, so
+"finishing the class" would spread false-refusal risk to defend a case needing broken RLS to occur.
+A decline is only safe while it is recorded; otherwise the next reviewer greps the pattern, finds five
+hits and no reason, and either re-derives it or "finishes" it.
+
+**The `closure-candidates` sweep found a live security exposure, not a closure.** The check named 18
+ageing rows whose subject a spec mentions, and says to open each one. Doing that:
+
+- **`2026-07-24-public-self-signup-closed-off-entirely` (CRITICAL, 44 days) — the server half was never
+  done.** Probed live 2026-09-06 via the public read-only `GET /auth/v1/settings`: **`disable_signup:
+  false`**. The 2026-07-24 fix removed the signup form *because* `db.auth.signUp` is callable from
+  devtools regardless of UI — and then the dashboard toggle that closes that path was never flipped.
+  `tests/signup-removed-2026-07-24.spec.js` genuinely passes and genuinely proves the UI half, which is
+  exactly how a two-part row gets closed on half its evidence. Needs Jake in the Supabase dashboard;
+  no spec can close it.
+- **17 of 18 were dismissed, and most say so themselves.** Their own `status_detail` reads "awaiting
+  Jake" — the authors judged clause (b) insufficient and wanted eyes on live. Three explicitly reason
+  it out: `checks-sh-rule-2` says *"Awaiting Jake because the closure evidence is a self-test, not a
+  red→green"*; `client-plan-clone-cleanup` says *"NOT closed: no test yet ASSERTS the cleanup left
+  nothing behind"*; `no-delete-rowcount` carries red-before evidence in its frontmatter **and** a body
+  `Closes when` naming Jake — one row, two closure conditions, `feedback_two_fields_one_fact` again.
+  Closing any of these on the spec would overrule a deliberate recorded judgement.
+- **Exactly one plausible clean clause-(b) close remains** (`2026-07-30-fmtdistancem…`), held back
+  until its spec is seen green on a quiet machine.
+
+**Measurement worth keeping: `closure-candidates` converts leads to closures at roughly 1 in 18.** By
+[[feedback_measure_before_giving_a_gate_teeth]] that is close to noise — except it earned its whole
+existence this run by routing attention to the signup row. Recommendation: keep it, at WARN, and never
+let it acquire teeth.
+
+**What os-lint cannot fix without Jake.** 29 `open` rows and 65 ungraded predictions, and **20 of the
+29 state no closure condition at all** — which is precisely what the high-priority row
+`2026-08-29-most-open-rows-never-say-what-would-close-them` predicted. Those two REDs are not decay;
+they are a queue with one server.
+
+---
+
 ## 2026-08-28 — Jake's live double-press bug fixed at the class level; STATUS.md cut 30%; and the OS question answered honestly (core v22 / programs v47 / calendar-goals v18 / workouts v83 / progress v56 / css v11)
 
 _Pushed `66003ce`. Six commits. Started from a live bug report, ended on a strategy question I answered "no" to._
