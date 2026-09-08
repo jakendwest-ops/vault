@@ -98,3 +98,47 @@ run ARE that artefact and should not be read as regressions.
 **Note the shape:** `expect(...).toEqual([])` is a cleanup assertion that can only be trusted if the
 fixture actually created something — an empty-vs-empty comparison would pass vacuously. Here it caught a
 real survivor, so it is a live check, not a decorative one. See [[feedback_reports_success_doing_nothing]].
+
+---
+
+## 2026-08-30 — measured, reaped, and the two tests that DEPENDED on the debris
+
+**Measured before deleting** (test account `coachapp.e2e.pt@...`, not Jake's personal account — an
+earlier version of this row said "the live coach account", which was imprecise):
+
+| Table | `[E2E]` | Total | Share |
+|---|---|---|---|
+| `workout_templates` | 74 | 77 | **96%** |
+| `programs` | 101 | 147 | 69% |
+| `clients` | 18 | 20 | 90% |
+| `workout_logs` | 43 | 143 | 30% |
+| `exercises` | 6 | 3,707 | 0.2% |
+
+The Workouts page rendered **48 rows, 47 of them `[E2E]`** — one real template under forty-seven fakes.
+
+**Reaped, Jake-approved: 242 rows, all counts verified 0 afterwards.** Every delete was anchored on
+`coach_id = currentUser.id` **as well as** the `[E2E]` prefix, so it could not reach another tenant even
+if the prefix matched there; children before parents.
+
+## The debris was load-bearing for two tests — that is the real finding
+
+Removing it broke two specs, and in both cases the debris had been silently propping up a test that
+**borrowed shared data instead of owning a fixture** — [[feedback_test_fixture_isolation]]:
+
+1. **`runner.spec.js:41`** clicked `.list-row` **first**, i.e. whatever was at the top. With the account
+   96% debris that was a leftover probe template. **This sits in the 57-test pre-push gate, so it
+   blocked the push.** Now creates its own template, clicks it by name, reaps it with a rowcount check.
+2. **`health-data-write-rls-2026-08-10.spec.js:35`** searched for *any* coach-owned client with no
+   `user_id` to use as its cross-tenant "victim". With the stale fixture clients gone there was exactly
+   one client left and it has a `user_id`, so the test failed with *"no non-login client available as
+   victim"* — **a fixture failure wearing the costume of a security-test failure**, which is the worst
+   way for a security test to fail. Now creates its own victim and reaps it only if this run created it
+   (never a pre-existing client, which would make a security test destructive).
+
+**So the debris was not merely clutter: it was undeclared shared state that two tests silently
+depended on.** Cleaning it up is what revealed that, and neither test would have been fixed without it.
+
+**Still open on this row:** the cleanup RACE itself. `own-workout-fixture-2026-08-11.spec.js:61` has
+been failing on a stranded template since 2026-08-28; that specific survivor is now gone with the sweep,
+but nothing yet proves the teardown will not strand the next one. **Closes when a full suite run leaves
+zero `[E2E]` rows behind** — measured before and after, not assumed.

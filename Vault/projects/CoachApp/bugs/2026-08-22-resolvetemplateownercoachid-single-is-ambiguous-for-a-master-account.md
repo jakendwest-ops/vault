@@ -3,7 +3,7 @@ id: 2026-08-22-resolvetemplateownercoachid-single-is-ambiguous-for-a-master-acco
 status: open
 priority: low
 reported: 2026-08-22
-status_detail: "found by multi-agent-review Agent B, 2026-08-22; PRE-EXISTING in app-workouts, not introduced by that day's work — a proposed move of this helper into app-core was reverted, so it stays where it is"
+status_detail: "PREMISE PARTLY WRONG, corrected 2026-09-04 while fixing its sibling: clients.user_id has a UNIQUE index (23505 on a duplicate insert), so .single() here can never match TWO rows. It can still fail on ZERO rows, which is a different and much narrower concern than this row describes. Re-scope or close on that basis rather than re-investigating the two-row story."
 ---
 
 # `_resolveTemplateOwnerCoachId` silently falls back to `currentUser.id` for a master account

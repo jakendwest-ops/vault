@@ -700,4 +700,17 @@ _No new public/formal register evidence — chat only._
 - **"run save now"** — imperative + "now" when a ritual was owed and he noticed. Same shape as the
   banked one-word delegation, with the "now" signalling he has been waiting on it.
 
+**Additional signals — 2026-09-07/08 session (UX cleanup)**
+
+- **Prefers to select visually over describing.** Asked "which areas feel clunky?" as prose, he
+  answered *"the top 4"*, then *"built it here in the preview so i can select what i want to change"*
+  — he'd rather point at a rendered thing than enumerate in text. When offered a walkthrough-vs-tell-me
+  choice he picked "build me the thing to tick". Frame discovery as *"here's a board, mark what you
+  want"* rather than a list of questions where that's an option.
+- **Watches the output render and flags issues in real time** — *"please reload as some of it hasnt
+  generated"* while a widget was still painting. Treat a half-rendered artifact as a bug he will
+  notice, not something to leave and explain.
+- Otherwise dead-on the banked profile: bare "1", "push", "builder", "approved" between checkpoints;
+  no "great job"; picks fast from a well-framed AskUserQuestion.
+
 _No new public/formal register evidence — chat only._

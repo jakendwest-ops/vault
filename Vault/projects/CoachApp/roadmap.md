@@ -1,5 +1,5 @@
 # CoachApp Roadmap
-_Last updated: 2026-09-06._
+_Last updated: 2026-09-08._
 
 > Session narratives belong in `LOG.md`. This masthead carried a write-up of the 2026-08-14 session
 > until OS v3; that session has a `## 2026-08-14` entry in `LOG.md`, so it was removed rather than
@@ -56,6 +56,50 @@ set token values against, or do they get neutral values now?
 >
 > **This file is a ROADMAP.** Session history belongs in `LOG.md`. `os-lint`’s `context-budget` now
 > ratchets down on what is left, so this saving cannot quietly regrow the way the last two did.
+
+## 🛠 Session backlog — 2026-09-07/08 — UX cleanup pass: runner + builder + progress shipped (3 of 4 areas)
+
+Jake: *"the app feels slightly clunky to me in places. I want to improve the UI and UX of certain areas."*
+→ `/superpowers:brainstorming` → walked the 4 areas he picked (runner, programs builder, progress, dashboards)
+at phone width in a served HTML board he ticked selections on → 16-item design, `docs/superpowers/specs/2026-09-07-ux-cleanup-design.md`.
+**D1 (solo↔client dashboard convergence) deferred to its own session** — it's a structural piece the vault
+already flags as such. 9 flow-item forks resolved with Jake in-session via AskUserQuestion.
+
+| Area | Commit | Status |
+|---|---|---|
+| Runner R1–R5 | `1598622`+`885fb0f` (app-runner v85→87) | ✅ Pushed (`7de8546`), CI green. Not tagged/live. |
+| Builder B1–B5 | `6190ab1`+`8bcbb92` (app-programs v53→54, app-core v27→28, css v12→14) | ✅ Pushed, CI green. Not tagged/live. |
+| Progress P1–P4 | `253398e` (app-progress v58→59, css v14→15) | ✅ Local only. checks.sh green, 3-agent review clean. |
+| Dashboards D2–D4 | — | ⬜ NOT started — awaits Jake's go |
+
+**Per commit:** tokenised (style literals fell — app-runner 62→58, app-progress 76→67, baselines lowered),
+`checks.sh` green, `/feature-audit` + `/mobile-check` run, a fresh 3-agent `multi-agent-review` (diff mode) —
+**every review came back clean**; the only finding across all three (a `:has()` selector scoped too
+narrowly to catch body-level modals) was fixed in `8bcbb92`.
+
+**What shipped, plainly:**
+- **Runner:** the set-complete tick was an invisible transparent glyph → now visible + the current set's
+  row is accent-highlighted; the pre-first-set footer was dead text → now a tappable "Log a set to
+  continue" that jumps you into the first field; empty kg/reps fields hint the unit not "—"; swap/add are
+  real 44px buttons.
+- **Builder:** the 5-button program header → one primary + a "⋯ Manage" menu; desktop day grid is 7-across
+  (was 5+2); empty days lose the heavy card; the ⚙ is now labelled "⚙ Units"; the periodization slab → a
+  header chip + compact buttons. Bonus fix: the mobile view-switcher pill no longer floats over any open
+  modal's content.
+- **Progress:** the Performance tab was 3 stacked pill rows + search → 1 toolbar row (range is a `<select>`
+  now) + search; pill rows scroll sideways instead of wrapping 2+2; Body Weight leads with the data, goals
+  collapse to a one-liner; the 1RM list is ~half the height — date/estimate hide until you tap a value.
+
+**Not done / next:**
+- **Dashboards D2–D4** (the pass's last commit): D2 solo bottom-nav → 5 items + a "More" sheet
+  (Dashboard/Workouts/Programs/Progress + More→Library/Calendar/Settings); D3 filter 0-exercise sessions
+  out of the client dashboard's "recent"; D4 PT stat tiles 3-across on mobile (was 2+1).
+- **Release** — nothing is live. When the pass is complete (or Jake wants 1–3 out now), cut
+  `v2026.09.3` via `scripts/release.mjs` — needs a full `npm test` pass + release notes first.
+
+**Style-density note:** Stage 3 of the design-system work (roadmap §Design system) converted ~1,027→256
+inline style literals; this pass trimmed another ~15 from app-runner + app-progress as a side effect of
+the token cleanup. app-runner and app-progress are still the two densest modules.
 
 ## 🛠 Session backlog — 2026-09-06 (session 2) — os-lint drained 5 RED to 2; a 44-day live security hole closed; weekly review ran
 
@@ -121,74 +165,6 @@ the migration half (drop the name) is **explicitly not being done** and would de
 
 **Blocked on Jake:** one read-only SQL query would decide whether a backfill is even possible — how
 many `client_1rms` rows have a null `exercise_id` AND a name matching no `exercises` row.
-
-## 🛠 Session backlog — 2026-08-25 (session 2) — OS audit answered honestly; the ratchet class closed; **nothing pushed**
-
-Jake asked whether the OS/MD files, the two rituals, and the SWOT were in a state I was satisfied with.
-Two of the three answers were **no**, and the nos held up under measurement.
-
-| # | Item | Status | Detail |
-|---|---|---|---|
-| 1 | **`/deploy-check` run in full** — first since 2026-07-12 | ✅ Done | 9 items. Cache bust ✅, Playwright **565/1 skipped/0 failed**, RLS probes A/B/C **+ the SELF-TEST** ✅, storage ✅, Pages ✅. 3 items are Jake’s (redirect URLs, `delete_current_user`, live incognito smoke). Clears the `gates-fired` RED once logged. |
-| 2 | **The ratchet class — one mechanism, 4 sites** | ✅ Done | A ceiling set ABOVE current is a permit, not a ratchet. See STATUS continuity block. |
-| 2a | STATUS.md archive block deleted | ✅ Done | **134,422 → 89,919 bytes (−33%)**; longest line 38,171 → 1,360. Verified safe first: 40 SHAs referenced, 34 verbatim in LOG.md, the other 6 intermediate commits from 2026-07-12 (a date with TWO full LOG entries). |
-| 2b | `context-budget`/`ritual-budget` now measured | ✅ Done | `measuredCeiling()` + `state/size-baseline.json`; ratchets DOWN, refuses growth past 2%. Ceilings 300,000 → 233,762 and 44,000 → 40,915. Proven 3 ways (refuses, auto-tightens, old fixture still bites). |
-| 2c/2d | STATUS.md self-contradictions | ✅ Done | Three conflicting last-push claims (`d361f87` correct, `d337418` 11d stale, `1a5cb72` 16d stale) → one line. Stale `CSS version: v=9` removed. Masthead no longer claims a deletion that had not happened. |
-| 3 | **`checks.sh` rule 9e — consent policy version** | ✅ Done, **local only** | `scripts/check-policy-version.mjs` + 8-case self-test. app-core v19→v20 (comment naming the enforcer). See GDPR step 7 above. |
-| 4 | **Stage 4 BRAND → its own session** | 🗓 Planned | Jake’s call. Moved off the kanban shortlist into Up Next as a standalone session; blocked on his direction (typeface + colour, or explicit “neutral for now”). |
-| 5 | **Prediction triage** | ✅ Done | 63 → **54** overdue. 4 graded on evidence, 5 graded `expired` (void premise / no capture mechanism). `prediction-triage-2026-08-25.md` groups the 54 by what settles them. |
-| 6 | `os-lint --self-test` takes ~10 min | 🐛 Bug (open) | 38 specs × 15.8s. Honest (38/38 bite, 0 decorative, verified twice today) but likely to be skipped. Ledger row filed; deliberately NOT fixed — batching the specs changes the isolation that makes it trustworthy. |
-| 7 | `/deploy-check` 5c names a removed signup form | 🐛 Bug (open) | Self-signup removed 2026-07-24; the checkbox lives on `#invite-form`. Passed by correct reading, not correct text. |
-
-**Not done, and named:** `multi-agent-review` could not run in its pinned 3-agent form — this session is
-configured without subagents. Recorded rather than silently substituted. `/code-review ultra` is Jake’s to
-trigger. **No app behaviour changed this session** (the only `js/` edit is a comment), so the review debt
-is small — but it is debt, and the push is gated on it.
-
-**Dropped deliberately:** `dbq()` adoption (26 of 313 calls; the audit traced the cause to app-core not
-using its own wrapper — a rewrite dressed as a lint rule) and a general “two fields, one fact” detector
-(no unambiguous source of truth; a bad check is worse than none).
-
-## 🛠 Session backlog — 2026-08-25 — OS v3 finished: the top bug class can finally block a push
-
-**Shipped and pushed** — coachapp `d361f87`, claude-config `b0b029a`. Full suite **566 passed / 1
-skipped / 0 failed**; deploy verified live.
-
-1. ✅ **R1 — `checks.sh` rule 2 is now BLOCKING**, replaced by `scripts/check-query-scope.mjs`.
-   Measuring before flipping is the whole story: the `clients` sub-check was **vacuous** (it required
-   that no `clients` query anywhere carried `coach_id` within 5 lines — 40 do), and the other two were
-   single-LINE greps against a codebase that writes the anchor on the next line, flagging 4 correct
-   queries. Flipping them as written would have refused every push. New rule: 0 findings on the real
-   tree, **13/13 self-test cases**, catches an injected leak in a real module, and treats the
-   solo-safe `.or()` form as a first-class anchor so it cannot manufacture the solo bug.
-   Ledger: `bugs/2026-08-25-checks-sh-rule-2-clients-sub-check-was-vacuous.md`.
-2. ✅ **Rules 5a/5b blocking too.** 5a (UUIDs) was at zero — a pure ratchet. 5b (emails) had **3 real
-   violations**: the owner email pasted at three call sites in public source. Fixed the class first
-   (one `OWNER_EMAIL` + `_isOwnerAccount()` in app-core), then flipped. Both proven to fire on an
-   injected violation. Residual (value still shipped) → `bugs/2026-08-25-owner-email-is-still-in-public-client-side-source.md`.
-3. ✅ **R6 — guardrails RULE 6**: no new prediction may be appended while past-due ones are ungraded.
-   10 self-test cases including both escape doors; the 63 already past due are grandfathered
-   (`state/predictions-baseline.txt`) so the rule could not wall its owner on day one. A **live-path**
-   case earned its place — all 7 fixture cases passed while the real `git show` was failing, because
-   the Vault sits inside a repo rooted one level up. It would have been decorative in real use.
-4. ✅ **R4 — `os-lint closure-candidates`**: surfaces ageing ledger rows whose subject a spec already
-   names, so clause (b) stops being a door nobody uses. It never closes anything. First version
-   matched the *reported date* and returned 103 of 177 rows — noise; matching the slug returns 15.
-5. ✅ **R8 — `enforced_by` coverage 9 → 35 of 41** memory files.
-6. ✅ **Vault `projects/CoachApp/CLAUDE.md`** no longer instructs future sessions to run `graphify`
-   (no such tool, no such directory — verified). Deletion is still blocked by the permission
-   classifier, so the content was replaced rather than routed around. **Deleting it is Jake's call.**
-
-**Deliberately NOT done, and why:**
-- **The two backlogs themselves** — 22 stale bug rows, 63 ungraded predictions. The valve is closed;
-  the drain is not done. Grading predictions to clear a gate is the one thing the rule forbids.
-- **`feature-audit` / `mobile-check` triggers** — still prose. Three gates were added today and the
-  standing agreement was to stop adding checks; a bad check is worse than a missing one.
-- **The weekly full-file review is DUE** — marker reads 2026-08-17, and `os-lint` goes RED above 7 days.
-
-**Process note:** `multi-agent-review` ran **inline** (three angles + verifier by one agent), because
-this session forbids subagents. That is a weaker review than the pinned 3-agent form. Recorded, not
-hidden — the pinned prompt exists precisely to stop rigor drifting silently.
 
 ## 🔴 GDPR — BLOCKS INVITING ANY NEW USER (found 2026-08-11 by /deploy-check)
 

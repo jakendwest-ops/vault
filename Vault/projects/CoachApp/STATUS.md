@@ -1,5 +1,5 @@
 # CoachApp — STATUS
-_Last updated: 2026-09-06._
+_Last updated: 2026-09-08._
 
 > **Session history lives in `LOG.md`, not here.** This masthead used to carry a
 > `Previous: … Previous: …` chain going back to 2026-07-19 — every session of it already written
@@ -18,7 +18,13 @@ _Last updated: 2026-09-06._
 
 ## Live state
 
-**App version:** app-core v=27 · app-dashboard v=18 · app-clients v=16 · app-programs v=53 · app-calendar-goals v=21 · app-workouts v=100 · app-runner v=85 · app-progress v=58 · starter-content v=5 · main.css v=12 — **all pushed and live as of 2026-09-06, released as tag `v2026.09.2` (67380b1) and verified live.** Deploy is now TAG-GATED: pushing master runs the checks but does NOT deploy; only a `v*` tag moves the site.
+**App version:** app-core v=28 · app-dashboard v=18 · app-clients v=16 · app-programs v=54 · app-calendar-goals v=21 · app-workouts v=100 · app-runner v=87 · app-progress v=59 · starter-content v=5 · main.css v=15 — **LIVE is still tag `v2026.09.2` (67380b1)** (app-core v27/app-programs v53/app-runner v85/app-progress v58/main.css v12). The UX-cleanup pass (below) is on `origin/master` (commits 1–2, CI green) + local (commit 3), **not tagged, not live.**
+
+**UX cleanup pass (2026-09-07/08).** A `/superpowers:brainstorming` design — 16 items across runner/builder/progress/dashboards; D1 (solo↔client dashboard convergence) deferred to its own session; 9 flow-item decisions resolved with Jake. Design + progress: `docs/superpowers/specs/2026-09-07-ux-cleanup-design.md`. Each commit: tokenised (no new style literals), `checks.sh` green, `/feature-audit` + `/mobile-check` + a 3-agent `multi-agent-review` (diff) — all clean.
+- **✅ Commit 1 — Runner R1–R5** (`1598622` + `885fb0f`, app-runner v85→87). Visible set-complete tick (was a transparent glyph); current set's row accent-highlighted; pre-first-set footer is a tappable "Log a set to continue" control that focuses the first empty field (`_runnerFocusFirstInput`); empty kg/reps fields hint the unit not "—"; swap/add-exercise are 44px outline buttons not 11px links. app-runner style literals 62→58.
+- **✅ Commit 2 — Builder B1–B5** (`6190ab1` + `8bcbb92`, app-programs v53→54, app-core v27→28, main.css v12→14). 5-button program header → primary + "⋯ Manage" menu (`#program-manage-modal`, `modal-fullscreen-mobile`); desktop day grid 7-across at ≥900px (was 5+2); empty days lose the card chrome; shared page-header ⚙ → labelled "⚙ Units" (`_quickPrefsIconHtml`, hits runner/programs/workouts); periodization slab → header chip (`_periodizationLabel`) + compact button row, Generate weeks stays visible. Plus a review fix: `body:has(.modal-overlay:not([style*="display:none"]))` hides the mobile view-switcher pill under any open modal.
+- **✅ Commit 3 — Progress P1–P4** (`253398e`, app-progress v58→59, main.css v14→15). Trend range → `<select>` on the Performance toolbar (Per-exercise only), `#trend-range-row` deleted; new shared `.chip-row`/`.chip` — pill rows scroll sideways instead of wrapping, active chip scrolled into view; Body Weight goals editor collapses to a one-line "Start X → Goal Y  Edit" summary once both are set; 1RM date/estimate controls hide until the value input is focused (`_revealOneRMRow`), per row. app-progress style literals 76→67.
+- **⬜ Commit 4 — Dashboards D2–D4** — NOT started (awaits Jake). D2 solo bottom-nav → 5 items + "More" sheet; D3 filter 0-exercise sessions from "recent"; D4 PT stat tiles 3-across on mobile.
 > **DESIGN TOKENS LANDED 2026-08-23.** `js/` style literals **1,027 → 256**. Every remaining
 > literal is a deliberate exclusion, not a miss: JS-string colours that reach Chart.js on a
 > canvas (where `var()` cannot resolve), values with no exactly-matching token, and attributes
@@ -28,7 +34,7 @@ _Last updated: 2026-09-06._
 > `--surface-2` background, fixed from a `--surface2` typo — awaiting Jake's eyes.
 > Branding is now an edit to the `:root` block of `css/main.css`, not a hunt through nine files.
 **Hosting:** GitHub Pages — https://jakendwest-ops.github.io/coachapp — deploy source switched 2026-07-03 from legacy branch-deploy to Actions-only (`build_type: workflow`); see CRITICAL.md timeline for why
-**Last push:** 0a50d7d vault / `v2026.09.2` tag 67380b1 app (2026-09-06) — local and origin/master in sync. Session detail lives in LOG.md.
+**Last push:** app `7de8546` origin/master (2026-09-08, UX cleanup commits 1–2 + design doc; CI green, not tagged). Commit 3 (`253398e` progress) + a docs commit local-only. Vault: this save. LIVE tag unchanged at `v2026.09.2` (67380b1).
 **Supabase project:** avilxuiacmtgeoxxhfhc (eu-west-1, Ireland)
 
 ### ✅ Progress overhaul (SHIPPED LIVE 2026-07-19 — pushed 95e8e8f; ④ coach parity remains)
@@ -83,7 +89,7 @@ Nothing was lost: the whole section is appended verbatim to `LOG.md` under a dat
 - **Progress-photos feature REMOVED 2026-07-12** (Jake, "for now"). Removed while fixing a **live cross-tenant leak** in its storage policies: `progress-photos` was `public=false` yet had 3 `storage.objects` policies scoped by `bucket_id` alone (`"Public read"` SELECT, `"Authenticated delete"` DELETE, `"Authenticated upload"` INSERT) — so any authenticated coach could read AND delete any client's photos. Reproduced live (a second coach downloaded a real 1.79MB photo, deleted another). Dropped all 3 (`scripts/fix-storage-rls-2026-07-12.sql`); the correctly path-scoped "Client/Coach manages …" policies already covered every legitimate op. Bucket + code retained (restorable from app-progress v9). See CRITICAL.md storage section + breach-procedure.md §6.
 - **My Programs accordion Playwright tests** — conditional (skip if test client has no program). Test client may not have program assigned.
 - **My Progress Strength tab** — PostgREST `!inner` join; not verified on live with real data
-- **Program builder desktop layout** — cards may not span full width at wider viewports
+- **Program builder desktop layout** — ✅ addressed 2026-09-07 (B2, `6190ab1`): the day grid is `repeat(7,1fr)` at ≥900px, no longer wrapping 5+2. Local/pushed, not yet live.
 - **Weekly check-in notification** — always shows Due if >7 days; no dismiss until submitted
 - **Solo account Playwright tests** — ✅ 8 smoke tests added (v176); session detail slide-in smoke test added (v179); tests skip gracefully when E2E account has no solo client record
 
